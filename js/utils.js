@@ -1001,7 +1001,7 @@ Parser.spSubclassesToCurrentAndLegacyFull = function (classes) {
 			const nm = c.subclass.name;
 			const src = c.subclass.source;
 			const toAdd = Parser._spSubclassItem(c);
-			if (hasBeenReprinted(nm, src)) {
+			if (SourceUtil.hasBeenReprinted(nm, src)) {
 				out[1].push(toAdd);
 			} else if (Parser.sourceJsonToFull(src).startsWith(UA_PREFIX) || Parser.sourceJsonToFull(src).startsWith(PS_PREFIX)) {
 				const cleanName = mapClassShortNameToMostRecent(nm.split("(")[0].trim().split(/v\d+/)[0].trim());
@@ -1047,7 +1047,37 @@ Parser.trapTypeToFull = function (type) {
 Parser.TRAP_TYPE_TO_FULL = {};
 Parser.TRAP_TYPE_TO_FULL["MECH"] = "Mechanical trap";
 Parser.TRAP_TYPE_TO_FULL["MAG"] = "Magical trap";
+Parser.TRAP_TYPE_TO_FULL["SMPL"] = "Simple trap";
+Parser.TRAP_TYPE_TO_FULL["CMPX"] = "Complex trap";
 Parser.TRAP_TYPE_TO_FULL["HAZ"] = "Hazard";
+
+Parser.tierToFullLevel = function (tier) {
+	return Parser._parse_aToB(Parser.TIER_TO_FULL_LEVEL, tier);
+};
+
+Parser.TIER_TO_FULL_LEVEL = {};
+Parser.TIER_TO_FULL_LEVEL[1] = "level 1\u20144";
+Parser.TIER_TO_FULL_LEVEL[2] = "level 5\u201410";
+Parser.TIER_TO_FULL_LEVEL[3] = "level 11\u201416";
+Parser.TIER_TO_FULL_LEVEL[4] = "level 17\u201420";
+
+Parser.threatToFull = function (threat) {
+	return Parser._parse_aToB(Parser.THREAT_TO_FULL, threat);
+};
+
+Parser.THREAT_TO_FULL = {};
+Parser.THREAT_TO_FULL[1] = "moderate";
+Parser.THREAT_TO_FULL[2] = "dangerous";
+Parser.THREAT_TO_FULL[3] = "deadly";
+
+Parser.trapInitToFull = function (init) {
+	return Parser._parse_aToB(Parser.TRAP_INIT_TO_FULL, init);
+};
+
+Parser.TRAP_INIT_TO_FULL = {};
+Parser.TRAP_INIT_TO_FULL[1] = "initiative count 10";
+Parser.TRAP_INIT_TO_FULL[2] = "initiative count 20";
+Parser.TRAP_INIT_TO_FULL[3] = "initiative count 20 and initiative count 10";
 
 Parser.ATK_TYPE_TO_FULL = {};
 Parser.ATK_TYPE_TO_FULL["MW"] = "Melee Weapon Attack";
@@ -1517,45 +1547,47 @@ Parser.NUMBERS_TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 's
 Parser.NUMBERS_TEENS = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
 
 // SOURCES =============================================================================================================
-function hasBeenReprinted (shortName, source) {
-	/* can accept sources of the form:
-	{
-		"source": "UAExample",
-		"forceStandard": true
-	}
-	 */
-	if (source && source.source) source = source.source;
-	return (shortName !== undefined && shortName !== null && source !== undefined && source !== null) &&
-		(
-			(shortName === "Sun Soul" && source === SRC_SCAG) ||
-			(shortName === "Mastermind" && source === SRC_SCAG) ||
-			(shortName === "Swashbuckler" && source === SRC_SCAG) ||
-			(shortName === "Storm" && source === SRC_SCAG) ||
-			(shortName === "Deep Stalker Conclave" && source === SRC_UATRR)
-		);
-}
+SourceUtil = {
+	hasBeenReprinted (shortName, source) {
+		/* can accept sources of the form:
+		{
+			"source": "UAExample",
+			"forceStandard": true
+		}
+		 */
+		if (source && source.source) source = source.source;
+		return (shortName !== undefined && shortName !== null && source !== undefined && source !== null) &&
+			(
+				(shortName === "Sun Soul" && source === SRC_SCAG) ||
+				(shortName === "Mastermind" && source === SRC_SCAG) ||
+				(shortName === "Swashbuckler" && source === SRC_SCAG) ||
+				(shortName === "Storm" && source === SRC_SCAG) ||
+				(shortName === "Deep Stalker Conclave" && source === SRC_UATRR)
+			);
+	},
 
-function isNonstandardSource (source) {
-	/* can accept sources of the form:
-	{
-		"source": "UAExample",
-		"forceStandard": true
-	}
-	 */
-	if (source && source.forceStandard !== undefined) {
-		return !source.forceStandard;
-	}
-	if (source && source.source) source = source.source;
-	return (source !== undefined && source !== null) && (_isNonStandardSourceWiz(source) || _isNonStandardSource3pp(source));
-}
+	isNonstandardSource (source) {
+		/* can accept sources of the form:
+		{
+			"source": "UAExample",
+			"forceStandard": true
+		}
+		 */
+		if (source && source.forceStandard !== undefined) {
+			return !source.forceStandard;
+		}
+		if (source && source.source) source = source.source;
+		return (source !== undefined && source !== null) && (SourceUtil._isNonstandardSourceWiz(source) || SourceUtil._isNonstandardSource3pp(source));
+	},
 
-function _isNonStandardSourceWiz (source) {
-	return source.startsWith(SRC_UA_PREFIX) || source.startsWith(SRC_PS_PREFIX) || source === SRC_OGA || source === SRC_Mag || source === SRC_STREAM || source === SRC_TWITTER;
-}
+	_isNonstandardSourceWiz (source) {
+		return source.startsWith(SRC_UA_PREFIX) || source.startsWith(SRC_PS_PREFIX) || source === SRC_OGA || source === SRC_Mag || source === SRC_STREAM || source === SRC_TWITTER;
+	},
 
-function _isNonStandardSource3pp (source) {
-	return source.endsWith(SRC_3PP_SUFFIX);
-}
+	_isNonstandardSource3pp (source) {
+		return source.endsWith(SRC_3PP_SUFFIX);
+	}
+};
 
 // CONVENIENCE/ELEMENTS ================================================================================================
 function xor (a, b) {
@@ -2192,7 +2224,7 @@ function getSourceFilter (options) {
 }
 
 function defaultSourceDeselFn (val) {
-	return isNonstandardSource(val);
+	return SourceUtil.isNonstandardSource(val);
 }
 
 function defaultSourceSelFn (val) {
@@ -2690,17 +2722,21 @@ BrewUtil = {
 	},
 
 	addBrewData: (brewHandler) => {
-		const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
-		if (rawBrew) {
-			try {
-				BrewUtil.homebrew = JSON.parse(rawBrew);
-				brewHandler(BrewUtil.homebrew);
-			} catch (e) {
-				// on error, purge all brew and reset hash
-				purgeBrew();
-				setTimeout(() => {
-					throw e
-				});
+		if (BrewUtil.homebrew) {
+			brewHandler(BrewUtil.homebrew);
+		} else {
+			const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
+			if (rawBrew) {
+				try {
+					BrewUtil.homebrew = JSON.parse(rawBrew);
+					brewHandler(BrewUtil.homebrew);
+				} catch (e) {
+					// on error, purge all brew and reset hash
+					purgeBrew();
+					setTimeout(() => {
+						throw e
+					});
+				}
 			}
 		}
 
@@ -3098,6 +3134,7 @@ BrewUtil = {
 				case "hazard":
 				case "deity":
 				case "item":
+				case "itemProperty":
 				case "reward":
 				case "psionic":
 				case "variantrule":
@@ -3161,7 +3198,9 @@ BrewUtil = {
 		}
 
 		// prepare for storage
-		["class", "subclass", "spell", "monster", "background", "feat", "invocation", "race", "deity", "item", "psionic", "reward", "object", "trap", "hazard", "variantrule", "legendaryGroup"].forEach(storePrep);
+		if (json.race && json.race.length) json.race = EntryRenderer.race.mergeSubraces(json.race);
+		const storable = ["class", "subclass", "spell", "monster", "background", "feat", "invocation", "race", "deity", "item", "itemProperty", "itemType", "psionic", "reward", "object", "trap", "hazard", "variantrule", "legendaryGroup"];
+		storable.forEach(storePrep);
 
 		// store
 		function checkAndAdd (prop) {
@@ -3192,45 +3231,13 @@ BrewUtil = {
 		}
 
 		let sourcesToAdd = json._meta ? json._meta.sources : [];
-		let classesToAdd = json.class;
-		let subclassesToAdd = json.subclass;
-		let spellsToAdd = json.spell;
-		let monstersToAdd = json.monster;
-		let backgroundsToAdd = json.background;
-		let featsToAdd = json.feat;
-		let invocationsToAdd = json.invocation;
-		let racesToAdd = json.race;
-		let objectsToAdd = json.object;
-		let trapsToAdd = json.trap;
-		let hazardsToAdd = json.hazard;
-		let deitiesToAdd = json.deity;
-		let itemsToAdd = json.item;
-		let rewardsToAdd = json.reward;
-		let psionicsToAdd = json.psionic;
-		let variantRulesToAdd = json.variantrule;
-		let legendaryGroupsToAdd = json.legendaryGroup;
+		const toAdd = {};
+		storable.forEach(k => toAdd[k] = json[k]);
 		if (!BrewUtil.homebrew) {
 			BrewUtil.homebrew = json;
 		} else {
 			sourcesToAdd = checkAndAddSources(); // adding source(s) to Filter should happen in per-page addX functions
-			// only add if unique ID not already present
-			classesToAdd = checkAndAdd("class");
-			subclassesToAdd = checkAndAdd("subclass");
-			spellsToAdd = checkAndAdd("spell");
-			monstersToAdd = checkAndAdd("monster");
-			backgroundsToAdd = checkAndAdd("background");
-			featsToAdd = checkAndAdd("feat");
-			invocationsToAdd = checkAndAdd("invocation");
-			racesToAdd = checkAndAdd("race");
-			objectsToAdd = checkAndAdd("object");
-			trapsToAdd = checkAndAdd("trap");
-			hazardsToAdd = checkAndAdd("hazard");
-			deitiesToAdd = checkAndAdd("deity");
-			itemsToAdd = checkAndAdd("item");
-			rewardsToAdd = checkAndAdd("reward");
-			psionicsToAdd = checkAndAdd("psionic");
-			variantRulesToAdd = checkAndAdd("variantrule");
-			legendaryGroupsToAdd = checkAndAdd("legendaryGroup");
+			storable.forEach(k => toAdd[k] = checkAndAdd(k)); // only add if unique ID not already present
 		}
 		BrewUtil.storage.setItem(HOMEBREW_STORAGE, JSON.stringify(BrewUtil.homebrew));
 
@@ -3238,51 +3245,50 @@ BrewUtil = {
 		BrewUtil._resetSourceCache();
 
 		// display on page
+		// FIXME this requires changing the addBrewData in the page JS, as well as here
+		// TODO complete refactoring so this alwayss call `handleBrew` which can be defined per-page
 		switch (page) {
 			case UrlUtil.PG_SPELLS:
-				addSpells(spellsToAdd);
+				handleBrew(toAdd);
 				break;
 			case UrlUtil.PG_CLASSES:
-				addClassData({class: classesToAdd});
-				addSubclassData({subclass: subclassesToAdd});
+				handleBrew(toAdd);
 				break;
 			case UrlUtil.PG_BESTIARY:
-				addLegendaryGroups(legendaryGroupsToAdd);
-				addMonsters(monstersToAdd);
+				handleBrew(toAdd);
 				break;
 			case UrlUtil.PG_BACKGROUNDS:
-				addBackgrounds({background: backgroundsToAdd});
+				addBackgrounds({background: toAdd.background});
 				break;
 			case UrlUtil.PG_FEATS:
-				addFeats({feat: featsToAdd});
+				addFeats({feat: toAdd.feat});
 				break;
 			case UrlUtil.PG_INVOCATIONS:
-				addInvocations({invocation: invocationsToAdd});
+				addInvocations({invocation: toAdd.invocation});
 				break;
 			case UrlUtil.PG_RACES:
-				addRaces({race: racesToAdd});
+				addRaces({race: toAdd.race});
 				break;
 			case UrlUtil.PG_OBJECTS:
-				addObjects({object: objectsToAdd});
+				addObjects({object: toAdd.object});
 				break;
 			case UrlUtil.PG_TRAPS_HAZARDS:
-				addTrapsHazards({trap: trapsToAdd});
-				addTrapsHazards({hazard: hazardsToAdd});
+				handleBrew(toAdd);
 				break;
 			case UrlUtil.PG_DEITIES:
-				addDeities({deity: deitiesToAdd});
+				addDeities({deity: toAdd.deity});
 				break;
 			case UrlUtil.PG_ITEMS:
-				addItems(itemsToAdd);
+				handleBrew(toAdd);
 				break;
 			case UrlUtil.PG_REWARDS:
-				addRewards({reward: rewardsToAdd});
+				addRewards({reward: toAdd.reward});
 				break;
 			case UrlUtil.PG_PSIONICS:
-				addPsionics({psionic: psionicsToAdd});
+				addPsionics({psionic: toAdd.psionic});
 				break;
 			case UrlUtil.PG_VARIATNRULES:
-				addVariantRules({variantrule: variantRulesToAdd});
+				addVariantRules({variantrule: toAdd.variantrule});
 				break;
 			case "NO_PAGE":
 				break;

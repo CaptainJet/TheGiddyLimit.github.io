@@ -272,7 +272,15 @@ function EntryRenderer () {
 				// list items
 				case "item":
 					renderPrefix();
-					this.recursiveEntryRender(entry.entry, textStack, depth, {prefix: `<p><span class="bold list-item-title">${entry.name}</span> `, suffix: "</p>"});
+					textStack.push(`<p><span class="bold list-item-title">${entry.name}</span> `);
+					if (entry.entry) this.recursiveEntryRender(entry.entry, textStack, depth, {prefix: "", suffix: ""});
+					else if (entry.entries) entry.entries.forEach((nxt, i) => this.recursiveEntryRender(nxt, textStack, depth, {prefix: i > 0 ? `<span class="para-continue-indented">` : "", suffix: i > 0 ? "</span>" : ""}));
+					textStack.push("</p>");
+					renderSuffix();
+					break;
+				case "itemSub":
+					renderPrefix();
+					this.recursiveEntryRender(entry.entry, textStack, depth, {prefix: `<p><span class="italic list-item-title">${entry.name}</span> `, suffix: "</p>"});
 					renderSuffix();
 					break;
 				case "itemSpell":
@@ -549,7 +557,7 @@ function EntryRenderer () {
 
 		function _getStyleClass (source) {
 			const outList = [];
-			if (isNonstandardSource(source)) outList.push(CLSS_NON_STANDARD_SOURCE);
+			if (SourceUtil.isNonstandardSource(source)) outList.push(CLSS_NON_STANDARD_SOURCE);
 			if (BrewUtil.hasSourceJson(source)) outList.push(CLSS_HOMEBREW_SOURCE);
 			return outList.join(" ");
 		}
@@ -1515,11 +1523,87 @@ EntryRenderer.object = {
 };
 
 EntryRenderer.traphazard = {
+	getSubtitle (it) {
+		const type = it.trapType || "HAZ";
+		switch (type) {
+			case "SMPL":
+			case "CMPX":
+				return `${Parser.trapTypeToFull(type)} (${Parser.tierToFullLevel(it.tier)}, ${Parser.threatToFull(it.threat)} threat)`;
+			default:
+				return Parser.trapTypeToFull(type);
+		}
+	},
+
+	getSimplePart (it) {
+		if (it.trapType === "SMPL") {
+			return renderer.renderEntry({
+				entries: [
+					{
+						type: "entries",
+						name: "Trigger",
+						entries: it.trigger
+					},
+					{
+						type: "entries",
+						name: "Effect",
+						entries: it.effect
+					},
+					{
+						type: "entries",
+						name: "Countermeasures",
+						entries: it.countermeasures
+					}
+				]
+			}, 1);
+		}
+		return "";
+	},
+
+	getComplexPart (it) {
+		if (it.trapType === "CMPX") {
+			return renderer.renderEntry({
+				entries: [
+					{
+						type: "entries",
+						name: "Trigger",
+						entries: it.trigger
+					},
+					{
+						type: "entries",
+						name: "Initiative",
+						entries: [`The trap acts on ${Parser.trapInitToFull(it.initiative)}${it.initiativeNote ? ` (${it.initiativeNote})` : ""}.`]
+					},
+					it.eActive ? {
+						type: "entries",
+						name: "Active Elements",
+						entries: it.eActive
+					} : null,
+					it.eDynamic ? {
+						type: "entries",
+						name: "Dynamic Elements",
+						entries: it.eDynamic
+					} : null,
+					it.eConstant ? {
+						type: "entries",
+						name: "Constant Elements",
+						entries: it.eConstant
+					} : null,
+					{
+						type: "entries",
+						name: "Countermeasures",
+						entries: it.countermeasures
+					}
+				].filter(it => it)
+			}, 1);
+		}
+		return "";
+	},
+
 	getCompactRenderedString: (it) => {
 		const renderer = EntryRenderer.getDefaultRenderer();
 		return `
 			${EntryRenderer.utils.getNameTr(it, true)}
-			<tr class="text"><td colspan="6"><i>${Parser.trapTypeToFull(it.trapType || "HAZ")}</i></td>
+			<tr class="text"><td colspan="6"><i>${EntryRenderer.traphazard.getSubtitle(it)}</i>${EntryRenderer.traphazard.getSimplePart(it)}${EntryRenderer.traphazard.getComplexPart(it)}</td>
 			<tr class="text"><td colspan="6">${renderer.renderEntry({entries: it.entries}, 2)}</td></tr>
 		`;
 	}
@@ -1811,12 +1895,19 @@ EntryRenderer.item = {
 			"entries": t.entries
 		};
 	},
+	_addBrewPropertiesAndTypes () {
+		BrewUtil.addBrewData((brew) => {
+			(brew.itemProperty || []).forEach(p => EntryRenderer.item._addProperty(p));
+			(brew.itemType || []).forEach(t => EntryRenderer.item._addType(t));
+		});
+	},
 	/**
 	 * Runs callback with itemList as argument
 	 * @param callback
 	 * @param urls optional overrides for default URLs
+	 * @addGroups whether item groups should be included
 	 */
-	buildList: function (callback, urls) {
+	buildList: function (callback, urls, addGroups) {
 		if (EntryRenderer.item._builtList) return callback(EntryRenderer.item._builtList);
 
 		if (!urls) urls = {};
@@ -1833,6 +1924,7 @@ EntryRenderer.item = {
 
 		function addBasicItems (itemData) {
 			itemList = itemData.item;
+			if (addGroups) itemList = itemList.concat(itemData.itemGroup || []);
 			DataUtil.loadJSON(basicItemUrl).then(addVariants);
 		}
 
@@ -1841,6 +1933,7 @@ EntryRenderer.item = {
 			// Convert the property and type list JSONs into look-ups, i.e. use the abbreviation as a JSON property name
 			basicItemData.itemProperty.forEach(p => EntryRenderer.item._addProperty(p));
 			basicItemData.itemType.forEach(t => EntryRenderer.item._addType(t));
+			EntryRenderer.item._addBrewPropertiesAndTypes();
 			DataUtil.loadJSON(magicVariantUrl).then(mergeBasicItems);
 		}
 
@@ -1994,9 +2087,9 @@ EntryRenderer.item = {
 		}
 	},
 
-	promiseData: (urls) => {
+	promiseData: (urls, addGroups) => {
 		return new Promise((resolve, reject) => {
-			EntryRenderer.item.buildList((data) => resolve({item: data}), urls);
+			EntryRenderer.item.buildList((data) => resolve({item: data}), urls, addGroups);
 		});
 	},
 
@@ -2005,6 +2098,7 @@ EntryRenderer.item = {
 			try {
 				data.itemProperty.forEach(p => EntryRenderer.item._addProperty(p));
 				data.itemType.forEach(t => EntryRenderer.item._addType(t));
+				EntryRenderer.item._addBrewPropertiesAndTypes();
 				Promise.resolve();
 			} catch (e) {
 				Promise.reject(e);
@@ -2258,7 +2352,7 @@ EntryRenderer.hover = {
 							EntryRenderer.hover._addToCache(page, item.source, itemHash, item)
 						});
 						callbackFn();
-					});
+					}, {}, true);
 				} else {
 					callbackFn();
 				}
@@ -2431,8 +2525,8 @@ EntryRenderer.hover = {
 							panel.doPopulate_Stats(page, source, hash);
 							altTeardown();
 						}
+						this._dmScreen.resetHoveringButton();
 					}
-					this._dmScreen.resetHoveringButton();
 				}
 			})
 			.on(mouseMoveId, (evt) => {
