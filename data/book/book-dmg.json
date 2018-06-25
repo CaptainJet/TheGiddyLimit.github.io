@@ -26,7 +26,7 @@
 							"type": "entries",
 							"name": "Part 1: Master of Worlds",
 							"entries": [
-								"Every DM is the creator of his or her own campaign world. Whether you invent a world, adapt a world from a favourite movie or novel, or use a published setting for the D&D game, you make that world your own over the course of a campaign.",
+								"Every DM is the creator of his or her own campaign world. Whether you invent a world, adapt a world from a favorite movie or novel, or use a published setting for the D&D game, you make that world your own over the course of a campaign.",
 								"The world where you set your campaign is one of countless worlds that make up the D&D {@b multiverse}, a vast array of planes and worlds where adventures happen. Even if you're using an established world such as the Forgotten Realms, your campaign takes place in a sort of mirror universe of the official setting where Forgotten Realms novels, game products, and digital games are assumed to take place. The world is yours to change as you see fit and yours to modify as you explore the consequences of the players' actions.",
 								"Your world is more than just a backdrop for adventures. Like Middle Earth, Westeros, and countless other fantasy worlds out there, it's a place to which you can escape and witness fantastic stories unfold. A well-designed and well-run world seems to flow around the adventurers, so that they feel part of something, instead of apart from it.",
 								"Consistency is a key to a believable fictional world. When the adventurers go back into town for supplies, they should encounter the same {@b nonplayer characters} (NPCs) they met before. Soon, they'll learn the barkeep's name, and he or she will remember theirs as well. Once you have achieved this degree of consistency, you can provide an occasional change. If the adventurers come back to buy more horses at the stables, they might discover that the man who ran the place went back home to the large city over the hills, and now his niece runs the family business. That sort of change-one that has nothing to do with the adventurers directly, but one that they'll notice-makes the players feel as though their characters are part of a living world that changes and grows along with them.",
@@ -59,7 +59,7 @@
 					"type": "entries",
 					"name": "Know Your Players",
 					"entries": [
-						"The success of a D&D game hinges on your ability to entertain the other players at the game table. Whereas their role is to create characters (the protagonists of the campaign), breathe life into them, and help steer the campaign through their characters' actions, your role is to keep the players (and yourself ) interested and immersed in the world you've created, and to let their characters do awesome things.",
+						"The success of a D&D game hinges on your ability to entertain the other players at the game table. Whereas their role is to create characters (the protagonists of the campaign), breathe life into them, and help steer the campaign through their characters' actions, your role is to keep the players (and yourself) interested and immersed in the world you've created, and to let their characters do awesome things.",
 						"Knowing what your players enjoy most about the D&D game helps you create and run adventures that they will enjoy and remember. Once you know which of the following activities each player in your group enjoys the most, you can tailor adventures that satisfy your players' preferences as much as possible, thus keeping them engaged.",
 						{
 							"type": "entries",
@@ -523,7 +523,7 @@
 									"name": "Forces and Philosophies",
 									"entries": [
 										"Not all divine powers need to be derived from deities. In some campaigns, believers hold enough conviction in their ideas about the universe that they gain magical power from that conviction. In other campaigns, impersonal forces of nature or magic replace the gods by granting power to mortals attuned to them. Just as druids and rangers can gain their spell ability from the force of nature rather than from a specific nature deity, some clerics devote themselves to ideals rather than to a god. Paladins might serve a philosophy of justice and chivalry rather than a specific deity.",
-										"Forces and philosophies aren't worshiped; they aren't beings that can hear and respond to prayers or accept sacrifices. Devotion to a philosophy or a force isn't necessarily exclusive of service to a deity. A person can be devoted to the philosophy of good and offer worship to various good deities, or revere the force of nature and also pay homage to the gods of nature, who might be seen as personal manifestations of an impersonal force. In a world that includes deities with demonstrable power (through their clerics), it's unusual for a philosophy to deny the existence of deities, although a common philosophical belief states that the deities are more like mortals than they would have mortals believe. According to such philosophies, the gods aren't truly immortal ( just very long-lived), and mortals can attain divinity. In fact, ascending to godhood is the ultimate goal of some philosophies.",
+										"Forces and philosophies aren't worshiped; they aren't beings that can hear and respond to prayers or accept sacrifices. Devotion to a philosophy or a force isn't necessarily exclusive of service to a deity. A person can be devoted to the philosophy of good and offer worship to various good deities, or revere the force of nature and also pay homage to the gods of nature, who might be seen as personal manifestations of an impersonal force. In a world that includes deities with demonstrable power (through their clerics), it's unusual for a philosophy to deny the existence of deities, although a common philosophical belief states that the deities are more like mortals than they would have mortals believe. According to such philosophies, the gods aren't truly immortal (just very long-lived), and mortals can attain divinity. In fact, ascending to godhood is the ultimate goal of some philosophies.",
 										"The power of a philosophy stems from the belief that mortals invest in it. A philosophy that only one person believes in isn't strong enough to bestow magical power on that person."
 									]
 								}
@@ -3680,7 +3680,7 @@
 									"type": "entries",
 									"name": "Optional Rule: Psychic Dissonance",
 									"entries": [
-										"Each of the Outer Planes emanates a psychic dissonance that affects visitors of an incompatible alignment-good creatures on the Lower Planes, evil ones on the Upper Planes-if they spend too much time on the plane. You can reflect this dissonance with this optional rule. At the end of a long rest spent on an incompatible plane, a visitor must make a DC 10 Constitution saving throw. On a failed save, the creature gains one level of exhaustion. Incompatibility between lawful and chaotic alignments doesn't have the same effect, so Mechanus and Limbo lack this quality."
+										"Each of the Outer Planes emanates a psychic dissonance that affects visitors of an incompatible alignment-good creatures on the Lower Planes, evil ones on the Upper Planes-if they spend too much time on the plane. You can reflect this dissonance with this optional rule. At the end of a long rest spent on an incompatible plane, a visitor must make a DC 10 Constitution saving throw. On a failed save, the creature gains one level of {@condition exhaustion}. Incompatibility between lawful and chaotic alignments doesn't have the same effect, so Mechanus and Limbo lack this quality."
 									]
 								}
 							]
@@ -3804,7 +3804,7 @@
 									"type": "entries",
 									"name": "Optional Rule: Mad Winds",
 									"entries": [
-										"A visitor must make a DC 10 Wisdom saving throw after each hour spent among the howling winds. On a failed save, the creature gains one level of exhaustion. A creature that reaches six levels of exhaustion while on this plane doesn't die. Instead, the creature gains a random form of indefinite madness, as described in chapter 8, \"Running the Game.\" Finishing a long rest doesn't reduce a creature's exhaustion level unless the creature can somehow escape the maddening winds."
+										"A visitor must make a DC 10 Wisdom saving throw after each hour spent among the howling winds. On a failed save, the creature gains one level of {@condition exhaustion}. A creature that reaches six levels of {@condition exhaustion} while on this plane doesn't die. Instead, the creature gains a random form of indefinite madness, as described in chapter 8, \"Running the Game.\" Finishing a long rest doesn't reduce a creature's {@condition exhaustion} level unless the creature can somehow escape the maddening winds."
 									]
 								}
 							]
@@ -3929,7 +3929,7 @@
 									"type": "entries",
 									"name": "Optional Rule: Vile Transformation",
 									"entries": [
-										"At the end of each long rest taken on the plane, a visitor must make a DC 10 Wisdom saving throw. On a failed save, the creature gains one level of exhaustion, which can't be removed while the creature remains in Hades. If the creature reaches six levels of exhaustion, it doesn't die. Instead, the creature permanently transforms into a larva, whereupon all levels of exhaustion afflicting the creature are removed.",
+										"At the end of each long rest taken on the plane, a visitor must make a DC 10 Wisdom saving throw. On a failed save, the creature gains one level of {@condition exhaustion}, which can't be removed while the creature remains in Hades. If the creature reaches six levels of {@condition exhaustion}, it doesn't die. Instead, the creature permanently transforms into a larva, whereupon all levels of {@condition exhaustion} afflicting the creature are removed.",
 										"A larva is a miserable fiend that retains the facial features of its previous form but has the body of a fat worm. A larva has only a few faint memories of its previous life and the statistics in the larva stat block.",
 										"Hades is crawling with larvae. Night hags, liches, and rakshasas harvest them for use in vile rituals. Other fiends like to feed on them."
 									]
@@ -4727,7 +4727,7 @@
 												],
 												[
 													"2",
-													"Inexperienced  adventurer"
+													"Inexperienced adventurer"
 												],
 												[
 													"3",
@@ -4935,15 +4935,15 @@
 												"col-xs-10"
 											],
 											"rows": [
-												["1",  "The adventurers confront the main villain and a group of minions in a bloody battle to the finish."],
-												["2",  "The adventurers chase the villain while dodging obstacles designed to thwart them, leading to a final confrontation in or outside the villain's refuge."],
-												["3",  "The actions of the adventurers or the villain result in a cataclysmic event that the adventurers must escape."],
-												["4",  "The adventurers race to the site where the villain is bringing a master plan to its conclusion, arriving just as that plan is about to be completed."],
-												["5",  "The villain and two or three lieutenants perform separate rites in a large room. The adventurers must disrupt all the rites at the same time."],
-												["6",  "An ally betrays the adventurers as they're about to achieve their goal. (Use this climax carefully, and don't overuse it.)"],
-												["7",  "A portal opens to another plane of existence. Creatures on the other side spill out, forcing the adventurers to close the portal and deal with the villain at the same time."],
-												["8",  "Traps, hazards, or animated objects turn against the adventurers while the main villain attacks."],
-												["9",  "The dungeon begins to collapse while the adventurers face the main villain, who attempts to escape in the chaos."],
+												["1", "The adventurers confront the main villain and a group of minions in a bloody battle to the finish."],
+												["2", "The adventurers chase the villain while dodging obstacles designed to thwart them, leading to a final confrontation in or outside the villain's refuge."],
+												["3", "The actions of the adventurers or the villain result in a cataclysmic event that the adventurers must escape."],
+												["4", "The adventurers race to the site where the villain is bringing a master plan to its conclusion, arriving just as that plan is about to be completed."],
+												["5", "The villain and two or three lieutenants perform separate rites in a large room. The adventurers must disrupt all the rites at the same time."],
+												["6", "An ally betrays the adventurers as they're about to achieve their goal. (Use this climax carefully, and don't overuse it.)"],
+												["7", "A portal opens to another plane of existence. Creatures on the other side spill out, forcing the adventurers to close the portal and deal with the villain at the same time."],
+												["8", "Traps, hazards, or animated objects turn against the adventurers while the main villain attacks."],
+												["9", "The dungeon begins to collapse while the adventurers face the main villain, who attempts to escape in the chaos."],
 												["10", "A threat more powerful than the adventurers appears, destroys the main villain, and then turns its attention on the characters."],
 												["11", "The adventurers must choose whether to pursue the fleeing main villain or save an NPC they care about or a group of innocents."],
 												["12", "The adventurers must discover the main villain's secret weakness before they can hope to defeat that villain."]
@@ -8746,8 +8746,8 @@
 									]
 								},
 								{
-								    "type": "inline",
-								    "entries": [
+									"type": "inline",
+									"entries": [
 										"See the ",
 										{
 											"type": "link",
@@ -8758,7 +8758,7 @@
 											"text": "traps and hazards page"
 										},
 										" for more information."
-								    ]
+									]
 								}
 							]
 						}
@@ -9110,14 +9110,14 @@
 									"type": "entries",
 									"name": "Extreme Cold",
 									"entries": [
-										"Whenever the temperature is at or below 0 degrees Fahrenheit, a creature exposed to the cold must succeed on a DC 10 Constitution saving throw at the end of each hour or gain one level of exhaustion. Creatures with resistance or immunity to cold damage automatically succeed on the saving throw, as do creatures wearing cold weather gear (thick coats, gloves, and the like) and creatures naturally adapted to cold climates."
+										"Whenever the temperature is at or below 0 degrees Fahrenheit, a creature exposed to the cold must succeed on a DC 10 Constitution saving throw at the end of each hour or gain one level of {@condition exhaustion}. Creatures with resistance or immunity to cold damage automatically succeed on the saving throw, as do creatures wearing cold weather gear (thick coats, gloves, and the like) and creatures naturally adapted to cold climates."
 									]
 								},
 								{
 									"type": "entries",
 									"name": "Extreme Heat",
 									"entries": [
-										"When the temperature is at or above 100 degrees Fahrenheit, a creature exposed to the heat and without access to drinkable water must succeed on a Constitution saving throw at the end of each hour or gain one level of exhaustion. The DC is 5 for the first hour and increases by 1 for each additional hour.",
+										"When the temperature is at or above 100 degrees Fahrenheit, a creature exposed to the heat and without access to drinkable water must succeed on a Constitution saving throw at the end of each hour or gain one level of {@condition exhaustion}. The DC is 5 for the first hour and increases by 1 for each additional hour.",
 										"Creatures wearing medium or heavy armor, or who are clad in heavy clothing, have disadvantage on the saving throw. Creatures with resistance or immunity to fire damage automatically succeed on the saving throw, as do creatures naturally adapted to hot climates."
 									]
 								},
@@ -9166,7 +9166,7 @@
 									"type": "entries",
 									"name": "Frigid Water",
 									"entries": [
-										"A creature can be immersed in frigid water for a number of minutes equal to its Constitution score before suffering any ill effects. Each additional minute spent in frigid water requires the creature to succeed on a DC 10 Constitution saving throw or gain one level of exhaustion. Creatures with resistance or immunity to cold damage automatically succeed on the saving throw, as do creatures that are naturally adapted to living in ice-cold water."
+										"A creature can be immersed in frigid water for a number of minutes equal to its Constitution score before suffering any ill effects. Each additional minute spent in frigid water requires the creature to succeed on a DC 10 Constitution saving throw or gain one level of {@condition exhaustion}. Creatures with resistance or immunity to cold damage automatically succeed on the saving throw, as do creatures that are naturally adapted to living in ice-cold water."
 									]
 								},
 								{
@@ -10369,7 +10369,7 @@
 									"type": "entries",
 									"name": "Pickpocket",
 									"entries": [
-										" A thief (use the spy statistics in the Monster Manual ) tries to steal from a random character."
+										" A thief (use the spy statistics in the Monster Manual) tries to steal from a random character."
 									]
 								},
 								"Characters whose passive Wisdom (Perception) scores are equal to or greater than the thief's Dexterity (Sleight of Hand) check total catch the theft in progress.",
@@ -10530,9 +10530,9 @@
 									"type": "entries",
 									"name": "Swimming",
 									"entries": [
-										"Unless aided by magic, a character can't swim for a full 8 hours per day. After each hour of swimming, a character must succeed on a DC 10 Constitution saving throw or gain one level of exhaustion.",
+										"Unless aided by magic, a character can't swim for a full 8 hours per day. After each hour of swimming, a character must succeed on a DC 10 Constitution saving throw or gain one level of {@condition exhaustion}.",
 										"A creature that has a swimming speed-including a character with a ring of swimming or similar magic- can swim all day without penalty and uses the normal forced march rules in the {@i Player's Handbook}.",
-										"Swimming through deep water is similar to traveling at high altitudes, because of the water's pressure and cold temperature. For a creature without a swimming speed, each hour spent swimming at a depth greater than 100 feet counts as 2 hours for the purpose of determining exhaustion. Swimming for an hour at a depth greater than 200 feet counts as 4 hours."
+										"Swimming through deep water is similar to traveling at high altitudes, because of the water's pressure and cold temperature. For a creature without a swimming speed, each hour spent swimming at a depth greater than 100 feet counts as 2 hours for the purpose of determining {@condition exhaustion}. Swimming for an hour at a depth greater than 200 feet counts as 4 hours."
 									]
 								},
 								{
@@ -10574,7 +10574,7 @@
 							"type": "entries",
 							"name": "The Sea",
 							"entries": [
-								"Characters can row a boat for 8 hours per day, or can row longer at the risk of exhaustion (as per the rules for a forced march in chapter 8 of the Player's Handbook). A fully crewed sailing vessel can sail all day, assuming its sailors work in shifts.",
+								"Characters can row a boat for 8 hours per day, or can row longer at the risk of {@condition exhaustion} (as per the rules for a forced march in chapter 8 of the Player's Handbook). A fully crewed sailing vessel can sail all day, assuming its sailors work in shifts.",
 								{
 									"type": "entries",
 									"name": "Navigation",
@@ -11567,7 +11567,7 @@
 									"name": "Selling Magic Items",
 									"entries": [
 										"Few people can afford to buy a magic item, and fewer still know how to find one. Adventurers are exceptional in this regard due to the nature of their profession.",
-										"A character who comes into possession of a common, uncommon, rare, or very rare magic item that he or she wants to sell can spend downtime searching for a buyer. This downtime activity can be performed only in  a city or another location where one can find wealthy individuals interested in buying magic items. Legendary magic items and priceless artifacts can't be sold during downtime. Finding someone to buy such an item can be the substance of an adventure or quest.",
+										"A character who comes into possession of a common, uncommon, rare, or very rare magic item that he or she wants to sell can spend downtime searching for a buyer. This downtime activity can be performed only in a city or another location where one can find wealthy individuals interested in buying magic items. Legendary magic items and priceless artifacts can't be sold during downtime. Finding someone to buy such an item can be the substance of an adventure or quest.",
 										"For each salable item, the character makes a DC 20 Intelligence (Investigation) check to find buyers. Another character can use his or her downtime to assist with the search, granting advantage on the checks. On a failed check, no buyer for the item is found after a search that lasts 10 days. On a successful check, a buyer for the item is found after a number of days based on the item's rarity, as shown in the Salable Magic Item table.",
 										"A character can attempt to find buyers for multiple magic items at once. Although this requires multiple Intelligence (Investigation) checks, the searches are occurring simultaneously, and the results of multiple failures or successes aren't added together. For example, if the character finds a buyer for a common magic item in 2 days and a buyer for an uncommon item in 5 days, but fails to find a buyer for a rare item up for grabs, the entire search takes 10 days.",
 										"For each item a character wishes to sell, the player rolls percentile dice and consults the Selling a Magic Item table, applying a modifier based on the item's rarity, as shown in the Salable Magic Items table. The character also makes a Charisma (Persuasion) check and adds that check's total to the roll. The subsequent total determines what a buyer offers to pay for the item.",
@@ -13129,7 +13129,7 @@
 											"type": "inset",
 											"name": "Magic Item Formulas",
 											"entries": [
-												"A magic item formula explains how to make a particular magic item. Such a formula can be an excellent reward if you allow player characters to craft magic items, as explained in Chapter 6, \"Between Adventures\".",
+												"A magic item formula explains how to make a particular magic item. Such a formula can be an excellent reward if you allow player characters to craft magic items, as explained in Chapter 6, \"Between Adventures.\"",
 												"You can award a formula in place of a magic item. Usually written in a book or on a scroll, a formula is one step rarer than the item it allows a character to create. For example, the formula for a common magic item is uncommon. No formulas exist for legendary items.",
 												"If the creation of magic items is commonplace in your campaign, a formula can have a rarity that matches the rarity of the item it allows a character to create. Formulas for common and uncommon items might even be for sale, each with a cost double that of its magic item."
 											]
@@ -13814,8 +13814,8 @@
 										"Most adventurers go their entire lives without receiving even one of these blessings. There is no limit on the number of blessings a character can receive, but it should be rare for a character to have more than one at a time. Moreover, a character can't benefit from multiple instances of a blessing at the same time. For example, a character can't benefit from two instances of the Blessing of Health at once.",
 										"Example blessings are provided below. The text of a blessing addresses its user. If you decide to create more blessings, consider this: a typical blessing mimics the properties of a wondrous item.",
 										{
-										    "type": "list",
-										    "items": [
+											"type": "list",
+											"items": [
 												"{@reward Blessing of Health}",
 												"{@reward Blessing of Protection}",
 												"{@reward Blessing of Magic Resistance}",
@@ -13823,7 +13823,7 @@
 												"{@reward Blessing of Valhalla}",
 												"{@reward Blessing of Weapon Enhancement}",
 												"{@reward Blessing of Wound Closure}"
-										    ]
+											]
 										}
 									]
 								},
@@ -13835,8 +13835,8 @@
 										"Some charms can be used only once, and others can be used a specific number of times before vanishing. If a charm lets you cast a spell, you are able to do so without spending a spell slot or providing any components (verbal, somatic, or material). In any case, a charm can't be used in the area created by an antimagic field or a similar effect, and a charm's effects are susceptible to dispel magic and the like. But the charm itself can't be removed from a creature by anything short of divine intervention or the wish spell.",
 										"Example charms are provided below. The text of a charm addresses its user. A typical charm mimics the effects of a potion or a spell, so it is easy to create more charms of your own, if you like.",
 										{
-										    "type": "list",
-										    "items": [
+											"type": "list",
+											"items": [
 												"{@reward Charm of Animal Conjuring}",
 												"{@reward Charm of Darkvision}",
 												"{@reward Charm of Feather Falling}",
@@ -13844,7 +13844,7 @@
 												"{@reward Charm of Restoration}",
 												"{@reward Charm of the Slayer}",
 												"{@reward Charm of Vitality}"
-										    ]
+											]
 										}
 									]
 								}
@@ -15335,7 +15335,7 @@
 										"dmref": 2
 									},
 									"entries": [
-										"A creature's size determines how much space it occupies on squares or hexes, as shown in the Creature Size and Space table. If the miniature you use for a monster takes up an amount of space different from what's on the table, that's fine, but treat the monster as its official size for all other rules. For example, you might use  a miniature that has a Large base to represent a Huge giant. The giant takes up less space on the battlefield than its size suggests, but it is still Huge for the purposes of rules like grappling.",
+										"A creature's size determines how much space it occupies on squares or hexes, as shown in the Creature Size and Space table. If the miniature you use for a monster takes up an amount of space different from what's on the table, that's fine, but treat the monster as its official size for all other rules. For example, you might use a miniature that has a Large base to represent a Huge giant. The giant takes up less space on the battlefield than its size suggests, but it is still Huge for the purposes of rules like grappling.",
 										{
 											"type": "table",
 											"caption": "Creature Size and Space",
@@ -15517,7 +15517,7 @@
 								"dmref": 2
 							},
 							"entries": [
-								"Different game features can affect a target at the same time. But when two or more game features have the same name, only the effects of one of them-the most potent one-apply while the durations of the effects overlap. For example, if a target is ignited by a fire elemental's {@i Fire Form} trait, the ongoing  fire damage doesn't increase if the burning target is subjected to that trait again. Game features include spells, class features, feats, racial traits, monster abilities, and magic items. See the related rule in the 'Combining Magical Effects' section of chapter 10 in the {@i Player's Handbook}.",
+								"Different game features can affect a target at the same time. But when two or more game features have the same name, only the effects of one of them-the most potent one-apply while the durations of the effects overlap. For example, if a target is ignited by a fire elemental's {@i Fire Form} trait, the ongoing fire damage doesn't increase if the burning target is subjected to that trait again. Game features include spells, class features, feats, racial traits, monster abilities, and magic items. See the related rule in the 'Combining Magical Effects' section of chapter 10 in the {@i Player's Handbook}.",
 								"Damage sufficient to cause a {@b setback} rarely poses a risk of death to characters of the level shown, but a severely weakened character might be laid low by this damage.",
 								"In contrast, {@b dangerous} damage values pose a significant threat to weaker characters and could potentially kill a character of the level shown if that character is missing many hit points.",
 								"As the name suggests, {@b deadly} damage is enough to drop a character of the level shown to 0 hit points. This level of damage can kill even powerful characters outright if they are already wounded."
@@ -15551,8 +15551,8 @@
 									"type": "entries",
 									"name": "Dashing",
 									"entries": [
-										"During the chase, a participant can freely use the Dash action a number of times equal to 3 + its Constitution modifier. Each additional Dash action it takes during the chase requires the creature to succeed on a DC 10 Constitution check at the end of its turn or gain one level of exhaustion.",
-										"A participant drops out of the chase if its exhaustion reaches level 5, since its speed becomes 0. A creature can remove the levels of exhaustion it gained during the chase by finishing a short or long rest."
+										"During the chase, a participant can freely use the Dash action a number of times equal to 3 + its Constitution modifier. Each additional Dash action it takes during the chase requires the creature to succeed on a DC 10 Constitution check at the end of its turn or gain one level of {@condition exhaustion}.",
+										"A participant drops out of the chase if its {@condition exhaustion} reaches level 5, since its speed becomes 0. A creature can remove the levels of {@condition exhaustion} it gained during the chase by finishing a short or long rest."
 									]
 								},
 								{
@@ -15800,7 +15800,8 @@
 									"type": "entries",
 									"name": "Cackle Fever",
 									"entries": [
-										"This disease targets humanoids, although gnomes are strangely immune. While in the grips of this disease, victims frequently succumb to fits of mad laughter, giving the disease its common name and its morbid nickname: \"the shrieks.\"Symptoms manifest 1d4 hours after infection and include fever and disorientation. The infected creature gains one level of exhaustion that can't be removed until the disease is cured.",
+										"This disease targets humanoids, although gnomes are strangely immune. While in the grips of this disease, victims frequently succumb to fits of mad laughter, giving the disease its common name and its morbid nickname: \"the shrieks.\"",
+										"Symptoms manifest 1d4 hours after infection and include fever and disorientation. The infected creature gains one level of {@condition exhaustion} that can't be removed until the disease is cured.",
 										"Any event that causes the infected creature great stress-including entering combat, taking damage, experiencing fear, or having a nightmare-forces the creature to make a DC 13 Constitution saving throw.",
 										"On a failed save, the creature takes 5 (1d10) psychic damage and becomes incapacitated with mad laughter for 1 minute. The creature can repeat the saving throw at the end of each of its turns, ending the mad laughter and the incapacitated condition on a success. Any humanoid creature that starts its turn within 10 feet of an infected creature in the throes of mad laughter must succeed on a DC 10 Constitution saving throw or also become infected with the disease. Once a creature succeeds on this save, it is immune to the mad laughter of that particular infected creature for 24 hours.",
 										"At the end of each long rest, an infected creature can make a DC 13 Constitution saving throw. On a successful save, the DC for this save and for the save to avoid an attack of mad laughter drops by 1d6. When the saving throw DC drops to 0, the creature recovers from the disease. A creature that fails three of these saving throws gains a randomly determined form of indefinite madness, as described later in this chapter."
@@ -15812,9 +15813,9 @@
 									"entries": [
 										"Sewer plague is a generic term for a broad category of illnesses that incubate in sewers, refuse heaps, and stagnant swamps, and which are sometimes transmitted by creatures that dwell in those areas, such as rats and otyughs.",
 										"When a humanoid creature is bitten by a creature that carries the disease, or when it comes into contact with filth or offal contaminated by the disease, the creature must succeed on a DC 11 Constitution saving throw or become infected.",
-										"It takes 1d4 days for sewer plague's symptoms to manifest in an infected creature. Symptoms include fatigue and cramps. The infected creature suffers one level of exhaustion, and it regains only half the normal number of hit points from spending Hit Dice and no hit points from finishing a long rest.",
-										"At the end of each long rest, an infected creature must make a DC 11 Constitution saving throw. On a failed save, the character gains one level of exhaustion.",
-										"On a successful save, the character's exhaustion level decreases by one level. If a successful saving throw reduces the infected creature's level of exhaustion below 1, the creature recovers from the disease."
+										"It takes 1d4 days for sewer plague's symptoms to manifest in an infected creature. Symptoms include fatigue and cramps. The infected creature suffers one level of {@condition exhaustion}, and it regains only half the normal number of hit points from spending Hit Dice and no hit points from finishing a long rest.",
+										"At the end of each long rest, an infected creature must make a DC 11 Constitution saving throw. On a failed save, the character gains one level of {@condition exhaustion}.",
+										"On a successful save, the character's {@condition exhaustion} level decreases by one level. If a successful saving throw reduces the infected creature's level of {@condition exhaustion} below 1, the creature recovers from the disease."
 									]
 								},
 								{
@@ -18861,7 +18862,7 @@
 												[
 													"Skeleton",
 													"+2 Dex, -4 Int, -4 Cha",
-													"Vulnerable to bludgeoning damage, immune to poison damage and exhaustion, can't be poisoned, darkvision 60 ft., can't speak but understands the languages it knew in life"
+													"Vulnerable to bludgeoning damage, immune to poison damage and {@condition exhaustion}, can't be poisoned, darkvision 60 ft., can't speak but understands the languages it knew in life"
 												],
 												[
 													"Tiefling*",

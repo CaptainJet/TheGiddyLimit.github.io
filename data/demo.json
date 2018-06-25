@@ -37,13 +37,17 @@
 								"Invocations: {@invocation Agonizing Blast} assumes PHB by default, {@invocation Aspect of the Moon|xge} can have sources added with a pipe, {@invocation Aspect of the Moon|xge|and optional link text added with another pipe}.",
 								"Classes: {@class fighter} assumes PHB by default, {@class artificer|uaartificer} can have sources added with a pipe, {@class fighter|phb|optional link text added with another pipe}, {@class fighter|phb|subclasses added|Eldritch Knight} with another pipe, {@class fighter|phb|and class feature added|Eldritch Knight|phb|Martial Archetype 3} with another pipe (number denotes level, since names can be duplicate).",
 								"Conditions: {@condition stunned} assumes PHB by default, {@condition stunned|phb} can have sources added with a pipe (not that it's ever useful), {@condition stunned|phb|and optional link text added with another pipe}.",
+								"Diseases: {@disease cackle fever} assumes DMG by default, {@disease cackle fever|dmg} can have sources added with a pipe, {@disease cackle fever|dmg|and optional link text added with another pipe}.",
 								"Other Rewards: {@reward Blessing of Health} assumes DMG by default, {@reward Blessing of Health|dmg} can have sources added with a pipe, {@reward Blessing of Health|dmg|and optional link text added with another pipe}.",
 								"Feats: {@feat Alert} assumes PHB by default, {@feat Elven Accuracy|xge} can have sources added with a pipe, {@feat Elven Accuracy|xge|and optional link text added with another pipe}.",
-								"Psionics: {@psionic Mastery of Force} assumes UATheMysticClass by default, {@psionic Mastery of Force|UATheMysticClass} can have sources added with a pipe, {@psionic Mastery of Force|UATheMysticClass|and optional link text added with another pipe}."
+								"Psionics: {@psionic Mastery of Force} assumes UATheMysticClass by default, {@psionic Mastery of Force|UATheMysticClass} can have sources added with a pipe, {@psionic Mastery of Force|UATheMysticClass|and optional link text added with another pipe}.",
+								"Objects: {@object Ballista} assumes DMG by default, {@object Ballista|DMG} can have sources added with a pipe, {@object Ballista|DMG|and optional link text added with another pipe}.",
+								"Boons: {@boon Demogorgon} assumes MTF by default, {@boon Demogorgon|MTF} can have sources added with a pipe, {@boon Demogorgon|MTF|and optional link text added with another pipe}.",
+								"Cults: {@cult Cult of Asmodeus} assumes MTF by default, {@cult Cult of Asmodeus|MTF} can have sources added with a pipe, {@cult Cult of Asmodeus|MTF|and optional link text added with another pipe}."
 							]
 						},
 						{
-						    "type": "inset",
+							"type": "inset",
 							"name": "Filter Tag",
 							"entries": [
 								"Another tag that appears occasionally in the data is the @filter tag. This tag can be tricky to use, and generally relies on knowledge of the internals of each page. As such, use with caution, and if you're not sure about something, don't be afraid to drop by our {@link Discord|https://discord.gg/v3AXzcW} and ask questions.",
@@ -58,12 +62,12 @@
 								"{@filter Divination and Evocation spells|spells|school=D;V}",
 								"{@filter All uncommon magic items|items|source=null|type=null|tier=null|rarity=uncommon|property=null|attunement=null|category=null|miscellaneous=Magic}",
 								{
-								    "type": "entries",
-								    "name": "Note",
-								    "entries": [
-										"Setting a filter to null, i.e. ...|school=null|... is equivalent to 'clear the  filter,' resetting it to all-white.",
+									"type": "entries",
+									"name": "Note",
+									"entries": [
+										"Setting a filter to null, i.e. ...|school=null|... is equivalent to 'clear the filter,' resetting it to all-white.",
 										"The pages that support this functionality are those with the 'magnet' button; the link this button exports will give clues as to what one could do with the filter tag."
-								    ]
+									]
 								}
 							]
 						}

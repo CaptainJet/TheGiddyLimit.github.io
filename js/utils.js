@@ -5,7 +5,7 @@
 // in deployment, `_IS_DEPLOYED = "<version number>";` should be prepended here
 IS_DEPLOYED = typeof _IS_DEPLOYED !== "undefined" && _IS_DEPLOYED;
 VERSION_NUMBER = IS_DEPLOYED ? _IS_DEPLOYED : "-1";
-DEPLOYED_STATIC_ROOT = "https://static.5etools.com/";
+DEPLOYED_STATIC_ROOT = ""; // "https://static.5etools.com/"; // FIXME re-enable this when we have a CDN again
 // for the roll20 script to set
 IS_ROLL20 = false;
 
@@ -669,7 +669,7 @@ Parser.spRangeToFull = function (range) {
 		function getAreaStyleStr () {
 			switch (range.type) {
 				case RNG_SPHERE:
-					return "-radius";
+					return " radius";
 				case RNG_HEMISPHERE:
 					return `-radius ${range.type}`;
 				default:
@@ -955,6 +955,9 @@ Parser.CAT_ID_OBJECT = 15;
 Parser.CAT_ID_TRAP = 16;
 Parser.CAT_ID_HAZARD = 17;
 Parser.CAT_ID_QUICKREF = 18;
+Parser.CAT_ID_CULT = 19;
+Parser.CAT_ID_BOON = 20;
+Parser.CAT_ID_DISEASE = 21;
 
 Parser.CAT_ID_TO_FULL = {};
 Parser.CAT_ID_TO_FULL[Parser.CAT_ID_CREATURE] = "Bestiary";
@@ -975,6 +978,9 @@ Parser.CAT_ID_TO_FULL[Parser.CAT_ID_OBJECT] = "Object";
 Parser.CAT_ID_TO_FULL[Parser.CAT_ID_TRAP] = "Trap";
 Parser.CAT_ID_TO_FULL[Parser.CAT_ID_HAZARD] = "Hazard";
 Parser.CAT_ID_TO_FULL[Parser.CAT_ID_QUICKREF] = "Quick Reference";
+Parser.CAT_ID_TO_FULL[Parser.CAT_ID_CULT] = "Cult";
+Parser.CAT_ID_TO_FULL[Parser.CAT_ID_BOON] = "Boon";
+Parser.CAT_ID_TO_FULL[Parser.CAT_ID_DISEASE] = "Disease";
 
 Parser.pageCategoryToFull = function (catId) {
 	return Parser._parse_aToB(Parser.CAT_ID_TO_FULL, catId);
@@ -1278,13 +1284,6 @@ SRC_UACAM = SRC_UA_PREFIX + "CentaursMinotaurs";
 SRC_UAGSS = SRC_UA_PREFIX + "GiantSoulSorcerer";
 
 SRC_3PP_SUFFIX = " 3pp";
-SRC_AL_3PP = "AL" + SRC_3PP_SUFFIX;
-SRC_BOLS_3PP = "BoLS" + SRC_3PP_SUFFIX;
-SRC_CC_3PP = "CC" + SRC_3PP_SUFFIX;
-SRC_FEF_3PP = "FEF" + SRC_3PP_SUFFIX;
-SRC_GDoF_3PP = "GDoF" + SRC_3PP_SUFFIX;
-SRC_ToB_3PP = "ToB" + SRC_3PP_SUFFIX;
-
 SRC_STREAM = "Stream";
 SRC_TWITTER = "Twitter";
 
@@ -1294,7 +1293,6 @@ PS_PREFIX = "Plane Shift: ";
 PS_PREFIX_SHORT = "PS: ";
 UA_PREFIX = "Unearthed Arcana: ";
 UA_PREFIX_SHORT = "UA: ";
-PP3_SUFFIX = " (3pp)";
 TftYP_NAME = "Tales from the Yawning Portal";
 
 Parser.SOURCE_JSON_TO_FULL = {};
@@ -1377,12 +1375,6 @@ Parser.SOURCE_JSON_TO_FULL[SRC_UATSC] = UA_PREFIX + "Three Subclasses";
 Parser.SOURCE_JSON_TO_FULL[SRC_UAOD] = UA_PREFIX + "Order Domain";
 Parser.SOURCE_JSON_TO_FULL[SRC_UACAM] = UA_PREFIX + "Centaurs and Minotaurs";
 Parser.SOURCE_JSON_TO_FULL[SRC_UAGSS] = UA_PREFIX + "Giant Soul Sorcerer";
-Parser.SOURCE_JSON_TO_FULL[SRC_AL_3PP] = "Adventurers League" + PP3_SUFFIX;
-Parser.SOURCE_JSON_TO_FULL[SRC_BOLS_3PP] = "Book of Lost Spells" + PP3_SUFFIX;
-Parser.SOURCE_JSON_TO_FULL[SRC_CC_3PP] = "Critter Compendium" + PP3_SUFFIX;
-Parser.SOURCE_JSON_TO_FULL[SRC_FEF_3PP] = "Fifth Edition Foes" + PP3_SUFFIX;
-Parser.SOURCE_JSON_TO_FULL[SRC_GDoF_3PP] = "Gem Dragons of Faerûn" + PP3_SUFFIX;
-Parser.SOURCE_JSON_TO_FULL[SRC_ToB_3PP] = "Tome of Beasts" + PP3_SUFFIX;
 Parser.SOURCE_JSON_TO_FULL[SRC_STREAM] = "Livestream";
 Parser.SOURCE_JSON_TO_FULL[SRC_TWITTER] = "Twitter";
 
@@ -1466,12 +1458,6 @@ Parser.SOURCE_JSON_TO_ABV[SRC_UATSC] = "UATSC";
 Parser.SOURCE_JSON_TO_ABV[SRC_UAOD] = "UAOD";
 Parser.SOURCE_JSON_TO_ABV[SRC_UACAM] = "UACAM";
 Parser.SOURCE_JSON_TO_ABV[SRC_UAGSS] = "UAGSS";
-Parser.SOURCE_JSON_TO_ABV[SRC_AL_3PP] = "AL (3pp)";
-Parser.SOURCE_JSON_TO_ABV[SRC_BOLS_3PP] = "BoLS (3pp)";
-Parser.SOURCE_JSON_TO_ABV[SRC_CC_3PP] = "CC (3pp)";
-Parser.SOURCE_JSON_TO_ABV[SRC_FEF_3PP] = "FEF (3pp)";
-Parser.SOURCE_JSON_TO_ABV[SRC_GDoF_3PP] = "GDoF (3pp)";
-Parser.SOURCE_JSON_TO_ABV[SRC_ToB_3PP] = "ToB (3pp)";
 Parser.SOURCE_JSON_TO_ABV[SRC_STREAM] = "Stream";
 Parser.SOURCE_JSON_TO_ABV[SRC_TWITTER] = "Twitter";
 
@@ -2333,7 +2319,7 @@ UrlUtil.PG_SPELLS = "spells.html";
 UrlUtil.PG_BACKGROUNDS = "backgrounds.html";
 UrlUtil.PG_ITEMS = "items.html";
 UrlUtil.PG_CLASSES = "classes.html";
-UrlUtil.PG_CONDITIONS = "conditions.html";
+UrlUtil.PG_CONDITIONS_DISEASES = "conditionsdiseases.html";
 UrlUtil.PG_FEATS = "feats.html";
 UrlUtil.PG_INVOCATIONS = "invocations.html";
 UrlUtil.PG_PSIONICS = "psionics.html";
@@ -2353,7 +2339,7 @@ UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS] = (it) => UrlUtil.encodeForHash([
 UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_BACKGROUNDS] = (it) => UrlUtil.encodeForHash([it.name, Parser.sourceJsonToAbv(it.source)]);
 UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS] = (it) => UrlUtil.encodeForHash([it.name, it.source]);
 UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES] = (it) => UrlUtil.encodeForHash([it.name, it.source]);
-UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CONDITIONS] = (it) => UrlUtil.encodeForHash([it.name, it.source]);
+UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CONDITIONS_DISEASES] = (it) => UrlUtil.encodeForHash([it.name, it.source]);
 UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_FEATS] = (it) => UrlUtil.encodeForHash([it.name, it.source]);
 UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_INVOCATIONS] = (it) => UrlUtil.encodeForHash([it.name, it.source]);
 UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_PSIONICS] = (it) => UrlUtil.encodeForHash([it.name, it.source]);
@@ -2372,7 +2358,7 @@ UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_SPELL] = UrlUtil.PG_SPELLS;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_BACKGROUND] = UrlUtil.PG_BACKGROUNDS;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_ITEM] = UrlUtil.PG_ITEMS;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_CLASS] = UrlUtil.PG_CLASSES;
-UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_CONDITION] = UrlUtil.PG_CONDITIONS;
+UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_CONDITION] = UrlUtil.PG_CONDITIONS_DISEASES;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_FEAT] = UrlUtil.PG_FEATS;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_ELDRITCH_INVOCATION] = UrlUtil.PG_INVOCATIONS;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_PSIONIC] = UrlUtil.PG_PSIONICS;
@@ -2385,6 +2371,9 @@ UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_OBJECT] = UrlUtil.PG_OBJECTS;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_TRAP] = UrlUtil.PG_TRAPS_HAZARDS;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_HAZARD] = UrlUtil.PG_TRAPS_HAZARDS;
 UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_QUICKREF] = UrlUtil.PG_QUICKREF;
+UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_CULT] = UrlUtil.PG_CULTS_BOONS;
+UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_BOON] = UrlUtil.PG_CULTS_BOONS;
+UrlUtil.CAT_TO_PAGE[Parser.CAT_ID_DISEASE] = UrlUtil.PG_CONDITIONS_DISEASES;
 
 UrlUtil.bindLinkExportButton = (filterBox) => {
 	const $btn = ListUtil.getOrTabRightButton(`btn-link-export`, `magnet`);
@@ -2857,6 +2846,8 @@ BrewUtil = {
 						return ["psionic"];
 					case UrlUtil.PG_VARIATNRULES:
 						return ["variantrule"];
+					case UrlUtil.PG_CONDITIONS_DISEASES:
+						return ["condition", "disease"];
 					default:
 						throw new Error(`No homebrew properties defined for category ${page}`);
 				}
@@ -3134,11 +3125,14 @@ BrewUtil = {
 				case "hazard":
 				case "deity":
 				case "item":
+				case "itemType":
 				case "itemProperty":
 				case "reward":
 				case "psionic":
 				case "variantrule":
 				case "legendaryGroup":
+				case "condition":
+				case "disease":
 					return deleteGenericBrew(category);
 				case "subclass":
 					return deleteSubclassBrew;
@@ -3199,7 +3193,7 @@ BrewUtil = {
 
 		// prepare for storage
 		if (json.race && json.race.length) json.race = EntryRenderer.race.mergeSubraces(json.race);
-		const storable = ["class", "subclass", "spell", "monster", "background", "feat", "invocation", "race", "deity", "item", "itemProperty", "itemType", "psionic", "reward", "object", "trap", "hazard", "variantrule", "legendaryGroup"];
+		const storable = ["class", "subclass", "spell", "monster", "background", "feat", "invocation", "race", "deity", "item", "itemProperty", "itemType", "psionic", "reward", "object", "trap", "hazard", "variantrule", "legendaryGroup", "condition", "disease"];
 		storable.forEach(storePrep);
 
 		// store
@@ -3289,6 +3283,9 @@ BrewUtil = {
 				break;
 			case UrlUtil.PG_VARIATNRULES:
 				addVariantRules({variantrule: toAdd.variantrule});
+				break;
+			case UrlUtil.PG_CONDITIONS_DISEASES:
+				handleBrew(toAdd);
 				break;
 			case "NO_PAGE":
 				break;

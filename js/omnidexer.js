@@ -151,9 +151,9 @@ Omnidexer.TO_INDEX = [
 	},
 	{
 		category: 6,
-		file: "conditions.json",
+		file: "conditionsdiseases.json",
 		listProp: "condition",
-		baseUrl: "conditions.html",
+		baseUrl: "conditionsdiseases.html",
 		hover: true
 	},
 	{
@@ -307,6 +307,27 @@ Omnidexer.TO_INDEX = [
 				}
 			});
 		}
+	},
+	{
+		category: 19,
+		file: "cultsboons.json",
+		listProp: "cult",
+		baseUrl: "cultsboons.html",
+		hover: true
+	},
+	{
+		category: 20,
+		file: "cultsboons.json",
+		listProp: "boon",
+		baseUrl: "cultsboons.html",
+		hover: true
+	},
+	{
+		category: 21,
+		file: "conditionsdiseases.json",
+		listProp: "disease",
+		baseUrl: "conditionsdiseases.html",
+		hover: true
 	}
 ];
 

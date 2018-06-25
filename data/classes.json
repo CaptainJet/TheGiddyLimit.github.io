@@ -10184,13 +10184,6 @@
 								"entries": [
 									{
 										"type": "entries",
-										"name": "Additional Cantrip",
-										"entries": [
-											"You learn an additional wizard cantrip of your choice at 10th level."
-										]
-									},
-									{
-										"type": "entries",
 										"name": "Eldritch Strike",
 										"entries": [
 											"At 10th level, you learn how to make your weapon strikes undercut a creature's resistance to your spells. When you hit a creature with a weapon attack, that creature has disadvantage on the next saving throw it makes against a spell you cast before the end of your next turn."
@@ -24961,11 +24954,11 @@
 								]
 							},
 							{
-							    "type": "entries",
-							    "name": "Spellcasting Focus",
-							    "entries": [
-							        "You can use an arcane focus (found in chapter 5) as a spellcasting focus for your sorcerer spells."
-							    ]
+								"type": "entries",
+								"name": "Spellcasting Focus",
+								"entries": [
+									"You can use an arcane focus (found in chapter 5) as a spellcasting focus for your sorcerer spells."
+								]
 							}
 						]
 					},
@@ -30042,7 +30035,7 @@
 												"type": "entries",
 												"name": "Fury",
 												"entries": [
-													"The tentacles slam into your foes. Pick up to 5 creatures that you can see within 30 ft. of the portal. Those creatures must make Dexterity saving throws against your Warlock spell save DC.  Creatures that fail their saving throws take {@dice 10d6} bludgeoning damage and are {@condition restrained} for 1 minute. Creatures that succeed take half the bludgeoning damage and are not {@condition restrained}. On its turn, a {@condition restrained} creature can use its action to attempt a DC 15 Strength (Athletics) or Dexterity (Acrobatics) check to end its {@condition restrained} condition."
+													"The tentacles slam into your foes. Pick up to 5 creatures that you can see within 30 ft. of the portal. Those creatures must make Dexterity saving throws against your Warlock spell save DC. Creatures that fail their saving throws take {@dice 10d6} bludgeoning damage and are {@condition restrained} for 1 minute. Creatures that succeed take half the bludgeoning damage and are not {@condition restrained}. On its turn, a {@condition restrained} creature can use its action to attempt a DC 15 Strength (Athletics) or Dexterity (Acrobatics) check to end its {@condition restrained} condition."
 												]
 											}
 										]
