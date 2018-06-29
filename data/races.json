@@ -480,13 +480,10 @@
 					},
 					"entries": [
 						{
-							"name": "Languages",
+							"name": "Extra Language",
 							"entries": [
 								"You can speak, read, and write Auran."
 							],
-							"data": {
-								"overwrite": "Languages"
-							},
 							"type": "entries"
 						},
 						{
@@ -543,13 +540,10 @@
 					},
 					"entries": [
 						{
-							"name": "Languages",
+							"name": "Extra Language",
 							"entries": [
 								"You can speak, read, and write Aquan."
 							],
-							"data": {
-								"overwrite": "Languages"
-							},
 							"type": "entries"
 						},
 						{
@@ -687,13 +681,10 @@
 							"type": "entries"
 						},
 						{
-							"name": "Languages",
+							"name": "Extra Language",
 							"entries": [
-								"You can speak, read, and write Common, Aquan and Elvish. Elvish is fluid, with subtle intonations and intricate grammar. Elven literature is rich and varied, and their songs and poems are famous among other races. Many bards learn their language so they can add Elvish ballads to their repertoires."
+								"You can speak, read, and write Aquan."
 							],
-							"data": {
-								"overwrite": "Languages"
-							},
 							"type": "entries"
 						}
 					]
@@ -1082,7 +1073,10 @@
 							"name": "Size",
 							"entries": [
 								"A typical svirfneblin stands about 3 to 3½ feet tall and weighs 80 to 120 pounds. Your size is Small."
-							]
+							],
+							"data": {
+								"overwrite": "Size"
+							}
 						},
 						{
 							"name": "Superior Darkvision",
@@ -1196,6 +1190,16 @@
 							],
 							"data": {
 								"overwrite": "Age"
+							}
+						},
+						{
+							"type": "entries",
+							"name": "Size",
+							"entries": [
+								"Unlike other gnomes, svirfneblin tend to weigh 80 to 120 pounds. Your size is Small."
+							],
+							"data": {
+								"overwrite": "Size"
 							}
 						},
 						{
@@ -2400,7 +2404,7 @@
 						{
 							"name": "Appearance",
 							"entries": [
-								"Your tiefling might not look like other tieflings. Rather than having the physical characteristics described in the Player's Handbook, choose 1d4+1 of the following features: small horns; fangs or sharp teeth; a forked tongue; catlike eyes; six fingers on each hand; goatlike legs; cloven hoofs; a forked tail; leathery or scaly skin; red or dark blue skin; cast no shadow or reflection; exude a smell of brimstone"
+								"Your tiefling might not look like other tieflings. Rather than having the physical characteristics described in the Player's Handbook, choose {@dice 1d4+1} of the following features: small horns; fangs or sharp teeth; a forked tongue; catlike eyes; six fingers on each hand; goatlike legs; cloven hoofs; a forked tail; leathery or scaly skin; red or dark blue skin; cast no shadow or reflection; exude a smell of brimstone"
 							],
 							"type": "entries"
 						},
