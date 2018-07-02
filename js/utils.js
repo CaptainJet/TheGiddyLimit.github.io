@@ -111,6 +111,8 @@ EXCLUDES_STORAGE = "EXCLUDES_STORAGE";
 DMSCREEN_STORAGE = "DMSCREEN_STORAGE";
 ROLLER_MACRO_STORAGE = "ROLLER_MACRO_STORAGE";
 
+JSON_HOMEBREW_INDEX = `homebrew/index.json`;
+
 // STRING ==============================================================================================================
 // Appropriated from StackOverflow (literally, the site uses this code)
 String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
@@ -632,6 +634,10 @@ Parser.spLevelToFull = function (level) {
 	if (level === 2) return level + "nd";
 	if (level === 3) return level + "rd";
 	return level + "th";
+};
+
+Parser.spLevelToFullLevelText = function (level, dash) {
+	return `${Parser.spLevelToFull(level)}${(level === 0 ? "s" : `${dash ? "-" : " "}level`)}`;
 };
 
 Parser.spMetaToFull = function (meta) {
@@ -2229,13 +2235,16 @@ ListUtil = {
  * @param options overrides for the default filter options
  * @returns {*} a `Filter`
  */
-function getSourceFilter (options) {
+function getSourceFilter (options = {}) {
 	const baseOptions = {
 		header: FilterBox.SOURCE_HEADER,
 		displayFn: Parser.sourceJsonToFullCompactPrefix,
-		selFn: defaultSourceSelFn
+		selFn: defaultSourceSelFn,
+		numGroups: 2,
+		groupFn: SourceUtil.isNonstandardSource
 	};
-	return getFilterWithMergedOptions(baseOptions, options);
+	Object.assign(baseOptions, options);
+	return new GroupedFilter(baseOptions);
 }
 
 function defaultSourceDeselFn (val) {
@@ -2595,6 +2604,18 @@ DataUtil = {
 			loadSaved(evt);
 		}).appendTo($(`body`));
 		$iptAdd.click();
+	},
+
+	class: {
+		loadJSON: function () {
+			return new Promise((resolve, reject) => {
+				DataUtil.loadJSON(`data/class/index.json`).then((index) => {
+					Promise.all(Object.values(index).map(it => DataUtil.loadJSON(`data/class/${it}`))).then((all) => {
+						resolve(all.reduce((a, b) => ({class: a.class.concat(b.class)}), {class: []}));
+					});
+				})
+			});
+		}
 	}
 };
 
@@ -2743,19 +2764,38 @@ BrewUtil = {
 		if (BrewUtil.homebrew) {
 			brewHandler(BrewUtil.homebrew);
 		} else {
-			const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
-			if (rawBrew) {
-				try {
-					BrewUtil.homebrew = JSON.parse(rawBrew);
-					brewHandler(BrewUtil.homebrew);
-				} catch (e) {
-					// on error, purge all brew and reset hash
-					purgeBrew();
-					setTimeout(() => {
-						throw e
-					});
+			DataUtil.loadJSON(JSON_HOMEBREW_INDEX).then((data) => {
+				// auto-load from `homebrew/`, for custom versions of the site
+				function handleHomebrewFolder () {
+					if (data.toImport.length) {
+						Promise.all(data.toImport.map(it => DataUtil.loadJSON(`homebrew/${it}`))).then((datas) => {
+							const page = UrlUtil.getCurrentPage();
+							datas.forEach(d => {
+								BrewUtil.doHandleBrewJson(d, page);
+							})
+						});
+					}
 				}
-			}
+
+				const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
+				if (rawBrew) {
+					try {
+						BrewUtil.homebrew = JSON.parse(rawBrew);
+						handleHomebrewFolder();
+						brewHandler(BrewUtil.homebrew);
+					} catch (e) {
+						// on error, purge all brew and reset hash
+						purgeBrew();
+						setTimeout(() => {
+							throw e
+						});
+					}
+				} else {
+					BrewUtil.homebrew = {};
+					handleHomebrewFolder();
+					brewHandler(BrewUtil.homebrew);
+				}
+			});
 		}
 
 		function purgeBrew () {
@@ -2960,7 +3000,7 @@ BrewUtil = {
 					const $ul = $lst.find(`ul`);
 					let stack = "";
 					BrewUtil._getBrewCategories().forEach(cat => {
-						BrewUtil.homebrew[cat].filter(it => it.source === source).forEach(it => {
+						BrewUtil.homebrew[cat].filter(it => it.source === source).sort((a, b) => SortUtil.ascSort(a.name, b.name)).forEach(it => {
 							stack += `<li><section onclick="ListUtil.toggleCheckbox(event, this)">
 							<span class="col-xs-7 name">${it.name}</span>
 							<span class="col-xs-4 category">${getDisplayCat(cat)}${getExtraInfo(cat, it)}</span>

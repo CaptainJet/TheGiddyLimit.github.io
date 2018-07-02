@@ -193,6 +193,19 @@ header {
 
 /* *** */
 
+.btn-name-pronounce {
+	margin-top: 5px;
+	margin-left: 5px;
+}
+
+.name-pronounce-icon {
+	line-height: 16px;
+}
+
+.name-pronounce {
+	display: none;
+}
+
 .glyphicon.delete-icon {
 	top: 0;
 	margin-left: auto;
@@ -1681,6 +1694,10 @@ table.stats.stats-book table.printbook-bestiary-entry {
 	background: #cfe5ff78;
 }
 
+.dm-init-row.dm-init-row-active .init-wrp-creature {
+	background: #cfe5ff78;
+}
+
 /* *** */
 
 /****************************************
@@ -1913,6 +1930,18 @@ table.stats.stats-book table.printbook-bestiary-entry {
 	width: 10%;
 }
 
+.col-xs-0-8 {
+	width: 6.66666666666667%;
+}
+
+.col-xs-0-7 {
+	width: 5.83333333333333%;
+}
+
+.col-xs-0-6 {
+	width: 5%;
+}
+
 .dropdown-menu > li > a.dropdown-ext-link {
 	display: flex;
 	justify-content: space-between;
@@ -2047,11 +2076,22 @@ table.stats.stats-book table.printbook-bestiary-entry {
 	background: #7a564f;
 }
 
-.dropdown-menu-filter .pill-grid {
+.dropdown-menu-filter .pill-grid,
+.dropdown-menu-filter .pill-grid-sub {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
 	max-width: 100%;
+}
+
+.dropdown-menu-filter .pill-grid.pill-grid-subs {
+	display: block;
+}
+
+.dropdown-menu-filter .pill-grid-subs-divider {
+	margin-top: 6px;
+	margin-bottom: 6px;
+	max-width: 80%;
 }
 
 .dropdown-menu-filter .pill-grid-divider {
@@ -3538,6 +3578,10 @@ table.stats table.statsDataInset {
 	}
 
 	.dm-init-row.dm-init-row-active input {
+		background: #0e93f94f;
+	}
+
+	.dm-init-row.dm-init-row-active .init-wrp-creature {
 		background: #0e93f94f;
 	}
 
