@@ -195,7 +195,12 @@ String.prototype.rtrim = String.prototype.rtrim ||
 
 String.prototype.escapeQuotes = String.prototype.escapeQuotes ||
 	function () {
-		return this.replace(/'/g, `\\'`).replace(/"/g, `&quot;`)
+		return this.replace(/'/g, `&singlequot;`).replace(/"/g, `&quot;`);
+	};
+
+String.prototype.unescapeQuotes = String.prototype.unescapeQuotes ||
+	function () {
+		return this.replace(/&singlequot;/g, `'`).replace(/&quot;/g, `"`);
 	};
 
 StrUtil = {
@@ -242,12 +247,6 @@ function utils_makeAttChoose (attList) {
 		}
 		return attsTemp.join(" or ") + " modifier (your choice)";
 	}
-}
-
-DICE_REGEX = /([1-9]\d*)?d([1-9]\d*)(\s?[+-]\s?\d+)?/g;
-
-function utils_makeRoller (text) {
-	return text.replace(DICE_REGEX, "<span class='roller' data-roll='$&'>$&</span>").replace(/(-|\+)?\d+(?= to hit)/g, "<span class='roller' data-roll='1d20$&'>$&</span>").replace(/(-|\+)?\d+(?= bonus to)/g, "<span class='roller' data-roll='1d20$&'>$&</span>").replace(/(bonus of )(=?-|\+\d+)/g, "$1<span class='roller' data-roll='1d20$2'>$2</span>");
 }
 
 class AbilityData {
@@ -407,7 +406,12 @@ Parser.getAbilityModifier = function (abilityScore) {
 
 Parser.getSpeedString = (it) => {
 	function procSpeed (propName) {
-		if (it.speed[propName]) stack.push(`${propName} ${getVal(it.speed[propName])}ft.${getCond(it.speed[propName])}`);
+		function addSpeed (s) {
+			stack.push(`${propName === "walk" ? "" : `${propName} `}${getVal(s)}ft.${getCond(s)}`);
+		}
+
+		if (it.speed[propName]) addSpeed(it.speed[propName]);
+		if (it.speed.alternate && it.speed.alternate[propName]) it.speed.alternate[propName].forEach(addSpeed);
 	}
 
 	function getVal (speedProp) {
@@ -421,7 +425,7 @@ Parser.getSpeedString = (it) => {
 	const stack = [];
 	if (typeof it.speed === "object") {
 		let joiner = ", ";
-		if (it.speed.walk !== undefined) stack.push(`${getVal(it.speed.walk)}ft.${getCond(it.speed.walk)}`);
+		procSpeed("walk");
 		procSpeed("burrow");
 		procSpeed("climb");
 		procSpeed("fly");
@@ -734,7 +738,7 @@ Parser.spDurationToFull = function (dur) {
 			case "instant":
 				return `Instantaneous${d.condition ? ` (${d.condition})` : ""}`;
 			case "timed":
-				return `${d.concentration ? "Concentration, " : ""}${d.duration.upTo && d.concentration ? "u" : d.duration.upTo ? "U" : ""}${d.duration.upTo ? "p to " : ""}${d.duration.amount} ${d.duration.amount === 1 ? Parser.getSingletonUnit(d.duration.type) : d.duration.type}`;
+				return `${d.concentration ? "Concentration, " : ""}${d.duration.upTo && d.concentration ? "u" : d.duration.upTo ? "U" : ""}${d.duration.upTo ? "p to " : ""}${d.duration.amount} ${d.duration.amount === 1 ? d.duration.type : `${d.duration.type}s`}`;
 			case "permanent":
 				if (d.ends) {
 					return `Until ${d.ends.map(m => m === "dispel" ? "dispelled" : m === "trigger" ? "triggered" : m === "discharge" ? "discharged" : undefined).join(" or ")}`
@@ -772,6 +776,15 @@ Parser._spSubclassItem = function (fromSubclass, textOnly) {
 	const text = `${fromSubclass.subclass.name}${fromSubclass.subclass.subSubclass ? ` (${fromSubclass.subclass.subSubclass})` : ""}`;
 	if (textOnly) return text;
 	return `<span class="italic" title="Source: ${Parser.sourceJsonToFull(fromSubclass.subclass.source)}">${text}</span> <span title="Source: ${Parser.sourceJsonToFull(fromSubclass.class.source)}">${fromSubclass.class.name}</span>`;
+};
+
+Parser.SPELL_ATTACK_TYPE_TO_FULL = {};
+Parser.SPELL_ATTACK_TYPE_TO_FULL["M"] = "Melee";
+Parser.SPELL_ATTACK_TYPE_TO_FULL["R"] = "Ranged";
+Parser.SPELL_ATTACK_TYPE_TO_FULL["O"] = "Other/Unknown";
+
+Parser.spAttackTypeToFull = function (type) {
+	return Parser._parse_aToB(Parser.SPELL_ATTACK_TYPE_TO_FULL, type);
 };
 
 // mon-prefix functions are for parsing monster data, and shared with the roll20 script
@@ -1596,7 +1609,7 @@ SourceUtil = {
 			return !source.forceStandard;
 		}
 		if (source && source.source) source = source.source;
-		return (source !== undefined && source !== null) && (SourceUtil._isNonstandardSourceWiz(source) || SourceUtil._isNonstandardSource3pp(source));
+		return (source !== undefined && source !== null) && !BrewUtil.hasSourceJson(source) && (SourceUtil._isNonstandardSourceWiz(source) || SourceUtil._isNonstandardSource3pp(source));
 	},
 
 	_isNonstandardSourceWiz (source) {
@@ -1605,6 +1618,11 @@ SourceUtil = {
 
 	_isNonstandardSource3pp (source) {
 		return source.endsWith(SRC_3PP_SUFFIX);
+	},
+
+	getFilterGroup (source) {
+		if (BrewUtil.hasSourceJson(source)) return 2;
+		return Number(SourceUtil.isNonstandardSource(source))
 	}
 };
 
@@ -1684,6 +1702,23 @@ MiscUtil = {
 		} else if (document.selection) {
 			document.selection.empty();
 		}
+	},
+
+	randomColour () {
+		let r; let g; let b;
+		const h = RollerUtil.randomise(30, 0) / 30;
+		const i = ~~(h * 6);
+		const f = h * 6 - i;
+		const q = 1 - f;
+		switch (i % 6) {
+			case 0: r = 1; g = f; b = 0; break;
+			case 1: r = q; g = 1; b = 0; break;
+			case 2: r = 0; g = 1; b = f; break;
+			case 3: r = 0; g = q; b = 1; break;
+			case 4: r = f; g = 0; b = 1; break;
+			case 5: r = 1; g = 0; b = q; break;
+		}
+		return `#${("00" + (~~(r * 255)).toString(16)).slice(-2)}${("00" + (~~(g * 255)).toString(16)).slice(-2)}${("00" + (~~(b * 255)).toString(16)).slice(-2)}`;
 	}
 };
 
@@ -1780,6 +1815,10 @@ ListUtil = {
 			ListUtil._primaryLists.forEach(l => ListUtil.deslectAll(l));
 			$(ele).addClass("list-multi-selected");
 		}
+	},
+
+	updateSelected: () => {
+		ListUtil.toggleSelected({}, History.getSelectedListElement().parent());
 	},
 
 	_ctxInit: {},
@@ -2240,8 +2279,7 @@ function getSourceFilter (options = {}) {
 		header: FilterBox.SOURCE_HEADER,
 		displayFn: Parser.sourceJsonToFullCompactPrefix,
 		selFn: defaultSourceSelFn,
-		numGroups: 2,
-		groupFn: SourceUtil.isNonstandardSource
+		groupFn: SourceUtil.getFilterGroup
 	};
 	Object.assign(baseOptions, options);
 	return new GroupedFilter(baseOptions);
@@ -2365,6 +2403,7 @@ UrlUtil.PG_RACES = "races.html";
 UrlUtil.PG_REWARDS = "rewards.html";
 UrlUtil.PG_VARIATNRULES = "variantrules.html";
 UrlUtil.PG_ADVENTURE = "adventure.html";
+UrlUtil.PG_ADVENTURES = "adventures.html";
 UrlUtil.PG_DEITIES = "deities.html";
 UrlUtil.PG_CULTS_BOONS = "cultsboons.html";
 UrlUtil.PG_OBJECTS = "objects.html";
@@ -2607,12 +2646,59 @@ DataUtil = {
 	},
 
 	class: {
-		loadJSON: function () {
-			return new Promise((resolve, reject) => {
-				DataUtil.loadJSON(`data/class/index.json`).then((index) => {
-					Promise.all(Object.values(index).map(it => DataUtil.loadJSON(`data/class/${it}`))).then((all) => {
+		loadJSON: function (baseUrl = "") {
+			return new Promise((resolve) => {
+				DataUtil.loadJSON(`${baseUrl}data/class/index.json`).then((index) => {
+					Promise.all(Object.values(index).map(it => DataUtil.loadJSON(`${baseUrl}data/class/${it}`))).then((all) => {
 						resolve(all.reduce((a, b) => ({class: a.class.concat(b.class)}), {class: []}));
 					});
+				})
+			});
+		}
+	},
+
+	deity: {
+		doPostLoad: function (data, callbackFn) {
+			const PRINT_ORDER = [
+				SRC_PHB,
+				SRC_DMG,
+				SRC_SCAG,
+				SRC_MTF
+			];
+
+			const inSource = {};
+			PRINT_ORDER.forEach(src => {
+				inSource[src] = {};
+				data.deity.filter(it => it.source === src).forEach(it => inSource[src][it.reprintAlias || it.name] = it); // TODO need to handle similar names
+			});
+
+			const laterPrinting = [PRINT_ORDER.last()];
+			[...PRINT_ORDER].reverse().slice(1).forEach(src => {
+				laterPrinting.forEach(laterSrc => {
+					Object.keys(inSource[src]).forEach(name => {
+						const newer = inSource[laterSrc][name];
+						if (newer) {
+							const old = inSource[src][name];
+							old.reprinted = true;
+							if (!newer._isEnhanced) {
+								newer.previousVersions = newer.previousVersions || [];
+								newer.previousVersions.push(old);
+							}
+						}
+					});
+				});
+
+				laterPrinting.push(src);
+			});
+			data.deity.forEach(g => g._isEnhanced = true);
+
+			callbackFn(data);
+		},
+
+		loadJSON: function (baseUrl = "") {
+			return new Promise((resolve) => {
+				DataUtil.loadJSON(`${baseUrl}data/deities.json`).then((data) => {
+					DataUtil.deity.doPostLoad(data, resolve);
 				})
 			});
 		}
@@ -2653,6 +2739,43 @@ function addListShowHide () {
 
 // ROLLING =============================================================================================================
 RollerUtil = {
+	isCrypto: () => {
+		return typeof window !== "undefined" && typeof window.crypto !== "undefined";
+	},
+
+	randomise: (max, min = 1) => {
+		if (RollerUtil.isCrypto()) {
+			return RollerUtil._randomise(min, max + min);
+		} else {
+			return RollerUtil.roll(max) + min;
+		}
+	},
+
+	/**
+	 * Cryptographically secure RNG
+	 */
+	_randomise: (min, max) => {
+		const range = max - min;
+		const bytesNeeded = Math.ceil(Math.log2(range) / 8);
+		const randomBytes = new Uint8Array(bytesNeeded);
+		const maximumRange = Math.pow(Math.pow(2, 8), bytesNeeded);
+		const extendedRange = Math.floor(maximumRange / range) * range;
+		let i;
+		let randomInteger;
+		while (true) {
+			window.crypto.getRandomValues(randomBytes);
+			randomInteger = 0;
+			for (i = 0; i < bytesNeeded; i++) {
+				randomInteger <<= 8;
+				randomInteger += randomBytes[i];
+			}
+			if (randomInteger < extendedRange) {
+				randomInteger %= range;
+				return min + randomInteger;
+			}
+		}
+	},
+
 	/**
 	 * Result in range: 0 to (max-1); inclusive
 	 * e.g. roll(20) gives results ranging from 0 to 19
@@ -2684,7 +2807,7 @@ RollerUtil = {
 
 	isRollCol (string) {
 		if (typeof string !== "string") return false;
-		return !!/^(\d+)?d\d+([+-](\d+)?d\d+)*$/.exec(string.trim());
+		return !!/^({@dice )?(\d+)?d\d+([+-](\d+)?d\d+)*(})?$/.exec(string.trim());
 	}
 };
 
@@ -2745,6 +2868,7 @@ StorageUtil = {
 // HOMEBREW ============================================================================================================
 BrewUtil = {
 	homebrew: null,
+	_homebrewMeta: null,
 	_lists: null,
 	storage: StorageUtil.getStorage(),
 	_sourceCache: null,
@@ -2764,38 +2888,22 @@ BrewUtil = {
 		if (BrewUtil.homebrew) {
 			brewHandler(BrewUtil.homebrew);
 		} else {
-			DataUtil.loadJSON(JSON_HOMEBREW_INDEX).then((data) => {
-				// auto-load from `homebrew/`, for custom versions of the site
-				function handleHomebrewFolder () {
-					if (data.toImport.length) {
-						Promise.all(data.toImport.map(it => DataUtil.loadJSON(`homebrew/${it}`))).then((datas) => {
-							const page = UrlUtil.getCurrentPage();
-							datas.forEach(d => {
-								BrewUtil.doHandleBrewJson(d, page);
-							})
-						});
-					}
+			const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
+			if (rawBrew) {
+				try {
+					BrewUtil.homebrew = JSON.parse(rawBrew);
+					BrewUtil._pLoadLocal().then(() => brewHandler(BrewUtil.homebrew));
+				} catch (e) {
+					// on error, purge all brew and reset hash
+					purgeBrew();
+					setTimeout(() => {
+						throw e
+					});
 				}
-
-				const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
-				if (rawBrew) {
-					try {
-						BrewUtil.homebrew = JSON.parse(rawBrew);
-						handleHomebrewFolder();
-						brewHandler(BrewUtil.homebrew);
-					} catch (e) {
-						// on error, purge all brew and reset hash
-						purgeBrew();
-						setTimeout(() => {
-							throw e
-						});
-					}
-				} else {
-					BrewUtil.homebrew = {};
-					handleHomebrewFolder();
-					brewHandler(BrewUtil.homebrew);
-				}
-			});
+			} else {
+				BrewUtil.homebrew = {};
+				BrewUtil._pLoadLocal().then(() => brewHandler(BrewUtil.homebrew));
+			}
 		}
 
 		function purgeBrew () {
@@ -2804,6 +2912,19 @@ BrewUtil = {
 			BrewUtil.homebrew = null;
 			window.location.hash = "";
 		}
+	},
+
+	_pLoadLocal (callbackFn = (d, page) => BrewUtil.doHandleBrewJson(d, page, null)) {
+		return DataUtil.loadJSON(JSON_HOMEBREW_INDEX).then((data) => {
+			// auto-load from `homebrew/`, for custom versions of the site
+			if (data.toImport.length) {
+				const page = UrlUtil.getCurrentPage();
+				Promise.all(data.toImport.map(it => DataUtil.loadJSON(`homebrew/${it}`))).then((datas) => {
+					datas.forEach(d => callbackFn(d, page));
+					Promise.resolve();
+				});
+			} else Promise.resolve();
+		});
 	},
 
 	manageBrew: (funcAddCallback) => {
@@ -2917,6 +3038,8 @@ BrewUtil = {
 						return ["variantrule"];
 					case UrlUtil.PG_CONDITIONS_DISEASES:
 						return ["condition", "disease"];
+					case UrlUtil.PG_ADVENTURES:
+						return ["adventure"];
 					default:
 						throw new Error(`No homebrew properties defined for category ${page}`);
 				}
@@ -3207,6 +3330,8 @@ BrewUtil = {
 					return deleteSubclassBrew;
 				case "class":
 					return deleteClassBrew;
+				case "adventure":
+					return deleteAdventureBrew;
 				default:
 					throw new Error(`No homebrew delete function defined for category ${category}`);
 			}
@@ -3249,6 +3374,14 @@ BrewUtil = {
 				doRemove(category, uniqueId, doRefresh);
 			}
 		}
+
+		function deleteAdventureBrew () {
+			return (uniqueId, doRefresh) => {
+				doRemove("adventure", uniqueId, false);
+				// TODO lookup the other uniqueID
+				doRemove("adventureData", uniqueId, doRefresh);
+			}
+		}
 	},
 
 	doHandleBrewJson: function (json, page, funcRefresh) {
@@ -3262,7 +3395,7 @@ BrewUtil = {
 
 		// prepare for storage
 		if (json.race && json.race.length) json.race = EntryRenderer.race.mergeSubraces(json.race);
-		const storable = ["class", "subclass", "spell", "monster", "background", "feat", "invocation", "race", "deity", "item", "itemProperty", "itemType", "psionic", "reward", "object", "trap", "hazard", "variantrule", "legendaryGroup", "condition", "disease"];
+		const storable = ["class", "subclass", "spell", "monster", "background", "feat", "invocation", "race", "deity", "item", "itemProperty", "itemType", "psionic", "reward", "object", "trap", "hazard", "variantrule", "legendaryGroup", "condition", "disease", "adventure", "adventureData"];
 		storable.forEach(storePrep);
 
 		// store
@@ -3356,6 +3489,9 @@ BrewUtil = {
 			case UrlUtil.PG_CONDITIONS_DISEASES:
 				handleBrew(toAdd);
 				break;
+			case UrlUtil.PG_ADVENTURES:
+				handleBrew(toAdd);
+				break;
 			case "NO_PAGE":
 				break;
 			default:
@@ -3392,18 +3528,38 @@ BrewUtil = {
 	},
 
 	_buildSourceCache () {
+		function doBuild () {
+			if (BrewUtil._homebrewMeta && BrewUtil._homebrewMeta.sources) {
+				BrewUtil._homebrewMeta.sources.forEach(src => BrewUtil._sourceCache[src.json] = ({abbreviation: src.abbreviation, full: src.full}));
+			}
+		}
+
 		if (!BrewUtil._sourceCache) {
 			BrewUtil._sourceCache = {};
 
-			if (!BrewUtil.homebrew) {
+			if (!BrewUtil._homebrewMeta) {
 				const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
-				if (rawBrew) {
-					BrewUtil.homebrew = JSON.parse(rawBrew);
-				}
-			}
+				const temp = rawBrew ? ((JSON.parse(rawBrew) || {})._meta || {}) : {};
+				temp.sources = temp.sources || [];
 
-			if (BrewUtil.homebrew && BrewUtil.homebrew._meta && BrewUtil.homebrew._meta.sources) {
-				BrewUtil.homebrew._meta.sources.forEach(src => BrewUtil._sourceCache[src.json] = ({abbreviation: src.abbreviation, full: src.full}));
+				// FIXME Async code that, to be properly implemented, requires everything to be rewritten.
+				// This *should* complete before anything further is allowed to execute.
+				// The downside of not doing this, is homebrew sources will appear in the "official" section of the source filter.
+				// This didn't seem worth breaking everything to fix.
+				BrewUtil._pLoadLocal(d => {
+					if (d._meta && !d._meta.sources) {
+						const existing = temp.sources.map(src => src.json);
+						d._meta.sources.forEach(src => {
+							if (!existing.find(it => it === src.json)) {
+								temp.sources.push(src);
+							}
+						});
+					}
+				});
+				BrewUtil._homebrewMeta = temp;
+				doBuild();
+			} else {
+				doBuild();
 			}
 		}
 	},
@@ -3660,6 +3816,11 @@ CollectionUtil = {
 		return true;
 	}
 };
+
+Array.prototype.last = Array.prototype.last ||
+	function () {
+		return this[this.length - 1];
+	};
 
 // OVERLAY VIEW ========================================================================================================
 /**

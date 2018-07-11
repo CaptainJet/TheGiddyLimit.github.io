@@ -272,13 +272,19 @@ class FilterBox {
 				const $pills = [];
 				const $grid = $(`<div class="pill-grid"/>`);
 				const $subGrids = [];
+				let gridIndex = 0;
+				function addGroup (bump) {
+					if (bump) {
+						filter.numGroups++;
+						$grid.append(`<hr class="pill-grid-subs-divider">`);
+					}
+					$subGrids[gridIndex] = $(`<div class="pill-grid-sub"/>`).appendTo($grid);
+					if (gridIndex + 1 < filter.numGroups) $grid.append(`<hr class="pill-grid-subs-divider">`);
+					if (bump) gridIndex++;
+				}
 				if (isGrouped) {
 					$grid.addClass(`pill-grid-subs`);
-
-					for (let i = 0; i < filter.numGroups; ++i) {
-						$subGrids[i] = $(`<div class="pill-grid-sub"/>`).appendTo($grid);
-						if (i + 1 < filter.numGroups) $grid.append(`<hr class="pill-grid-subs-divider">`);
-					}
+					for (; gridIndex < filter.numGroups; ++gridIndex) addGroup();
 				}
 
 				function cycleState ($pill, $miniPill, forward) {
@@ -356,6 +362,7 @@ class FilterBox {
 
 					if (isGrouped) {
 						const group = Number(item instanceof FilterItem && item.group != null ? item.group : filter.groupFn(iText));
+						while (group > $subGrids.length - 1) addGroup(true);
 						$subGrids[group].append($pill)
 					} else $grid.append($pill);
 					$miniView.append($miniPill);
@@ -499,6 +506,7 @@ class FilterBox {
 					max: filter.max,
 					value: [filter.min, filter.max]
 				});
+				filter.$slider = $sld;
 
 				const $miniPillMin = $(`<div class="mini-pill" state="ignore"/>`);
 				const $miniPillMax = $(`<div class="mini-pill" state="ignore"/>`);
@@ -737,7 +745,12 @@ class FilterBox {
 			const vals = cur[name];
 			const outName = `${FilterBox._SUB_HASH_PREFIX}${name}`;
 
-			if (vals._totals.yes || vals._totals.no) {
+			if (vals.min != null && vals.max != null) {
+				out[outName] = [
+					`min${vals.min}`,
+					`max${vals.max}`
+				];
+			} else if (vals._totals.yes || vals._totals.no) {
 				out[outName] = [];
 				Object.keys(vals).forEach(vK => {
 					if (vK.startsWith("_")) return;
@@ -890,6 +903,12 @@ class Filter {
 		// TODO handle AND/OR
 		const map = valObj[this.header];
 		const totals = map._totals;
+
+		function toCheckVal (tc) {
+			if (tc instanceof FilterItem) return tc.item;
+			return tc;
+		}
+
 		if (toCheck instanceof Array) {
 			let hide = false;
 			let display = false;
@@ -901,14 +920,14 @@ class Filter {
 				}
 
 				toCheck.forEach(tc => {
-					if (map[tc] === 1) { // if any are 1 (nlue) include if they match
+					if (map[toCheckVal(tc)] === 1) { // if any are 1 (blue) include if they match
 						display = true;
 					}
 				});
 			} else {
 				let ttlYes = 0;
 				toCheck.forEach(tc => {
-					if (map[tc] === 1) {
+					if (map[toCheckVal(tc)] === 1) {
 						ttlYes++;
 					}
 				});
@@ -917,14 +936,14 @@ class Filter {
 
 			if (map._andOr.red === "OR") {
 				toCheck.forEach(tc => {
-					if (map[tc] === -1) { // if any are -1 (red) exclude if they match
+					if (map[toCheckVal(tc)] === -1) { // if any are -1 (red) exclude if they match
 						hide = true;
 					}
 				});
 			} else {
 				let ttlNo = 0;
 				toCheck.forEach(tc => {
-					if (map[tc] === -1) {
+					if (map[toCheckVal(tc)] === -1) {
 						ttlNo++;
 					}
 				});
@@ -941,13 +960,13 @@ class Filter {
 			let hide = false;
 			if (map._andOr.blue === "OR") {
 				if (totals.yes > 0) {
-					display = map[toCheck] === 1;
+					display = map[toCheckVal(toCheck)] === 1;
 				} else {
 					display = true;
 				}
 			} else {
 				if (totals.yes > 0) {
-					display = map[toCheck] === 1 && totals.yes === 1;
+					display = map[toCheckVal(toCheck)] === 1 && totals.yes === 1;
 				} else {
 					display = true;
 				}
@@ -955,10 +974,10 @@ class Filter {
 
 			if (map._andOr.red === "OR") {
 				if (totals.no > 0) {
-					hide = map[toCheck] === -1;
+					hide = map[toCheckVal(toCheck)] === -1;
 				}
 			} else {
-				hide = totals.no === 1 && map[toCheck] === -1;
+				hide = totals.no === 1 && map[toCheckVal(toCheck)] === -1;
 			}
 
 			return display && !hide;
@@ -990,13 +1009,32 @@ class RangeFilter extends Filter {
 	addIfAbsent (number) {
 		if (this.min === null && this.max === null) this.min = this.max = number;
 		else {
+			const oMin = this.min;
+			const oMax = this.max;
 			this.min = Math.min(this.min, number);
 			this.max = Math.max(this.max, number);
+			if (this.$slider) {
+				const [lower, upper] = this.$slider.slider("getValue");
+
+				const updateMin = lower === oMin && this.min !== oMin;
+				const updateMax = upper === oMax && this.max !== oMax;
+
+				if (updateMin) this.$slider.slider("setAttribute", "min", this.min);
+				if (updateMax) this.$slider.slider("setAttribute", "max", this.max);
+
+				if (updateMin && updateMax) this.$slider.slider("setValue", [this.min, this.max]);
+				else if (updateMin) this.$slider.slider("setValue", [this.min, upper]);
+				else if (updateMax) this.$slider.slider("setValue", [lower, this.max]);
+			}
 		}
 	}
 
 	toDisplay (valObj, toCheck) {
 		const range = valObj[this.header];
+
+		// match everything if filter is set to complete range
+		if (toCheck == null) return range.min === this.min && range.max === this.max;
+
 		if (toCheck instanceof Array) return range.min <= Math.min(...toCheck) && range.max >= Math.max(...toCheck);
 		else return range.min <= toCheck && range.max >= toCheck;
 	}
@@ -1007,8 +1045,6 @@ class GroupedFilter extends Filter {
 	 * An extension of the basic filter, which enables visual grouping of elements.
 	 * @param options As with `Filter`, with two extra fields:
 	 *
-	 *   numGroups: the desired number of visual groups
-	 *
 	 *   (OPTIONAL)
 	 *   groupFn: function which takes an item, and returns a number (from 0 to numGroups, inclusive)
 	 *     Either this function or a `group` on a FilterItem must be specified.
@@ -1016,7 +1052,7 @@ class GroupedFilter extends Filter {
 	 */
 	constructor (options) {
 		super(options);
-		this.numGroups = options.numGroups;
+		this.numGroups = 1;
 		this.groupFn = options.groupFn;
 	}
 }

@@ -103,20 +103,17 @@ const crFilter = new Filter({header: "CR"});
 const sizeFilter = new Filter({
 	header: "Size",
 	items: [
-		SZ_FINE,
-		SZ_DIMINUTIVE,
 		SZ_TINY,
 		SZ_SMALL,
 		SZ_MEDIUM,
 		SZ_LARGE,
 		SZ_HUGE,
 		SZ_GARGANTUAN,
-		SZ_COLOSSAL,
 		SZ_VARIES
 	],
 	displayFn: Parser.sizeAbvToFull
 });
-const speedFilter = new Filter({header: "Speed", items: ["walk", "burrow", "climb", "fly", "swim"], displayFn: StrUtil.uppercaseFirst});
+const speedFilter = new Filter({header: "Speed", items: ["walk", "burrow", "climb", "fly", "hover", "swim"], displayFn: StrUtil.uppercaseFirst});
 const strengthFilter = new RangeFilter({header: "Strength"});
 const dexterityFilter = new RangeFilter({header: "Dexterity"});
 const constitutionFilter = new RangeFilter({header: "Constitution"});
@@ -221,7 +218,12 @@ const conditionImmuneFilter = new Filter({
 	items: CONDS,
 	displayFn: StrUtil.uppercaseFirst
 });
-const miscFilter = new Filter({header: "Miscellaneous", items: ["Familiar", "Legendary", "Spellcaster", "Swarm"], displayFn: StrUtil.uppercaseFirst});
+const miscFilter = new Filter({
+	header: "Miscellaneous",
+	items: ["Familiar", "Legendary", "NPC", "Spellcaster", "Swarm"],
+	displayFn: StrUtil.uppercaseFirst,
+	deselFn: (it) => it === "NPC"
+});
 
 const filterBox = initFilterBox(
 	sourceFilter,
@@ -384,6 +386,7 @@ function addMonsters (data) {
 		mon._pTypes = Parser.monTypeToFullObj(mon.type); // store the parsed type
 		mon._pCr = mon.cr === undefined ? "Unknown" : (mon.cr.cr || mon.cr);
 		mon._fSpeed = Object.keys(mon.speed).filter(k => mon.speed[k]);
+		if (mon.speed.canHover) mon._fSpeed.push("hover");
 		mon._fAc = mon.ac.map(it => it.ac || it);
 		mon._fHp = mon.hp.average;
 		const tempAlign = typeof mon.alignment[0] === "object"
@@ -428,6 +431,7 @@ function addMonsters (data) {
 		if (mon.familiar) mon._fMisc.push("Familiar");
 		if (mon.type.swarmSize) mon._fMisc.push("Swarm");
 		if (mon.spellcasting) mon._fMisc.push("Spellcaster");
+		if (mon.isNPC) mon._fMisc.push("NPC");
 	}
 	const lastSearch = ListUtil.getSearchTermAndReset(list);
 	table.append(textStack);
@@ -933,7 +937,7 @@ function loadhash (id) {
 				}
 				if (cpy.entries) {
 					if (!fluff.entries) fluff.entries = cpy.entries;
-					else fluff.entries.entries = fluff.entries.entries.concat(cpy.entries.entries);
+					else fluff.entries = fluff.entries.concat(cpy.entries);
 				}
 				delete fluff._appendCopy;
 			}
@@ -946,8 +950,8 @@ function loadhash (id) {
 				}
 			} else {
 				if (fluff.entries) {
-					const depth = fluff.entries.type === "section" ? -1 : 2;
-					$td.append(renderer.renderEntry(fluff.entries, depth));
+					const depth = fluff.type === "section" ? -1 : 2;
+					$td.append(renderer.renderEntry({type: fluff.type, entries: fluff.entries}, depth));
 				} else {
 					$td.append(HTML_NO_INFO);
 				}
@@ -983,6 +987,7 @@ function loadhash (id) {
 	EntryRenderer.utils.bindTabButtons(statTab, infoTab, picTab);
 
 	loadsub([]);
+	ListUtil.updateSelected();
 }
 
 function handleUnknownHash (link, sub) {

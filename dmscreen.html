@@ -344,6 +344,16 @@
 			width: 100%;
 		}
 
+		label.panel-tab-search-checkbox {
+			flex-shrink: 0;
+			padding: 5px;
+			margin-bottom: 0;
+			font-weight: normal;
+			border: 1px solid #ccc;
+			height: 34px;
+			border-left: 0;
+		}
+
 		.panel-tab-list-item {
 			display: block;
 		}
@@ -657,9 +667,23 @@
 			margin-bottom: 3px;
 		}
 
+		.dm-init-row-lhs,
 		.dm-init-row-rhs {
 			display: flex;
 			justify-content: space-between;
+		}
+
+		.dm-init-row-lhs {
+			width: 100%;
+		}
+
+		.dm-init-row-btn {
+			line-height: 26px;
+			padding: 1px 3px;
+		}
+
+		.dm-init-row-btn-flag {
+			margin-right: 3px;
 		}
 
 		.dm-init-row .init-wrp-creature {
@@ -669,6 +693,13 @@
 			margin: 0 3px 0 0;
 			padding-left: 5px;
 			border: 1px solid #ccc;
+		}
+
+		.dm-init-row .init-wrp-creature .btn {
+			margin-right: 3px;
+			padding: 0 1px;
+			line-height: 12px;
+			font-size: 9px;
 		}
 
 		.dm-init-row input {
@@ -695,6 +726,38 @@
 			border-top: 1px solid #ccc;
 			justify-content: space-evenly;
 			display: flex;
+		}
+
+		.dm-init-modal-wrp-rows {
+			min-width: 400px;
+			padding: 7px 0;
+		}
+
+		.btn-dm-init-cond {
+			min-width: 85px;
+			color: white !important;
+			outline: none !important;
+		}
+
+		.dm-init-wrp-conds {
+			display: flex;
+		}
+
+		.dm-init-cond {
+			width: 7px;
+			margin-right: 3px;
+			display: grid;
+			grid-gap: 3px;
+			cursor: pointer;
+		}
+
+		.dm-init-cond:hover {
+			box-shadow: 0 0 5px 0 rgba(240, 173, 78, 1);
+		}
+
+		.dm-init-cond-bar {
+			width: 7px;
+			height: 100%;
 		}
 
 		@media (max-width: 767px) {

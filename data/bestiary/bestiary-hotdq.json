@@ -58,7 +58,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) piercing damage."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) piercing damage."
 					]
 				}
 			],
@@ -66,6 +66,7 @@
 		},
 		{
 			"name": "Azbara Jos",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -179,7 +180,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +5} to hit, reach 5 ft. or ranged 20 ft./60 ft., one target. Hit: 5 ({@dice 1d4+3}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 5} to hit, reach 5 ft. or ranged 20 ft./60 ft., one target. Hit: 5 ({@dice 1d4+3}) piercing damage."
 					]
 				}
 			],
@@ -187,6 +188,7 @@
 		},
 		{
 			"name": "Blagothkus",
+			"isNPC": true,
 			"size": "H",
 			"type": {
 				"type": "giant",
@@ -196,7 +198,7 @@
 			},
 			"source": "HotDQ",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -305,7 +307,7 @@
 				{
 					"name": "Morningstar",
 					"entries": [
-						"Melee Weapon Attack: {@hit +10} to hit, reach 10 ft., one target. Hit: 21 ({@dice 3d8+8}) piercing damage."
+						"Melee Weapon Attack: {@hit 10} to hit, reach 10 ft., one target. Hit: 21 ({@dice 3d8+8}) piercing damage."
 					]
 				}
 			],
@@ -313,6 +315,7 @@
 		},
 		{
 			"name": "Captain Othelstan",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -384,13 +387,13 @@
 				{
 					"name": "Flail",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 8 ({@dice 1d8+4}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one target. Hit: 8 ({@dice 1d8+4}) bludgeoning damage."
 					]
 				},
 				{
 					"name": "Spear",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +7} to hit, reach 5 ft. or ranged 20 ft./60 ft., one target. Hit: 7 ({@dice 1d6+4}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 7} to hit, reach 5 ft. or ranged 20 ft./60 ft., one target. Hit: 7 ({@dice 1d6+4}) piercing damage."
 					]
 				}
 			],
@@ -398,6 +401,7 @@
 		},
 		{
 			"name": "Dralmorrer Borngray",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -407,7 +411,7 @@
 			},
 			"source": "HotDQ",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -510,13 +514,13 @@
 				{
 					"name": "Longsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +6} to hit, reach 5 ft., one target. Hit: 8 ({@dice 1d8+4}) slashing damage."
+						"Melee Weapon Attack: {@hit 6} to hit, reach 5 ft., one target. Hit: 8 ({@dice 1d8+4}) slashing damage."
 					]
 				},
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +6} to hit, reach 5 ft. or ranged 20/60, one target. Hit: 6 ({@dice 1d4+4}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 6} to hit, reach 5 ft. or ranged 20 ft./60 ft., one target. Hit: 6 ({@dice 1d4+4}) piercing damage."
 					]
 				}
 			],
@@ -524,6 +528,7 @@
 		},
 		{
 			"name": "Frulam Mondath",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -620,7 +625,7 @@
 				{
 					"name": "Halberd",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 10 ft., one target. Hit: 7 ({@dice 1d10+2}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 10 ft., one target. Hit: 7 ({@dice 1d10+2}) bludgeoning damage."
 					]
 				}
 			],
@@ -628,6 +633,7 @@
 		},
 		{
 			"name": "Jamna Gleamsilver",
+			"isNPC": true,
 			"size": "S",
 			"type": {
 				"type": "humanoid",
@@ -727,7 +733,7 @@
 				{
 					"name": "Shortsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) piercing damage, or 9 ({@dice 1d6+3}) plus ({@dice 1d6}) piercing damage if the target is Medium or larger."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) piercing damage, or 9 ({@dice 1d6+3}) plus ({@dice 1d6}) piercing damage if the target is Medium or larger."
 					]
 				}
 			],
@@ -735,6 +741,7 @@
 		},
 		{
 			"name": "Langdedrosa Cyanwrath",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -808,17 +815,17 @@
 				{
 					"name": "Greatsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +6} to hit, reach 5 ft., one target. Hit: 11 ({@dice 2d6+4}) slashing damage."
+						"Melee Weapon Attack: {@hit 6} to hit, reach 5 ft., one target. Hit: 11 ({@dice 2d6+4}) slashing damage."
 					]
 				},
 				{
 					"name": "Spear",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +6} to hit, reach 5 ft. or ranged 20/60 ft., one target. Hit: 7 ({@dice 1d6+4}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 6} to hit, reach 5 ft. or ranged 20 ft./60 ft., one target. Hit: 7 ({@dice 1d6+4}) piercing damage."
 					]
 				},
 				{
-					"name": "Lightning Breath (Recharge 5—6)",
+					"name": "Lightning Breath (Recharge 5\u20146)",
 					"entries": [
 						"Langdedrosa breathes lightning in a 30-foot line that is 5 feet wide. Each creature in the line must make a DC 13 Dexterity saving throw, taking 22 ({@dice 4d10}) lightning damage on a failed save, or half as much damage on a successful one."
 					]
@@ -828,6 +835,7 @@
 		},
 		{
 			"name": "Pharblex Spattergoo",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -952,13 +960,13 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
 					]
 				},
 				{
 					"name": "Spear",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +5} to hit. reach 5 ft. or ranged 20/60 ft., one target. Hit: 5 ({@dice 1d6+2}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 5} to hit. reach 5 ft. or ranged 20/60 ft., one target. Hit: 5 ({@dice 1d6+2}) piercing damage."
 					]
 				}
 			],
@@ -975,7 +983,7 @@
 			},
 			"source": "HotDQ",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -1060,17 +1068,17 @@
 				{
 					"name": "Greatsword (Hazirawn)",
 					"entries": [
-						"Melee Weapon Attack: {@hit +9} to hit, reach 5 ft., one target. Hit: 13 ({@dice 2d6+6}) slashing damage plus 7 ({@dice 2d6}) necrotic damage. If the target is a creature, it can't regain hit points for 1 minute. The target can make a DC 15 Constitution saving throw at the end of each of its turns, ending this effect early on a success."
+						"Melee Weapon Attack: {@hit 9} to hit, reach 5 ft., one target. Hit: 13 ({@dice 2d6+6}) slashing damage plus 7 ({@dice 2d6}) necrotic damage. If the target is a creature, it can't regain hit points for 1 minute. The target can make a DC 15 Constitution saving throw at the end of each of its turns, ending this effect early on a success."
 					]
 				},
 				{
 					"name": "Caustic Bolt",
 					"entries": [
-						"Ranged Spell Attack: {@hit +8} to hit, range 90 ft., one target. Hit: 18 ({@dice 4d8}) acid damage."
+						"Ranged Spell Attack: {@hit 8} to hit, range 90 ft., one target. Hit: 18 ({@dice 4d8}) acid damage."
 					]
 				},
 				{
-					"name": "Acid Breath (Recharge 5—6)",
+					"name": "Acid Breath (Recharge 5\u20146)",
 					"entries": [
 						"Rezmir breathes acid in a 30-foot line that is 5 feet wide. Each creature in the line must make a DC 14 Dexterity saving throw, taking 22 ({@dice 5d8}) acid damage on a failed save, or half as much damage on a successful one."
 					]
@@ -1098,10 +1106,12 @@
 				}
 			],
 			"page": 93,
-			"isNamedCreature": true
+			"isNamedCreature": true,
+			"isNPC": true
 		},
 		{
 			"name": "Talis the White",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -1229,11 +1239,84 @@
 				{
 					"name": "Spear",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +5} to hit, reach 5 ft. or ranged 20 ft./60 ft., one target. Hit: 6 ({@dice 1d6+2}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 5} to hit, reach 5 ft. or ranged 20 ft./60 ft., one target. Hit: 6 ({@dice 1d6+2}) piercing damage."
 					]
 				}
 			],
 			"page": 93
+		},
+		{
+			"name": "Trepsin",
+			"isNPC": true,
+			"size": "L",
+			"type": "giant",
+			"source": "HotDQ",
+			"alignment": [
+				"C",
+				"E"
+			],
+			"ac": [
+				{
+					"ac": 15,
+					"from": [
+						"natural armor"
+					]
+				}
+			],
+			"hp": {
+				"special": "84"
+			},
+			"speed": {
+				"walk": 30
+			},
+			"str": 18,
+			"dex": 13,
+			"con": 20,
+			"int": 7,
+			"wis": 9,
+			"cha": 7,
+			"skill": {
+				"perception": "+1"
+			},
+			"senses": "darkvision 60 ft., passive Perception 11",
+			"passive": 11,
+			"languages": "Giant",
+			"cr": "6",
+			"trait": [
+				{
+					"name": "Keen Smell",
+					"entries": [
+						"The troll has advantage on Wisdom (Perception) checks that rely on smell."
+					]
+				},
+				{
+					"name": "Regeneration",
+					"entries": [
+						"The troll regains 10 hit points at the start of its turn. If the troll takes acid or fire damage, this trait doesn't function at the start of the troll's next turn. The troll dies only if it starts its turn with 0 hit points and doesn't regenerate."
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Multiattack",
+					"entries": [
+						"The troll attacks five times, once with its bite and four times with its claws. If two or more claws hit the same target, the troll rends the target, dealing an extra {@dice 2d6} slashing damage."
+					]
+				},
+				{
+					"name": "Bite",
+					"entries": [
+						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 7 (1d6 + 4) piercing damage."
+					]
+				},
+				{
+					"name": "Claw",
+					"entries": [
+						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 11 (2d6 + 4) slashing damage."
+					]
+				}
+			],
+			"page": 63
 		}
 	]
 }

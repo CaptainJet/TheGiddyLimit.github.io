@@ -19,8 +19,9 @@
 				"walk": 60,
 				"fly": {
 					"number": 60,
-					"condition": " (hover)"
-				}
+					"condition": "(hover)"
+				},
+				"canHover": true
 			},
 			"str": 16,
 			"dex": 16,
@@ -130,7 +131,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Melee Weapon Attack: {@hit +1} to hit, reach 5 ft., one target. Hit: 1 ({@dice 1d4-1}) piercing damage."
+						"Melee Weapon Attack: {@hit 1} to hit, reach 5 ft., one target. Hit: 1 ({@dice 1d4-1}) piercing damage."
 					]
 				}
 			],

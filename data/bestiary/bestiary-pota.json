@@ -2,6 +2,7 @@
 	"monster": [
 		{
 			"name": "Aerisi Kalinoth",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -11,7 +12,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -71,7 +72,7 @@
 				{
 					"name": "Windvane",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +9} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 9 ({@dice 1d6+6}) piercing damage, or 10 ({@dice 1d8+6}) piercing damage if used with two hands to make a melee attack, plus 3 ({@dice 1d6}) lightning damage."
+						"Melee or Ranged Weapon Attack: {@hit 9} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 9 ({@dice 1d6+6}) piercing damage, or 10 ({@dice 1d8+6}) piercing damage if used with two hands to make a melee attack, plus 3 ({@dice 1d6}) lightning damage."
 					]
 				}
 			],
@@ -216,7 +217,7 @@
 				{
 					"name": "Flail",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 8 ({@dice 1d8+4}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one target. Hit: 8 ({@dice 1d8+4}) bludgeoning damage."
 					]
 				},
 				{
@@ -231,6 +232,7 @@
 		},
 		{
 			"name": "Bastian Thermandar",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -240,7 +242,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -279,7 +281,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +5} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 5} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
 					]
 				}
 			],
@@ -364,7 +366,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -405,7 +407,7 @@
 				{
 					"name": "Morningstar",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d8+3}) piercing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d8+3}) piercing damage."
 					]
 				}
 			],
@@ -430,7 +432,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -472,7 +474,7 @@
 				{
 					"name": "Glaive",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 10 ft., one target. Hit: 7 ({@dice 1d10+2}) slashing damage."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 10 ft., one target. Hit: 7 ({@dice 1d10+2}) slashing damage."
 					]
 				}
 			],
@@ -537,7 +539,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -588,7 +590,7 @@
 				{
 					"name": "Spear",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +6} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 7 ({@dice 1d6+4}) piercing damage, or 8 ({@dice 1d8+4}) piercing damage if used with two hands to make a melee attack."
+						"Melee or Ranged Weapon Attack: {@hit 6} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 7 ({@dice 1d6+4}) piercing damage, or 8 ({@dice 1d8+4}) piercing damage if used with two hands to make a melee attack."
 					]
 				}
 			],
@@ -613,7 +615,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -649,7 +651,7 @@
 				{
 					"name": "Quarterstaff",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d8+2}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d8+2}) bludgeoning damage."
 					]
 				}
 			],
@@ -707,7 +709,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -742,13 +744,13 @@
 				{
 					"name": "Sharktoothed Longsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d8+2}) slashing damage, or 7 ({@dice 1d10+2}) slashing damage if used with two hands. Against a target is wearing no armor, the reaver deals an extra die of damage with this sword."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d8+2}) slashing damage, or 7 ({@dice 1d10+2}) slashing damage if used with two hands. Against a target is wearing no armor, the reaver deals an extra die of damage with this sword."
 					]
 				},
 				{
 					"name": "Javelin",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +4} to hit, reach 5 ft. or range 30/120 ft., one target. Hit: 5 ({@dice 1d6+2}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 4} to hit, reach 5 ft. or range 30/120 ft., one target. Hit: 5 ({@dice 1d6+2}) piercing damage."
 					]
 				}
 			],
@@ -815,13 +817,13 @@
 				{
 					"name": "Shortsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) piercing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) piercing damage."
 					]
 				},
 				{
 					"name": "Lance",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 10 ft., one target. Hit: 9 ({@dice 1d12+3}) piercing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 10 ft., one target. Hit: 9 ({@dice 1d12+3}) piercing damage."
 					]
 				}
 			],
@@ -837,6 +839,7 @@
 		},
 		{
 			"name": "Drannin Splithelm",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -846,7 +849,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -930,7 +933,7 @@
 				{
 					"name": "Greataxe",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 17 ({@dice 2d12+4}) slashing damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one target. Hit: 17 ({@dice 2d12+4}) slashing damage."
 					]
 				}
 			],
@@ -1006,7 +1009,7 @@
 				{
 					"name": "Maul",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 11 ({@dice 2d6+4}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one target. Hit: 11 ({@dice 2d6+4}) bludgeoning damage."
 					]
 				},
 				{
@@ -1021,6 +1024,7 @@
 		},
 		{
 			"name": "Elizar Dryflagon",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -1030,7 +1034,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -1073,7 +1077,7 @@
 				{
 					"name": "Dagger +1",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +6} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 5 ({@dice 1d4+3}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 6} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 5 ({@dice 1d4+3}) piercing damage."
 					]
 				}
 			],
@@ -1196,13 +1200,13 @@
 				{
 					"name": "Longsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d8+2}) slashing damage."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d8+2}) slashing damage."
 					]
 				},
 				{
 					"name": "Heavy Crossbow",
 					"entries": [
-						"Ranged Weapon Attack: {@hit +3} to hit, range 100/400 ft., one target. Hit: 6 ({@dice 1d10+1}) piercing damage."
+						"Ranged Weapon Attack: {@hit 3} to hit, range 100/400 ft., one target. Hit: 6 ({@dice 1d10+1}) piercing damage."
 					]
 				}
 			],
@@ -1219,7 +1223,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -1258,7 +1262,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
 					]
 				}
 			],
@@ -1315,7 +1319,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -1366,13 +1370,13 @@
 				{
 					"name": "Constrict (Serpent Form Only)",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 9 ({@dice 2d6+2}) bludgeoning damage. If the target is Medium or smaller, it is grappled (escape DC 12). Until the grapple ends, the target is restrained, and the fathomer can't constrict another target."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 9 ({@dice 2d6+2}) bludgeoning damage. If the target is Medium or smaller, it is grappled (escape DC 12). Until the grapple ends, the target is restrained, and the fathomer can't constrict another target."
 					]
 				},
 				{
 					"name": "Dagger (Human Form Only)",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
 					]
 				}
 			],
@@ -1467,13 +1471,13 @@
 				{
 					"name": "Longsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d8+2}) slashing damage, or 7 ({@dice 1d10+2}) slashing damage if used with two hands."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d8+2}) slashing damage, or 7 ({@dice 1d10+2}) slashing damage if used with two hands."
 					]
 				},
 				{
 					"name": "Spear",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 5 ({@dice 1d6+2}) piercing damage, or 6 ({@dice 1d8+2}) piercing damage if used with two hands to make a melee attack."
+						"Melee or Ranged Weapon Attack: {@hit 4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 5 ({@dice 1d6+2}) piercing damage, or 6 ({@dice 1d8+2}) piercing damage if used with two hands to make a melee attack."
 					]
 				}
 			],
@@ -1587,7 +1591,7 @@
 				{
 					"name": "Scimitar",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d6+4}) slashing damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d6+4}) slashing damage."
 					]
 				},
 				{
@@ -1657,7 +1661,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +5} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 5} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
 					]
 				}
 			],
@@ -1712,6 +1716,7 @@
 		},
 		{
 			"name": "Gar Shatterkeel",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -1721,7 +1726,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -1792,13 +1797,13 @@
 				{
 					"name": "Claw",
 					"entries": [
-						"Melee Weapon Attack: {@hit +6} to hit, reach 5 ft., one target. Hit: 9 ({@dice 2d6+2}) bludgeoning damage, and the target is grappled (escape DC 13). Until the grapple ends, Gar can't attack other creatures with his claw."
+						"Melee Weapon Attack: {@hit 6} to hit, reach 5 ft., one target. Hit: 9 ({@dice 2d6+2}) bludgeoning damage, and the target is grappled (escape DC 13). Until the grapple ends, Gar can't attack other creatures with his claw."
 					]
 				},
 				{
 					"name": "Drown",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +7} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 6 ({@dice 1d6+3}) piercing damage plus 4 ({@dice 1d8}) cold damage."
+						"Melee or Ranged Weapon Attack: {@hit 7} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 6 ({@dice 1d6+3}) piercing damage plus 4 ({@dice 1d8}) cold damage."
 					]
 				}
 			],
@@ -1862,6 +1867,7 @@
 		},
 		{
 			"name": "Ghald",
+			"isNPC": true,
 			"size": "L",
 			"type": {
 				"type": "humanoid",
@@ -1946,19 +1952,19 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one creature. Hit: 9 ({@dice 2d4+4}) piercing damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one creature. Hit: 9 ({@dice 2d4+4}) piercing damage."
 					]
 				},
 				{
 					"name": "Shortsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one creature. Hit: 11 ({@dice 2d6+4}) piercing damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one creature. Hit: 11 ({@dice 2d6+4}) piercing damage."
 					]
 				},
 				{
 					"name": "Garrote",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one Medium or Small creature against which Ghald has advantage on the attack roll. Hit: 9 ({@dice 2d4+4}) bludgeoning damage, and the target is grappled (escape DC 15). Until the grapple ends, the target can't breathe, and Ghald has advantage on attack rolls against it."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one Medium or Small creature against which Ghald has advantage on the attack roll. Hit: 9 ({@dice 2d4+4}) bludgeoning damage, and the target is grappled (escape DC 15). Until the grapple ends, the target can't breathe, and Ghald has advantage on attack rolls against it."
 					]
 				}
 			],
@@ -1966,6 +1972,7 @@
 		},
 		{
 			"name": "Hellenrae",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -2019,7 +2026,7 @@
 					]
 				},
 				{
-					"name": "Stunning Strike (Recharge 5—6)",
+					"name": "Stunning Strike (Recharge 5\u20146)",
 					"entries": [
 						"When Hellenrae hits a target with a melee weapon attack, the target must succeed on a DC 13 Constitution saving throw or be stunned until the end of Hellenrae's next turn."
 					]
@@ -2047,7 +2054,7 @@
 				{
 					"name": "Unarmed Strike",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 9 ({@dice 1d10+4}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one target. Hit: 9 ({@dice 1d10+4}) bludgeoning damage."
 					]
 				}
 			],
@@ -2072,7 +2079,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -2122,7 +2129,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
 					]
 				}
 			],
@@ -2139,7 +2146,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -2189,13 +2196,13 @@
 				{
 					"name": "Scimitar",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) slashing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) slashing damage."
 					]
 				},
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +5} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 5 ({@dice 1d4+3}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 5} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 5 ({@dice 1d4+3}) piercing damage."
 					]
 				}
 			],
@@ -2301,7 +2308,7 @@
 				{
 					"name": "Unarmed Strike",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) bludgeoning damage."
 					]
 				}
 			],
@@ -2353,7 +2360,7 @@
 			"type": "elemental",
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -2453,13 +2460,13 @@
 				{
 					"name": "Slam",
 					"entries": [
-						"Melee Weapon Attack: {@hit +12} to hit, reach 10 ft., one target. Hit: 18 ({@dice 2d10+7}) bludgeoning damage plus 18 ({@dice 5d6}) fire damage."
+						"Melee Weapon Attack: {@hit 12} to hit, reach 10 ft., one target. Hit: 18 ({@dice 2d10+7}) bludgeoning damage plus 18 ({@dice 5d6}) fire damage."
 					]
 				},
 				{
 					"name": "Flame Blast",
 					"entries": [
-						"Ranged Spell Attack: {@hit +12} to hit, range 250 ft., one target. Hit: 35 ({@dice 10d6}) fire damage."
+						"Ranged Spell Attack: {@hit 12} to hit, range 250 ft., one target. Hit: 35 ({@dice 10d6}) fire damage."
 					]
 				},
 				{
@@ -2520,11 +2527,12 @@
 		},
 		{
 			"name": "Marlos Urnrayle",
+			"isNPC": true,
 			"size": "M",
 			"type": "monstrosity",
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -2598,13 +2606,13 @@
 				{
 					"name": "Snake Hair",
 					"entries": [
-						"Melee Weapon Attack: {@hit +6} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d8+3}) piercing damage plus 14 ({@dice 4d6}) poison damage."
+						"Melee Weapon Attack: {@hit 6} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d8+3}) piercing damage plus 14 ({@dice 4d6}) poison damage."
 					]
 				},
 				{
 					"name": "Ironfang",
 					"entries": [
-						"Melee Weapon Attack: {@hit +9} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d8+3}) piercing damage plus 4 ({@dice 1d8}) thunder damage."
+						"Melee Weapon Attack: {@hit 9} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d8+3}) piercing damage plus 4 ({@dice 1d8}) thunder damage."
 					]
 				}
 			],
@@ -2613,6 +2621,7 @@
 		},
 		{
 			"name": "Miraj Vizann",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -2622,7 +2631,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -2665,7 +2674,7 @@
 				{
 					"name": "Staff",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) bludgeoning damage, or 5 ({@dice 1d8+1}) bludgeoning damage when used with two hands."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) bludgeoning damage, or 5 ({@dice 1d8+1}) bludgeoning damage when used with two hands."
 					]
 				}
 			],
@@ -2750,7 +2759,7 @@
 			"type": "elemental",
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -2841,13 +2850,13 @@
 				{
 					"name": "Slam",
 					"entries": [
-						"Melee Weapon Attack: {@hit +14} to hit, reach 15 ft., one target. Hit: 30 ({@dice 4d10+8}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 14} to hit, reach 15 ft., one target. Hit: 30 ({@dice 4d10+8}) bludgeoning damage."
 					]
 				},
 				{
 					"name": "Boulder",
 					"entries": [
-						"Ranged Weapon Attack: {@hit +6} to hit, range 500 ft., one target. Hit: 46 ({@dice 7d10+8}) bludgeoning damage. If the target is a creature, it must succeed on a DC 23 Strength saving throw or be knocked prone."
+						"Ranged Weapon Attack: {@hit 6} to hit, range 500 ft., one target. Hit: 46 ({@dice 7d10+8}) bludgeoning damage. If the target is a creature, it must succeed on a DC 23 Strength saving throw or be knocked prone."
 					]
 				},
 				{
@@ -2900,7 +2909,7 @@
 			"type": "elemental",
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -2995,13 +3004,13 @@
 				{
 					"name": "Slam",
 					"entries": [
-						"Melee Weapon Attack: {@hit +11} to hit, reach 10 ft., one target. Hit: 21 ({@dice 3d10+5}) bludgeoning damage, and the target is grappled (escape DC 19). Olhydra can grapple up to four targets. When Olhydra moves, all creatures she is grappling move with her."
+						"Melee Weapon Attack: {@hit 11} to hit, reach 10 ft., one target. Hit: 21 ({@dice 3d10+5}) bludgeoning damage, and the target is grappled (escape DC 19). Olhydra can grapple up to four targets. When Olhydra moves, all creatures she is grappling move with her."
 					]
 				},
 				{
 					"name": "Water Jet",
 					"entries": [
-						"Ranged Weapon Attack: {@hit +12} to hit, range 120 ft., one target. Hit: 21 ({@dice 6d6}) bludgeoning damage, and the target is knocked prone if it fails a DC 19 Strength saving throw."
+						"Ranged Weapon Attack: {@hit 12} to hit, range 120 ft., one target. Hit: 21 ({@dice 6d6}) bludgeoning damage, and the target is knocked prone if it fails a DC 19 Strength saving throw."
 					]
 				},
 				{
@@ -3116,7 +3125,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 4 ({@dice 1d4+2}) piercing damage."
 					]
 				},
 				{
@@ -3167,6 +3176,7 @@
 		},
 		{
 			"name": "Oreioth",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -3229,7 +3239,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee Weapon Attack: {@hit +3} to hit, reach 5 ft., one target. Hit: 3 ({@dice 1d4+1}) piercing damage."
+						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 3 ({@dice 1d4+1}) piercing damage."
 					]
 				}
 			],
@@ -3345,7 +3355,7 @@
 				{
 					"name": "Spear",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +6} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 6 ({@dice 1d6+3}) piercing damage, or 7 ({@dice 1d8+3}) piercing damage if used with two hands to make a melee attack, plus 3 ({@dice 1d6}) fire damage."
+						"Melee or Ranged Weapon Attack: {@hit 6} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 6 ({@dice 1d6+3}) piercing damage, or 7 ({@dice 1d8+3}) piercing damage if used with two hands to make a melee attack, plus 3 ({@dice 1d6}) fire damage."
 					]
 				}
 			],
@@ -3414,7 +3424,7 @@
 				{
 					"name": "Unarmed Strike",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d6+2}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d6+2}) bludgeoning damage."
 					]
 				}
 			],
@@ -3430,6 +3440,7 @@
 		},
 		{
 			"name": "Shoalar Quanderil",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -3488,7 +3499,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +3} to hit, reach 5 ft. or ranged 20/60 ft., one target. Hit: 3 ({@dice 1d4+1}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 3} to hit, reach 5 ft. or ranged 20/60 ft., one target. Hit: 3 ({@dice 1d4+1}) piercing damage."
 					]
 				}
 			],
@@ -3594,7 +3605,7 @@
 				{
 					"name": "Dagger",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 3 ({@dice 1d4+1}) piercing damage."
+						"Melee or Ranged Weapon Attack: {@hit 4} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 3 ({@dice 1d4+1}) piercing damage."
 					]
 				}
 			],
@@ -3652,7 +3663,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -3696,7 +3707,7 @@
 				{
 					"name": "Black Earth Rod",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d6+2}) bludgeoning damage. The Stonemelder can also expend a spell slot to deal extra damage, dealing {@dice 2d8} bludgeoning damage for a 1st level slot, plus an additional {@dice 1d8} for each level of the slot above 1st."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d6+2}) bludgeoning damage. The Stonemelder can also expend a spell slot to deal extra damage, dealing {@dice 2d8} bludgeoning damage for a 1st level slot, plus an additional {@dice 1d8} for each level of the slot above 1st."
 					]
 				}
 			],
@@ -3751,6 +3762,7 @@
 		},
 		{
 			"name": "Thurl Merosska",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -3803,13 +3815,13 @@
 				{
 					"name": "Greatsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one target. Hit: 10 ({@dice 2d6+3}) slashing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 10 ({@dice 2d6+3}) slashing damage."
 					]
 				},
 				{
 					"name": "Lance",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 10 ft., one target. Hit: 9 ({@dice 1d12+3}) piercing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 10 ft., one target. Hit: 9 ({@dice 1d12+3}) piercing damage."
 					]
 				}
 			],
@@ -3865,6 +3877,7 @@
 		},
 		{
 			"name": "Vanifer",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -3874,7 +3887,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -3934,7 +3947,7 @@
 				{
 					"name": "Tinderstrike",
 					"entries": [
-						"Melee or Ranged Weapon Attack: {@hit +9} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 7 ({@dice 1d4+5}) piercing damage plus 7 ({@dice 2d6}) fire damage."
+						"Melee or Ranged Weapon Attack: {@hit 9} to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 7 ({@dice 1d4+5}) piercing damage plus 7 ({@dice 2d6}) fire damage."
 					]
 				}
 			],
@@ -4072,7 +4085,7 @@
 				{
 					"name": "Trident",
 					"entries": [
-						"Melee Weapon Attack: {@hit +7} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d6+4}) piercing damage."
+						"Melee Weapon Attack: {@hit 7} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d6+4}) piercing damage."
 					]
 				},
 				{
@@ -4087,6 +4100,7 @@
 		},
 		{
 			"name": "Wiggan Nettlebee",
+			"isNPC": true,
 			"size": "S",
 			"type": {
 				"type": "humanoid",
@@ -4096,7 +4110,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -4145,7 +4159,7 @@
 				{
 					"name": "Wooden Cane",
 					"entries": [
-						"Melee Weapon Attack: {@hit +0} to hit ({@hit +4} to hit with shillelagh), reach 5 ft., one target. Hit: 1 ({@dice 1d4-1}) bludgeoning damage, or 6 ({@dice 1d8+2}) bludgeoning damage with shillelagh."
+						"Melee Weapon Attack: {@hit 0} to hit ({@hit 4} to hit with shillelagh), reach 5 ft., one target. Hit: 1 ({@dice 1d4-1}) bludgeoning damage, or 6 ({@dice 1d8+2}) bludgeoning damage with shillelagh."
 					]
 				}
 			],
@@ -4190,6 +4204,7 @@
 		},
 		{
 			"name": "Windharrow",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -4199,7 +4214,7 @@
 			},
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -4252,7 +4267,7 @@
 				{
 					"name": "Rapier",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one creature. Hit: 7 ({@dice 1d8+3}) piercing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one creature. Hit: 7 ({@dice 1d8+3}) piercing damage."
 					]
 				}
 			],
@@ -4312,7 +4327,7 @@
 			"type": "elemental",
 			"source": "PotA",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -4408,13 +4423,13 @@
 				{
 					"name": "Slam",
 					"entries": [
-						"Melee Weapon Attack: {@hit +14} to hit, reach 10 ft., one target. Hit: 20 ({@dice 3d8+7}) force damage plus 10 ({@dice 3d6}) lightning damage."
+						"Melee Weapon Attack: {@hit 14} to hit, reach 10 ft., one target. Hit: 20 ({@dice 3d8+7}) force damage plus 10 ({@dice 3d6}) lightning damage."
 					]
 				},
 				{
 					"name": "Thundercrack (Recharges after a Short or Long Rest)",
 					"entries": [
-						"Yan-C-Bin unleashes a terrible thundercrack in a 100-foot radius sphere centered on himself. All other creatures in the area must succeed on a DC 24 Constitution saving throw or take 31 ({@dice 9d6}) thunder damage and be deafened for 1 minute. On a successful save, a creature takes half as much damage and is deafened until the start of Yan-C-Bin's next turn."
+						"Yan-C-Bin unleashes a terrible thundercrack in a 100-foot-radius sphere centered on himself. All other creatures in the area must succeed on a DC 24 Constitution saving throw or take 31 ({@dice 9d6}) thunder damage and be deafened for 1 minute. On a successful save, a creature takes half as much damage and is deafened until the start of Yan-C-Bin's next turn."
 					]
 				},
 				{

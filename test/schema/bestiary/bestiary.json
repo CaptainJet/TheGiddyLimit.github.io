@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-06/schema#",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"title": "Bestiary Schema",
 	"id": "/Bestiary",
 	"type": "object",
@@ -533,6 +533,9 @@
 						"fly": {
 							"$ref": "#/definitions/speedVal"
 						},
+						"canHover": {
+							"type": "boolean"
+						},
 						"swim": {
 							"$ref": "#/definitions/speedVal"
 						},
@@ -561,6 +564,41 @@
 							},
 							"required": ["amount", "from"],
 							"additionalProperties": false
+						},
+						"alternate": {
+							"type": "object",
+							"properties": {
+								"walk": {
+									"type": "array",
+									"items": {
+										"$ref": "#/definitions/speedVal"
+									}
+								},
+								"burrow": {
+									"type": "array",
+									"items": {
+										"$ref": "#/definitions/speedVal"
+									}
+								},
+								"climb": {
+									"type": "array",
+									"items": {
+										"$ref": "#/definitions/speedVal"
+									}
+								},
+								"fly": {
+									"type": "array",
+									"items": {
+										"$ref": "#/definitions/speedVal"
+									}
+								},
+								"swim": {
+									"type": "array",
+									"items": {
+										"$ref": "#/definitions/speedVal"
+									}
+								}
+							}
 						}
 					},
 					"additionalProperties": false
@@ -984,7 +1022,7 @@
 					}
 				},
 				"page": {
-					"type": "int"
+					"type": "integer"
 				},
 				"familiar": {
 					"type": "boolean"
@@ -1026,6 +1064,10 @@
 					}
 				},
 				"isNamedCreature": {
+					"type": "boolean"
+				},
+				"isNPC": {
+					"description": "Used to flag quest-specific NPCs",
 					"type": "boolean"
 				},
 				"environment": {

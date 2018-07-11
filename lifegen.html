@@ -83,7 +83,7 @@
 </nav>
 <main class="container bodyContent">
 
-	<div class="row">
+	<div class="row noprint">
 		<div class="form-group col-xs-2 col-xs-2-4">
 			<label for="race">Race</label>
 			<select class="form-control form-inline" id="race"></select>
@@ -109,21 +109,21 @@
 			<select class="form-control form-inline" id="age">
 				<option value="" style="font-style: normal;">Random</option>
 				<option value="1" class="italic">20 years or younger</option>
-				<option value="21" class="italic">21–30 years</option>
-				<option value="60" class="italic">31–40 years</option>
-				<option value="70" class="italic">41–50 years</option>
-				<option value="90" class="italic">51–60 years</option>
+				<option value="21" class="italic">21&mdash;30 years</option>
+				<option value="60" class="italic">31&mdash;40 years</option>
+				<option value="70" class="italic">41&mdash;50 years</option>
+				<option value="90" class="italic">51&mdash;60 years</option>
 				<option value="100" class="italic">61 years or older</option>
 			</select>
 		</div>
 	</div>
-	<div class="row">
+	<div class="row noprint">
 		<div class="form-group col-xs-12">
 			<button type="button" class="btn btn-default" onclick="roll()">Generate</button>
 		</div>
 	</div>
 
-	<div class="row" style="padding: 0 3em;">
+	<div class="row noprint" style="padding: 0 3em;">
 		<p>Based on the tables and rules in Xanathar's Guide to Everything, pages 61-73.</p>
 		<p><i>NOTE: Rolls or options displayed in italics exist for the sake of speed and ease of use. They do not correspond to rolls on any table, nor do they have officially associated weightings or chances. Ignore or use them as you see fit.</i></p>
 	</div>

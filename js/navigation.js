@@ -39,15 +39,18 @@ function navigation () {
 	A('rules', 'ruleOption', 'dropdown-toggle', 'dropdown', '#', 'button', 'true', 'false', "Rules <span class='caret'></span>");
 	UL('rules', 'ul_rules', 'dropdown-menu');
 	LI('ul_rules', 'quickreference.html', 'Quick Reference');
-	LI('ul_rules', 'variantrules.html', 'Variant Rules');
+	LI('ul_rules', 'variantrules.html', 'Variant & Optional Rules');
 	LIDivider('ul_rules');
 	LI('ul_rules', 'book.html', "Dungeon Master's Guide", "DMG");
 	LI('ul_rules', 'book.html', "Monster Manual", "MM");
-	LI('ul_rules', 'book.html', "Mordenkainen's Tome of Foes", "MTF");
 	LI('ul_rules', 'book.html', "Player's Handbook", "PHB");
+	LIDivider('ul_rules');
+	LI('ul_rules', 'book.html', "Mordenkainen's Tome of Foes", "MTF");
 	LI('ul_rules', 'book.html', "Sword Coast Adventurer's Guide", "SCAG");
 	LI('ul_rules', 'book.html', "Volo's Guide to Monsters", "VGM");
 	LI('ul_rules', 'book.html', "Xanathar's Guide to Everything", "XGE");
+	LIDivider('ul_rules');
+	LI('ul_rules', 'book.html', "Adventurers League", "AL");
 
 	LIDropdown('navbar', 'players', 'dropdown');
 	A('players', 'playerOption', 'dropdown-toggle', 'dropdown', '#', 'button', 'true', 'false', "Player Options <span class='caret'></span>");

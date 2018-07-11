@@ -325,6 +325,40 @@ function EntryRenderer () {
 					renderSuffix();
 					break;
 				}
+
+				// homebrew changes
+				case "homebrew": {
+					renderPrefix();
+					textStack.push(`<div class="homebrew-section">`);
+					if (entry.oldEntries) {
+						const mouseOver = EntryRenderer.hover.createOnMouseHover(entry.oldEntries);
+						let markerText;
+						if (entry.movedTo) {
+							markerText = "(See moved content)";
+						} else if (entry.entries) {
+							markerText = "(See replaced content)";
+						} else {
+							markerText = "(See removed content)";
+						}
+						textStack.push(`<span class="homebrew-old-content" href="#${window.location.hash}" ${mouseOver}>
+								${markerText}
+							</span>`);
+					}
+
+					textStack.push(`<span class="homebrew-notice"></span>`);
+
+					if (entry.entries) {
+						entry.entries.forEach(nxt => this.recursiveEntryRender(nxt, textStack, depth));
+					} else if (entry.movedTo) {
+						textStack.push(`<i>This content has been moved to ${entry.movedTo}.</i>`);
+					} else {
+						textStack.push("<i>This content has been deleted.</i>");
+					}
+
+					textStack.push(`</div>`);
+					renderSuffix();
+					break;
+				}
 			}
 		} else if (typeof entry === "string") { // block
 			renderPrefix();
@@ -378,7 +412,7 @@ function EntryRenderer () {
 
 				for (let i = 0; i < entry.colLabels.length; ++i) {
 					textStack.push(`<th ${getTableThClassText(i)}>`);
-					self.recursiveEntryRender(autoMkRoller && i === 0 ? `{@dice ${entry.colLabels[i]}}` : entry.colLabels[i], textStack, depth);
+					self.recursiveEntryRender(autoMkRoller && i === 0 && !entry.colLabels[i].includes("@dice") ? `{@dice ${entry.colLabels[i]}}` : entry.colLabels[i], textStack, depth);
 					textStack.push(`</th>`);
 				}
 			}
@@ -726,6 +760,21 @@ function EntryRenderer () {
 							text: displayText
 						};
 						self.recursiveEntryRender(fauxEntry, textStack, depth);
+					} else if (tag === "@homebrew") {
+						const [newText, oldText] = text.split("|");
+						const tooltip = [];
+						if (newText && oldText) {
+							tooltip.push("<strong>This is a homebrew addition, replacing the following:</strong>");
+						} else if (newText) {
+							tooltip.push("<strong>This is a homebrew addition.</strong>")
+						} else if (oldText) {
+							tooltip.push("<strong>The following text has been removed with this homebrew:</strong>")
+						}
+						if (oldText) {
+							tooltip.push(oldText);
+						}
+						const onMouseOver = EntryRenderer.hover.createOnMouseHover(tooltip);
+						textStack.push(`<span class="homebrew-inline" ${onMouseOver}>${newText || "[...]"}</span>`);
 					} else {
 						const [name, source, displayText, ...others] = text.split("|");
 						const hash = `${name}${source ? `${HASH_LIST_SEP}${source}` : ""}`;
@@ -1941,7 +1990,7 @@ EntryRenderer.item = {
 		let damage = "";
 		let damageType = "";
 		if (item.weaponCategory) {
-			if (item.dmg1) damage = utils_makeRoller(item.dmg1);
+			if (item.dmg1) damage = EntryRenderer.getDefaultRenderer().renderEntry(item.dmg1);
 			if (item.dmgType) damageType = Parser.dmgTypeToFull(item.dmgType);
 		} else if (type === "LA" || type === "MA" || type === "HA") {
 			damage = "AC " + item.ac + (type === "LA" ? " + Dex" : type === "MA" ? " + Dex (max 2)" : "");
@@ -1971,7 +2020,7 @@ EntryRenderer.item = {
 			for (let i = 0; i < properties.length; i++) {
 				const prop = properties[i];
 				let a = item._allPropertiesPtr[prop].name;
-				if (prop === "V") a = `${a} (${utils_makeRoller(item.dmg2)})`;
+				if (prop === "V") a = `${a} (${EntryRenderer.getDefaultRenderer().renderEntry(item.dmg2)})`;
 				if (prop === "T" || prop === "A" || prop === "AF") a = `${a} (${item.range}ft.)`;
 				if (prop === "RLD") a = `${a} (${item.reload} shots)`;
 				a = (i > 0 ? ", " : item.dmg1 ? "- " : "") + a;
@@ -2029,104 +2078,152 @@ EntryRenderer.item = {
 	 * Runs callback with itemList as argument
 	 * @param callback
 	 * @param urls optional overrides for default URLs
-	 * @addGroups whether item groups should be included
+	 * @param addGroups whether item groups should be included
 	 */
 	buildList: function (callback, urls, addGroups) {
 		if (EntryRenderer.item._builtList) return callback(EntryRenderer.item._builtList);
 
 		if (!urls) urls = {};
-		let itemList;
-		let basicItemList;
-		let variantList;
 
 		// allows URLs to be overriden (used by roll20 script)
 		const itemUrl = urls.items || `${EntryRenderer.getDefaultRenderer().baseUrl}data/items.json`;
 		const basicItemUrl = urls.basicitems || `${EntryRenderer.getDefaultRenderer().baseUrl}data/basicitems.json`;
 		const magicVariantUrl = urls.magicvariants || `${EntryRenderer.getDefaultRenderer().baseUrl}data/magicvariants.json`;
 
-		DataUtil.loadJSON(itemUrl).then(addBasicItems);
+		loadItems()
+			.then(addBasicItemsAndTypes)
+			.then(addGenericVariants)
+			.then(createSpecificVariants)
+			.then(enhanceItems)
+			.then(callback);
 
-		function addBasicItems (itemData) {
-			itemList = itemData.item;
-			if (addGroups) itemList = itemList.concat(itemData.itemGroup || []);
-			DataUtil.loadJSON(basicItemUrl).then(addVariants);
+		function loadItems () {
+			return new Promise((resolve, reject) => {
+				DataUtil.loadJSON(itemUrl).then((itemData) => {
+					const items = itemData.item;
+					resolve(addGroups ? items.concat(itemData.itemGroup || []) : items);
+				}, reject);
+			});
 		}
 
-		function addVariants (basicItemData) {
-			basicItemList = basicItemData.basicitem;
-			// Convert the property and type list JSONs into look-ups, i.e. use the abbreviation as a JSON property name
-			basicItemData.itemProperty.forEach(p => EntryRenderer.item._addProperty(p));
-			basicItemData.itemType.forEach(t => EntryRenderer.item._addType(t));
-			EntryRenderer.item._addBrewPropertiesAndTypes();
-			DataUtil.loadJSON(magicVariantUrl).then(mergeBasicItems);
+		function addBasicItemsAndTypes (itemList) {
+			return new Promise((resolve, reject) => {
+				DataUtil.loadJSON(basicItemUrl).then((basicItemData) => {
+					const basicItems = basicItemData.basicitem;
+					// Convert the property and type list JSONs into look-ups, i.e. use the abbreviation as a JSON property name
+					basicItemData.itemProperty.forEach(p => EntryRenderer.item._addProperty(p));
+					basicItemData.itemType.forEach(t => EntryRenderer.item._addType(t));
+					EntryRenderer.item._addBrewPropertiesAndTypes();
+					resolve([itemList, basicItems]);
+				}, reject);
+			});
 		}
 
-		function mergeBasicItems (variantData) {
-			variantList = variantData.variant;
-			itemList = itemList.concat(basicItemList);
-			for (let i = 0; i < variantList.length; i++) {
-				variantList[i].tier = variantList[i].inherits.tier;
-				variantList[i].rarity = variantList[i].inherits.rarity;
-				variantList[i].source = variantList[i].inherits.source;
-				variantList[i].page = variantList[i].inherits.page;
-				if (!variantList[i].entries && variantList[i].inherits.entries) variantList[i].entries = JSON.parse(JSON.stringify(variantList[i].inherits.entries));
-				if (variantList[i].requires.armor) variantList[i].armor = variantList[i].requires.armor;
-				if (variantList[i].inherits.resist) variantList[i].resist = variantList[i].inherits.resist;
-				if (variantList[i].inherits.reqAttune) variantList[i].reqAttune = variantList[i].inherits.reqAttune;
-			}
-			itemList = itemList.concat(variantList);
-			for (let i = 0; i < basicItemList.length; i++) {
-				const curBasicItem = basicItemList[i];
-				basicItemList[i].category = "Basic";
-				if (curBasicItem.entries === undefined) curBasicItem.entries = [];
-				const curBasicItemName = curBasicItem.name.toLowerCase();
-				for (let j = 0; j < variantList.length; j++) {
-					const curVariant = variantList[j];
-					const curRequires = curVariant.requires;
-					let hasRequired = curBasicItemName.indexOf(" (") === -1;
-					for (const requiredProperty in curRequires) if (curRequires.hasOwnProperty(requiredProperty) && curBasicItem[requiredProperty] !== curRequires[requiredProperty]) hasRequired = false;
-					if (curVariant.excludes) {
-						const curExcludes = curVariant.excludes;
-						for (const excludedProperty in curExcludes) if (curExcludes.hasOwnProperty(excludedProperty) && curBasicItem[excludedProperty] === curExcludes[excludedProperty]) hasRequired = false;
-					}
-					if (hasRequired) {
-						const curInherits = curVariant.inherits;
-						const tmpBasicItem = JSON.parse(JSON.stringify(curBasicItem));
-						delete tmpBasicItem.value; // Magic items do not inherit the value of the non-magical item
-						tmpBasicItem.category = "Specific Variant";
-						for (const inheritedProperty in curInherits) {
-							if (curInherits.hasOwnProperty(inheritedProperty)) {
-								if (inheritedProperty === "namePrefix") {
-									tmpBasicItem.name = curInherits.namePrefix + tmpBasicItem.name;
-								} else if (inheritedProperty === "nameSuffix") {
-									tmpBasicItem.name += curInherits.nameSuffix;
-								} else if (inheritedProperty === "entries") {
-									for (let k = curInherits.entries.length - 1; k > -1; k--) {
-										let tmpText = curInherits.entries[k];
-										if (typeof tmpText === "string") {
-											if (tmpBasicItem.dmgType) tmpText = tmpText.replace(/{@dmgType}/g, Parser.dmgTypeToFull(tmpBasicItem.dmgType));
-											if (curInherits.genericBonus) tmpText = tmpText.replace(/{@genericBonus}/g, curInherits.genericBonus);
-											if (tmpText.indexOf("{@lowerName}") !== -1) tmpText = tmpText.split("{@lowerName}").join(curBasicItemName);
-										}
-										tmpBasicItem.entries.unshift(tmpText);
-									}
-								} else tmpBasicItem[inheritedProperty] = curInherits[inheritedProperty];
-							}
-						}
-						itemList.push(tmpBasicItem);
-					}
+		function addGenericVariants ([items, basicItems]) {
+			function addInheritedPropertiesToSelf (genericVariant) {
+				genericVariant.tier = genericVariant.inherits.tier;
+				genericVariant.rarity = genericVariant.inherits.rarity;
+				genericVariant.source = genericVariant.inherits.source;
+				genericVariant.page = genericVariant.inherits.page;
+				if (!genericVariant.entries && genericVariant.inherits.entries) {
+					genericVariant.entries = JSON.parse(JSON.stringify(genericVariant.inherits.entries));
 				}
+				if (genericVariant.requires.armor) genericVariant.armor = genericVariant.requires.armor;
+				if (genericVariant.inherits.resist) genericVariant.resist = genericVariant.inherits.resist;
+				if (genericVariant.inherits.reqAttune) genericVariant.reqAttune = genericVariant.inherits.reqAttune;
 			}
-			enhanceItems();
+
+			return new Promise((resolve, reject) => {
+				DataUtil.loadJSON(magicVariantUrl).then((variantData) => {
+					const genericVariants = variantData.variant;
+					genericVariants.forEach(addInheritedPropertiesToSelf);
+					resolve([items, basicItems, genericVariants]);
+				}, reject);
+			});
 		}
 
-		function enhanceItems () {
-			for (let i = 0; i < itemList.length; i++) {
-				const item = itemList[i];
-				EntryRenderer.item.enhanceItem(item);
+		function createSpecificVariants ([items, basicItems, genericVariants]) {
+			function isItemWithQuantity (baseItem) {
+				return baseItem.name.toLowerCase().indexOf(" (") !== -1;
 			}
-			EntryRenderer.item._builtList = itemList;
-			callback(itemList);
+
+			function isMissingRequiredProperty (baseItem, genericVariant) {
+				const curRequires = genericVariant.requires;
+				return Object.keys(curRequires).reduce((isMissingRequiredProperty, requiredProperty) => {
+					if (isMissingRequiredProperty) return true;
+					return baseItem[requiredProperty] !== curRequires[requiredProperty];
+				}, false);
+			}
+
+			function hasExcludedProperty (baseItem, genericVariant) {
+				const curExcludes = genericVariant.excludes || [];
+				return Object.keys(curExcludes).reduce((hasExcludedProperty, excludedProperty) => {
+					if (hasExcludedProperty) return true;
+					return baseItem[excludedProperty] === curExcludes[excludedProperty];
+				}, false);
+			}
+
+			function addSpecificVariantForEnhancing (genericVariant, base, specificVariant) {
+				genericVariant.variants = genericVariant.variants || [];
+				genericVariant.variants.push({
+					base,
+					specificVariant
+				});
+			}
+
+			function createSpecificVariant (baseItem, genericVariant) {
+				const inherits = genericVariant.inherits;
+				const specificVariant = JSON.parse(JSON.stringify(baseItem));
+				delete specificVariant.value; // Magic items do not inherit the value of the non-magical item
+				specificVariant.category = "Specific Variant";
+				Object.keys(inherits).forEach((inheritedProperty) => {
+					if (inheritedProperty === "namePrefix") {
+						specificVariant.name = inherits.namePrefix + specificVariant.name;
+					} else if (inheritedProperty === "nameSuffix") {
+						specificVariant.name += inherits.nameSuffix;
+					} else if (inheritedProperty === "entries") {
+						for (let k = inherits.entries.length - 1; k > -1; k--) {
+							let tmpText = inherits.entries[k];
+							if (typeof tmpText === "string") {
+								if (specificVariant.dmgType) tmpText = tmpText.replace(/{@dmgType}/g, Parser.dmgTypeToFull(specificVariant.dmgType));
+								if (inherits.genericBonus) tmpText = tmpText.replace(/{@genericBonus}/g, inherits.genericBonus);
+								if (tmpText.indexOf("{@lowerName}") !== -1) tmpText = tmpText.split("{@lowerName}").join(baseItem.name);
+							}
+							specificVariant.entries.unshift(tmpText);
+						}
+					} else {
+						specificVariant[inheritedProperty] = inherits[inheritedProperty];
+					}
+				});
+				addSpecificVariantForEnhancing(genericVariant, baseItem, specificVariant);
+				return specificVariant;
+			}
+
+			return new Promise((resolve) => {
+				const allItems = items.concat(basicItems).concat(genericVariants);
+
+				basicItems.forEach((curBaseItem) => {
+					curBaseItem.category = "Basic";
+					if (curBaseItem.entries === undefined) curBaseItem.entries = [];
+
+					if (isItemWithQuantity(curBaseItem)) return;
+
+					genericVariants.forEach((curGenericVariant) => {
+						if (isMissingRequiredProperty(curBaseItem, curGenericVariant)) return;
+						if (hasExcludedProperty(curBaseItem, curGenericVariant)) return;
+
+						allItems.push(createSpecificVariant(curBaseItem, curGenericVariant));
+					});
+				});
+
+				resolve(allItems);
+			});
+		}
+
+		function enhanceItems (allItems) {
+			allItems.forEach((item) => EntryRenderer.item.enhanceItem(item));
+			EntryRenderer.item._builtList = allItems;
+			return Promise.resolve(allItems);
 		}
 	},
 
@@ -2209,6 +2306,33 @@ EntryRenderer.item = {
 				item.value = `${Number(m[1]).toLocaleString()}${m[2]}`;
 			}
 		}
+
+		(function addBaseItemList (item) {
+			// item.variants was added during generic variant creation
+			const variants = item.variants;
+			delete item.variants;
+
+			function createItemLink (item) {
+				return `{@item ${item.name}|${item.source}}`;
+			}
+
+			if (variants && variants.length) {
+				const entries = item.entries;
+				entries.push({
+					type: "entries",
+					name: "Base items",
+					entries: [
+						"This item variant can be applied to the following base items:",
+						{
+							type: "list",
+							items: variants.map(({base, specificVariant}) => {
+								return `${createItemLink(base)} (${createItemLink(specificVariant)})`
+							})
+						}
+					]
+				});
+			}
+		})(item);
 	},
 
 	promiseData: (urls, addGroups) => {
@@ -2384,6 +2508,11 @@ EntryRenderer.hover = {
 		this._dmScreen = screen;
 	},
 
+	createOnMouseHover (entries) {
+		const source = JSON.stringify({entries: entries}).escapeQuotes();
+		return `onmouseover="EntryRenderer.hover.mouseOver(event, this, 'hover', '${source}', '')"`;
+	},
+
 	_addToCache: (page, source, hash, item) => {
 		page = page.toLowerCase();
 		source = source.toLowerCase();
@@ -2434,34 +2563,59 @@ EntryRenderer.hover = {
 				});
 				DataUtil.loadJSON(`${EntryRenderer.getDefaultRenderer().baseUrl}${baseUrl}index.json`).then((data) => {
 					const procData = {};
-					Object.keys(data).forEach(k => procData[k.toLowerCase()] = data[k]);
-					DataUtil.loadJSON(`${EntryRenderer.getDefaultRenderer().baseUrl}${baseUrl}${procData[source.toLowerCase()]}`).then((data) => {
-						loadPopulate(data, listProp);
+					const officialSource = Object.keys(data).find(k => k.toLowerCase() === source.toLowerCase());
+					if (officialSource) {
+						DataUtil.loadJSON(`${EntryRenderer.getDefaultRenderer().baseUrl}${baseUrl}${data[officialSource]}`).then((data) => {
+							loadPopulate(data, listProp);
+							callbackFn();
+						});
+					} else {
+						// source to load is 3rd party, which was already handled
 						callbackFn();
-					});
+					}
 				});
 			} else {
 				callbackFn();
 			}
 		}
 
+		function _loadSingleBrew (listProp, itemModifier) {
+			BrewUtil.addBrewData((data) => {
+				if (!data[listProp]) return;
+				loadPopulate(data, listProp, itemModifier);
+			});
+		}
+
+		function _handleSingleData (data, listProp, itemModifier) {
+			if (listProp instanceof Array) listProp.forEach(p => loadPopulate(data, p, itemModifier));
+			else loadPopulate(data, listProp, itemModifier);
+			callbackFn();
+		}
+
 		function loadSimple (page, jsonFile, listProp, itemModifier) {
 			if (!EntryRenderer.hover._isCached(page, source, hash)) {
-				BrewUtil.addBrewData((data) => {
-					if (!data[listProp]) return;
-					loadPopulate(data, listProp, itemModifier);
-				});
-				DataUtil.loadJSON(`${EntryRenderer.getDefaultRenderer().baseUrl}data/${jsonFile}`).then((data) => {
-					if (listProp instanceof Array) listProp.forEach(p => loadPopulate(data, p, itemModifier));
-					else loadPopulate(data, listProp, itemModifier);
-					callbackFn();
-				});
+				_loadSingleBrew(listProp, itemModifier);
+				DataUtil.loadJSON(`${EntryRenderer.getDefaultRenderer().baseUrl}data/${jsonFile}`).then((data) => _handleSingleData(data, listProp, itemModifier));
+			} else {
+				callbackFn();
+			}
+		}
+
+		function loadCustom (page, jsonFile, listProp, itemModifier, loader) {
+			if (!EntryRenderer.hover._isCached(page, source, hash)) {
+				_loadSingleBrew(listProp, itemModifier);
+				DataUtil[loader].loadJSON(EntryRenderer.getDefaultRenderer().baseUrl).then((data) => _handleSingleData(data, listProp, itemModifier));
 			} else {
 				callbackFn();
 			}
 		}
 
 		switch (page) {
+			case "hover": {
+				callbackFn();
+				break;
+			}
+
 			case UrlUtil.PG_SPELLS: {
 				loadMultiSource(page, `data/spells/`, "spell");
 				break;
@@ -2537,7 +2691,7 @@ EntryRenderer.hover = {
 				break;
 			}
 			case UrlUtil.PG_DEITIES: {
-				loadSimple(page, "deities.json", "deity");
+				loadCustom(page, "deities.json", "deity", null, "deity");
 				break;
 			}
 			case UrlUtil.PG_OBJECTS: {
@@ -2591,7 +2745,7 @@ EntryRenderer.hover = {
 		const clientX = EntryRenderer.hover._curHovering.clientX;
 
 		// if we've outrun the loading, restart
-		if (!EntryRenderer.hover._isCached(page, source, hash)) {
+		if (!EntryRenderer.hover._isCached(page, source, hash) && page !== "hover") {
 			EntryRenderer.hover._showInProgress = false;
 			if ((new Date().getTime() - 5000) > EntryRenderer.hover.startTime) throw new Error(`Hover content for ${page}#${hash} took too long to load! Could this be a typo?`);
 			// pass a fake "event"
@@ -2599,8 +2753,10 @@ EntryRenderer.hover = {
 			return;
 		}
 
-		const toRender = EntryRenderer.hover._getFromCache(page, source, hash);
-		const content = EntryRenderer.hover._curHovering.renderFunction(toRender);
+		const toRender = page === "hover" ? {name: "Homebrew"} : EntryRenderer.hover._getFromCache(page, source, hash);
+		const content = page === "hover"
+			? EntryRenderer.hover._curHovering.renderFunction(JSON.parse(source.unescapeQuotes()))
+			: EntryRenderer.hover._curHovering.renderFunction(toRender);
 
 		$(ele).attr("data-hover-active", true);
 
@@ -2616,7 +2772,7 @@ EntryRenderer.hover = {
 		const $body = $(`body`);
 		const $ele = $(ele);
 
-		$ele.on("mouseleave", (evt) => {
+		$ele.on("mouseleave.hoverwindow", (evt) => {
 			EntryRenderer.hover._cleanWindows();
 			if (!($brdrTop.attr("data-perm") === "true") && !evt.shiftKey) {
 				teardown();
@@ -2778,8 +2934,20 @@ EntryRenderer.hover = {
 		}
 	},
 
+	getGenericCompactRenderedString (entry, center) {
+		return `
+			<tr class="text homebrew-hover"><td colspan="6">
+			${EntryRenderer.getDefaultRenderer().setFirstSection(true).renderEntry(entry)}
+			</td></tr>
+		`;
+	},
+
 	_pageToRenderFn (page) {
 		switch (page) {
+			case "hover":
+				return EntryRenderer.hover.getGenericCompactRenderedString;
+			case "hoverNote":
+				return EntryRenderer.hover.getGenericCompactRenderedString;
 			case UrlUtil.PG_SPELLS:
 				return EntryRenderer.spell.getCompactRenderedString;
 			case UrlUtil.PG_ITEMS:
@@ -2878,13 +3046,13 @@ EntryRenderer.hover = {
 		$(ele).css("cursor", "wait");
 
 		// clean up any old event listeners
-		$(ele).off("mouseleave");
+		$(ele).off("mouseleave.hoverwindow");
 
 		// clean up any abandoned windows
 		EntryRenderer.hover._cleanWindows();
 
 		// cancel hover if the mouse leaves
-		$(ele).on("mouseleave", () => {
+		$(ele).on("mouseleave.hoverwindow", () => {
 			if (!EntryRenderer.hover._curHovering || !EntryRenderer.hover._curHovering.permanent) {
 				EntryRenderer.hover._curHovering = null;
 			}
@@ -2955,43 +3123,6 @@ EntryRenderer.dice = {
 		return EntryRenderer.dice._$wrpRoll;
 	},
 
-	isCrypto: () => {
-		return typeof window !== "undefined" && typeof window.crypto !== "undefined";
-	},
-
-	randomise: (max, min = 1) => {
-		if (EntryRenderer.dice.isCrypto()) {
-			return EntryRenderer.dice._randomise(min, max + min);
-		} else {
-			return RollerUtil.roll(max) + min;
-		}
-	},
-
-	/**
-	 * Cryptographically secure RNG
-	 */
-	_randomise: (min, max) => {
-		const range = max - min;
-		const bytesNeeded = Math.ceil(Math.log2(range) / 8);
-		const randomBytes = new Uint8Array(bytesNeeded);
-		const maximumRange = Math.pow(Math.pow(2, 8), bytesNeeded);
-		const extendedRange = Math.floor(maximumRange / range) * range;
-		let i;
-		let randomInteger;
-		while (true) {
-			window.crypto.getRandomValues(randomBytes);
-			randomInteger = 0;
-			for (i = 0; i < bytesNeeded; i++) {
-				randomInteger <<= 8;
-				randomInteger += randomBytes[i];
-			}
-			if (randomInteger < extendedRange) {
-				randomInteger %= range;
-				return min + randomInteger;
-			}
-		}
-	},
-
 	parseRandomise: (str) => {
 		if (!str.trim()) return null;
 		const toRoll = EntryRenderer.dice._parse(str);
@@ -3017,9 +3148,9 @@ EntryRenderer.dice = {
 
 	_DICE: [4, 6, 8, 10, 12, 20, 100],
 	_randomPlaceholder: () => {
-		const count = EntryRenderer.dice.randomise(10);
-		const faces = EntryRenderer.dice._DICE[EntryRenderer.dice.randomise(EntryRenderer.dice._DICE.length - 1)];
-		const mod = (EntryRenderer.dice.randomise(3) - 2) * EntryRenderer.dice.randomise(10);
+		const count = RollerUtil.randomise(10);
+		const faces = EntryRenderer.dice._DICE[RollerUtil.randomise(EntryRenderer.dice._DICE.length - 1)];
+		const mod = (RollerUtil.randomise(3) - 2) * RollerUtil.randomise(10);
 		return `${count}d${faces}${mod < 0 ? mod : mod > 0 ? `+${mod}` : ""}`;
 	},
 
@@ -3156,16 +3287,19 @@ EntryRenderer.dice = {
 		}
 	},
 
+	/**
+	 * Returns the total rolled, if available
+	 */
 	roll: (str, rolledBy) => {
 		str = str.trim();
 		if (!str) return;
 		if (rolledBy.user) EntryRenderer.dice._addHistory(str);
 
 		if (str.startsWith("/")) EntryRenderer.dice._handleCommand(str, rolledBy);
-		else if (str.startsWith("#")) EntryRenderer.dice._handleSavedRoll(str, rolledBy);
+		else if (str.startsWith("#")) return EntryRenderer.dice._handleSavedRoll(str, rolledBy);
 		else {
 			const toRoll = EntryRenderer.dice._parse(str);
-			EntryRenderer.dice._handleRoll(toRoll, rolledBy);
+			return EntryRenderer.dice._handleRoll(toRoll, rolledBy);
 		}
 	},
 
@@ -3203,6 +3337,8 @@ EntryRenderer.dice = {
 					</span>
 					${cbMessage ? `<span class="message">${cbMessage(v.total)}</span>` : ""}
 				</div>`);
+
+			return v.total;
 		} else {
 			$out.append(`<div class="out-roll-item">Invalid input! Try &quot;/help&quot;</div>`);
 		}
@@ -3292,7 +3428,7 @@ EntryRenderer.dice = {
 		const macro = EntryRenderer.dice.storage[id];
 		if (macro) {
 			const toRoll = EntryRenderer.dice._parse(macro);
-			EntryRenderer.dice._handleRoll(toRoll, rolledBy);
+			return EntryRenderer.dice._handleRoll(toRoll, rolledBy);
 		} else EntryRenderer.dice._showMessage(`Macro <span class="out-roll-item-code">#${id}</span> not found`, EntryRenderer.dice.SYSTEM_USER);
 	},
 
@@ -3319,7 +3455,7 @@ EntryRenderer.dice = {
 	rollDice: (count, faces) => {
 		const out = [];
 		for (let i = 0; i < count; ++i) {
-			out.push(EntryRenderer.dice.randomise(faces));
+			out.push(RollerUtil.randomise(faces));
 		}
 		return out;
 	},
@@ -3383,12 +3519,6 @@ EntryRenderer.dice = {
 	},
 
 	_parse: (str) => {
-		str = str.replace(/\s/g, "").toLowerCase();
-		const mods = [];
-		str = str.replace(/(([+-]+)\d+)(?=[^d]|$)|(([+-]+|^)\d+$)|(([+-]+|^)\d+(?=[+-]))/g, (m0) => {
-			mods.push(m0);
-			return "";
-		});
 		function cleanOperators (str) {
 			let len;
 			let nextLen;
@@ -3400,7 +3530,20 @@ EntryRenderer.dice = {
 			return str;
 		}
 
-		const totalMods = mods.map(m => Number(cleanOperators(m))).reduce((a, b) => a + b, 0);
+		str = str.replace(/\s/g, "").toLowerCase();
+		const mods = [];
+		str = cleanOperators(str);
+
+		const spl = str.split(/([+-][^+-]+)/).filter(it => it);
+		str = spl.filter(it => {
+			if (it.includes("d")) return true;
+			else {
+				mods.push(it);
+				return false;
+			}
+		}).join("");
+
+		const totalMods = mods.map(m => Number(m)).reduce((a, b) => a + b, 0);
 
 		function isNumber (char) {
 			return char >= "0" && char <= "9";

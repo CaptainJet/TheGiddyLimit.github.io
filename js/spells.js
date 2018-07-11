@@ -143,7 +143,7 @@ function getNormalisedRange (range) {
 				distance = 1;
 				break;
 			case RNG_SIGHT:
-				multiplier = FEET_PER_MILE * FEET_PER_MILE;
+				multiplier = INCHES_PER_FOOT * FEET_PER_MILE;
 				distance = 12; // assume sight range of person ~100 ft. above the ground
 				break;
 			case RNG_UNLIMITED_SAME_PLANE: // from BolS, if/when it gets restored
@@ -271,6 +271,11 @@ const damageFilter = new Filter({
 	],
 	displayFn: StrUtil.uppercaseFirst
 });
+const spellAttackFilter = new Filter({
+	header: "Spell Attack",
+	items: ["M", "R", "O"],
+	displayFn: Parser.spAttackTypeToFull
+});
 const saveFilter = new Filter({
 	header: "Saving Throw",
 	items: ["strength", "constitution", "dexterity", "intelligence", "wisdom", "charisma"],
@@ -320,6 +325,7 @@ const filterBox = initFilterBox(
 	metaFilter,
 	schoolFilter,
 	damageFilter,
+	spellAttackFilter,
 	saveFilter,
 	checkFilter,
 	timeFilter,
@@ -457,6 +463,7 @@ function handleFilterChange () {
 			s._fMeta,
 			s.school,
 			s.damageInflict,
+			s.spellAttack,
 			s.savingThrow,
 			s.opposedCheck,
 			s._fTimeType,
@@ -674,6 +681,8 @@ function loadhash (id) {
 	const spell = spellList[id];
 	$pageContent.append(EntryRenderer.spell.getRenderedString(spell, renderer));
 	loadsub([]);
+
+	ListUtil.updateSelected();
 }
 
 function handleUnknownHash (link, sub) {

@@ -56,7 +56,7 @@
 				{
 					"name": "Slam",
 					"entries": [
-						"Melee Weapon Attack: {@hit +3} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) bludgeoning damage."
 					]
 				}
 			],
@@ -64,6 +64,7 @@
 		},
 		{
 			"name": "Evil Mage",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -138,7 +139,7 @@
 				{
 					"name": "Quarterstaff",
 					"entries": [
-						"Melee Weapon Attack: {@hit +1} to hit, reach 5 ft., one target. Hit: 3 ({@dice 1d8-1}) bludgeoning damage."
+						"Melee Weapon Attack: {@hit 1} to hit, reach 5 ft., one target. Hit: 3 ({@dice 1d8-1}) bludgeoning damage."
 					]
 				}
 			],
@@ -146,11 +147,12 @@
 		},
 		{
 			"name": "Mormesk the Wraith",
+			"isNPC": true,
 			"size": "M",
 			"type": "undead",
 			"source": "LMoP",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -220,7 +222,7 @@
 				{
 					"name": "Life Drain",
 					"entries": [
-						"Melee Weapon Attack: {@hit +5} to hit, reach 5 ft., one creature. Hit: 16 ({@dice 3d8+3}) necrotic damage, and the target must succeed on a DC 13 Constitution saving throw or its hit point maximum is reduced by an amount equal to the damage taken. If this attack reduces the target's hit point maximum to 0, the target dies. This reduction to the target's hit point maximum lasts until the target finishes a long rest."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one creature. Hit: 16 ({@dice 3d8+3}) necrotic damage, and the target must succeed on a DC 13 Constitution saving throw or its hit point maximum is reduced by an amount equal to the damage taken. If this attack reduces the target's hit point maximum to 0, the target dies. This reduction to the target's hit point maximum lasts until the target finishes a long rest."
 					]
 				}
 			],
@@ -228,6 +230,7 @@
 		},
 		{
 			"name": "Nezznar the Black Spider",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -237,7 +240,7 @@
 			},
 			"source": "LMoP",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -345,7 +348,7 @@
 				{
 					"name": "Spider Staff",
 					"entries": [
-						"Melee Weapon Attack: {@hit +1} to hit, reach 5 ft., one target. Hit: 2 ({@dice 1d6-1}) bludgeoning damage plus 3 ({@dice 1d6}) poison damage."
+						"Melee Weapon Attack: {@hit 1} to hit, reach 5 ft., one target. Hit: 2 ({@dice 1d6-1}) bludgeoning damage plus 3 ({@dice 1d6}) poison damage."
 					]
 				}
 			],
@@ -362,7 +365,7 @@
 			},
 			"source": "LMoP",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -402,7 +405,7 @@
 				{
 					"name": "Shortsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +4} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d6+2}) piercing damage."
+						"Melee Weapon Attack: {@hit 4} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d6+2}) piercing damage."
 					]
 				}
 			],
@@ -410,6 +413,7 @@
 		},
 		{
 			"name": "Sildar Hallwinter",
+			"isNPC": true,
 			"size": "M",
 			"type": {
 				"type": "humanoid",
@@ -463,13 +467,13 @@
 				{
 					"name": "Longsword",
 					"entries": [
-						"Melee Weapon Attack: {@hit +3} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d8+1}) slashing damage."
+						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d8+1}) slashing damage."
 					]
 				},
 				{
 					"name": "Heavy Crossbow",
 					"entries": [
-						"Ranged Weapon Attack: {@hit +2} to hit, range 100 ft./400 ft., one target. Hit: 5 ({@dice 1d10}) piercing damage."
+						"Ranged Weapon Attack: {@hit 2} to hit, range 100/400 ft., one target. Hit: 5 ({@dice 1d10}) piercing damage."
 					]
 				}
 			],

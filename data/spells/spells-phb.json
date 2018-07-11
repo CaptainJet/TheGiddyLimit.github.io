@@ -77,7 +77,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -161,7 +161,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -217,7 +217,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -319,7 +319,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -396,7 +396,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -461,7 +461,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					},
 					"concentration": true
@@ -587,7 +587,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -742,7 +742,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -832,7 +832,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -865,7 +865,7 @@
 					"type": "entries",
 					"name": "Areas of Magic",
 					"entries": [
-						"The area of another spell or magical effect, such as fireball, can't extend into the sphere. If the sphere overlaps an area of magic, the part of the area that is covered by the sphere is suppressed. For example, the flames created by a wall of fire are suppressed within the sphere, creating a gap in the wall if the overlap is large enough."
+						"The area of another spell or magical effect, such as {@spell fireball}, can't extend into the sphere. If the sphere overlaps an area of magic, the part of the area that is covered by the sphere is suppressed. For example, the flames created by a wall of fire are suppressed within the sphere, creating a gap in the wall if the overlap is large enough."
 					]
 				},
 				{
@@ -932,7 +932,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 10
 					}
 				}
@@ -1007,7 +1007,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -1100,7 +1100,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -1207,7 +1207,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -1312,6 +1312,18 @@
 					{
 						"name": "Warlock",
 						"source": "PHB"
+					}
+				],
+				"fromSubclass": [
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -1507,7 +1519,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -1576,7 +1588,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -1623,7 +1635,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -1731,7 +1743,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -1842,7 +1854,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -1903,7 +1915,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -2080,7 +2092,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -2152,7 +2164,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -2195,6 +2207,16 @@
 							"name": "Solidarity (PSA)",
 							"source": "PSA"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -2230,7 +2252,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -2281,7 +2303,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -2412,7 +2434,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -2476,6 +2498,9 @@
 			],
 			"opposedCheck": [
 				"strength"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -2503,7 +2528,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -2554,7 +2579,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -2616,7 +2641,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -2787,6 +2812,16 @@
 							"name": "Conquest (UA)",
 							"source": "UAPaladin"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -2836,7 +2871,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -2899,7 +2934,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -2953,6 +2988,16 @@
 							"name": "Undying",
 							"source": "SCAG"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -2998,7 +3043,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -3091,7 +3136,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -3165,7 +3210,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -3367,7 +3412,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -3462,7 +3507,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -3599,7 +3644,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -3647,6 +3692,16 @@
 							"name": "Treachery (UA)",
 							"source": "UAPaladin"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -3693,7 +3748,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -3723,6 +3778,9 @@
 			"page": 221,
 			"damageInflict": [
 				"necrotic"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -3789,6 +3847,9 @@
 				"lightning",
 				"poison",
 				"thunder"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -3882,7 +3943,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -3953,7 +4014,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -4081,7 +4142,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -4150,7 +4211,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -4218,6 +4279,16 @@
 							"name": "Lolth (Twitter)",
 							"source": "Twitter"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -4270,7 +4341,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -4327,7 +4398,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -4505,7 +4576,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -4687,7 +4758,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -4768,7 +4839,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -4840,7 +4911,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -4862,6 +4933,16 @@
 						"subclass": {
 							"name": "Order (UA)",
 							"source": "UAOrderDomain"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -5006,7 +5087,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -5172,7 +5253,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -5218,10 +5299,10 @@
 				{
 					"type": "list",
 					"items": [
-						"One beast of challenge rating 2 or lower",
-						"Two beasts of challenge rating 1 or lower",
-						"Four beasts of challenge rating 1/2 or lower",
-						"Eight beasts of challenge rating 1/4 or lower"
+						"One {@filter beast of challenge rating 2 or lower|bestiary|cr=2|type=beast|miscellaneous=!swarm}",
+						"Two {@filter beasts of challenge rating 1 or lower|bestiary|cr=1|type=beast|miscellaneous=!swarm}",
+						"Four {@filter beasts of challenge rating 1/2 or lower|bestiary|cr=1/2|type=beast|miscellaneous=!swarm}",
+						"Eight {@filter beasts of challenge rating 1/4 or lower|bestiary|cr=0;1/8;1/4|type=beast|miscellaneous=!swarm}"
 					]
 				},
 				"Each beast is also considered fey, and it disappears when it drops to 0 hit points or when the spell ends.",
@@ -5307,7 +5388,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -5323,15 +5404,15 @@
 			},
 			"source": "PHB",
 			"entries": [
-				"You summon a celestial of challenge rating 4 or lower, which appears in an unoccupied space that you can see within range. The celestial disappears when it drops to 0 hit points or when the spell ends.",
-				"The celestial is friendly to you and your companions for the duration. Roll initiative for the celestial, which has its own turns. It obeys any verbal commands that you issue to it (no action required by you), as long as they don't violate its alignment. If you don't issue any commands to the celestial, it defends itself from hostile creatures but otherwise takes no actions The DM has the celestial's statistics."
+				"You summon a {@filter celestial of challenge rating 4 or lower|bestiary|cr=0;1/8;1/4;1/2;1;2;3;4|type=celestial|miscellaneous=!swarm}, which appears in an unoccupied space that you can see within range. The celestial disappears when it drops to 0 hit points or when the spell ends.",
+				"The celestial is friendly to you and your companions for the duration. Roll initiative for the celestial, which has its own turns. It obeys any verbal commands that you issue to it (no action required by you), as long as they don't violate its alignment. If you don't issue any commands to the celestial, it defends itself from hostile creatures but otherwise takes no actions The DM has {@creature couatl|mm|the celestial}'s statistics."
 			],
 			"entriesHigherLevel": [
 				{
 					"type": "entries",
 					"name": "At Higher Levels",
 					"entries": [
-						"When you cast this spell using a 9th-level spell slot, you summon a celestial of challenge rating 5 or lower."
+						"When you cast this spell using a 9th-level spell slot, you summon a {@filter celestial of challenge rating 5 or lower|bestiary|cr=0;1/8;1/4;1/2;1;2;3;4;5|type=celestial|miscellaneous=!swarm}."
 					]
 				}
 			],
@@ -5363,7 +5444,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -5396,7 +5477,7 @@
 			},
 			"source": "PHB",
 			"entries": [
-				"You call forth an elemental servant. Choose an area of air, earth, fire, or water that fills a 10-foot cube within range. An elemental of challenge rating 5 or lower appropriate to the area you chose appears in an unoccupied space within 10 feet of it. For example, a fire elemental emerges from a bonfire, and an earth elemental rises up from the ground. The elemental disappears when it drops to 0 hit points or when the spell ends.",
+				"You call forth an elemental servant. Choose an area of air, earth, fire, or water that fills a 10-foot cube within range. An {@filter elemental of challenge rating 5 or lower|bestiary|cr=0;1/8;1/4;1/2;1;2;3;4;5|type=elemental|miscellaneous=!swarm} appropriate to the area you chose appears in an unoccupied space within 10 feet of it. For example, a {@creature fire elemental} emerges from a bonfire, and an {@creature earth elemental} rises up from the ground. The elemental disappears when it drops to 0 hit points or when the spell ends.",
 				"The elemental is friendly to you and your companions for the duration. Roll initiative for the elemental, which has its own turns. It obeys any verbal commands that you issue to it (no action required by you). If you don't issue any commands to the elemental, it defends itself from hostile creatures but otherwise takes no actions.",
 				"If your concentration is broken, the elemental doesn't disappear. Instead, you lose control of the elemental, it becomes hostile toward you and your companions, and it might attack. An uncontrolled elemental can't be dismissed by you, and it disappears 1 hour after you summoned it. The DM has the elemental's statistics."
 			],
@@ -5436,7 +5517,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -5456,7 +5537,7 @@
 			},
 			"source": "PHB",
 			"entries": [
-				"You summon a fey creature of challenge rating 6 or lower, or a fey spirit that takes the form of a beast of challenge rating 6 or lower. It appears in an unoccupied space that you can see within range. The fey creature disappears when it drops to 0 hit points or when the spell ends.",
+				"You summon a {@filter fey creature of challenge rating 6 or lower|bestiary|cr=0;1/8;1/4;1/2;1;2;3;4;5;6|type=fey|miscellaneous=!swarm}, or a fey spirit that takes the form of a {@filter beast of challenge rating 6 or lower|bestiary|cr=0;1/8;1/4;1/2;1;2;3;4;5;6|type=beast|miscellaneous=!swarm}. It appears in an unoccupied space that you can see within range. The fey creature disappears when it drops to 0 hit points or when the spell ends.",
 				"The fey creature is friendly to you and your companions for the duration. Roll initiative for the creature, which has its own turns. It obeys any verbal commands that you issue to it (no action required by you), as long as they don't violate its alignment. If you don't issue any commands to the fey creature, it defends itself from hostile creatures but otherwise takes no actions.",
 				"If your concentration is broken, the fey creature doesn't disappear. Instead, you lose control of the fey creature, it becomes hostile toward you and your companions, and it might attack. An uncontrolled fey creature can't be dismissed by you, and it disappears 1 hour after you summoned it. The DM has the fey creature's statistics."
 			],
@@ -5496,7 +5577,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -5520,10 +5601,10 @@
 				{
 					"type": "list",
 					"items": [
-						"One elemental of challenge rating 2 or lower",
-						"Two elementals of challenge rating 1 or lower",
-						"Four elementals of challenge rating 1/2 or lower",
-						"Eight elementals of challenge rating 1/4 or lower."
+						"One {@filter elemental of challenge rating 2 or lower|bestiary|cr=2|type=elemental|miscellaneous=!swarm}",
+						"Two {@filter elementals of challenge rating 1 or lower|bestiary|cr=1|type=elemental|miscellaneous=!swarm}",
+						"Four {@filter elementals of challenge rating 1/2 or lower|bestiary|cr=1/2|type=elemental|miscellaneous=!swarm}",
+						"Eight {@filter elementals of challenge rating 1/4 or lower|bestiary|cr=0;1/8;1/4|type=elemental|miscellaneous=!swarm}."
 					]
 				},
 				"An elemental summoned by this spell disappears when it drops to 0 hit points or when the spell ends.",
@@ -5610,7 +5691,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -5634,10 +5715,10 @@
 				{
 					"type": "list",
 					"items": [
-						"One fey creature of challenge rating 2 or lower",
-						"Two fey creatures of challenge rating 1 or lower",
-						"Four fey creatures of challenge rating 1/2 or lower",
-						"Eight fey creatures of challenge rating 1/4 or lower"
+						"One {@filter fey creature of challenge rating 2 or lower|bestiary|cr=2|type=fey|miscellaneous=!swarm}",
+						"Two {@filter fey creatures of challenge rating 1 or lower|bestiary|cr=1|type=fey|miscellaneous=!swarm}",
+						"Four {@filter fey creatures of challenge rating 1/2 or lower|bestiary|cr=1/2|type=fey|miscellaneous=!swarm}",
+						"Eight {@filter fey creatures of challenge rating 1/4 or lower|bestiary|cr=0;1/8;1/4|type=fey|miscellaneous=!swarm}"
 					]
 				},
 				"A summoned creature disappears when it drops to 0 hit points or when the spell ends. The summoned creatures are friendly to you and your companions. Roll initiative for the summoned creatures as a group, which have their own turns. They obey any verbal commands that you issue to them (no action required by you). If you don't issue any commands to them, they defend themselves from hostile creatures, but otherwise take no actions. The DM has the creatures' statistics."
@@ -5676,7 +5757,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -5733,7 +5814,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 7
 					}
 				}
@@ -5768,6 +5849,16 @@
 						"subclass": {
 							"name": "Undying",
 							"source": "SCAG"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -5823,6 +5914,9 @@
 			"page": 227,
 			"savingThrow": [
 				"constitution"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -5853,7 +5947,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 10
 					}
 				}
@@ -5955,7 +6049,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -6079,7 +6173,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					},
 					"concentration": true
@@ -6241,7 +6335,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -6690,7 +6784,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -6762,7 +6856,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -6943,7 +7037,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -6997,7 +7091,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -7049,6 +7143,16 @@
 							"name": "Lolth (Twitter)",
 							"source": "Twitter"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -7085,7 +7189,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -7145,7 +7249,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -7259,7 +7363,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -7374,7 +7478,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -7440,7 +7544,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -7537,6 +7641,16 @@
 							"name": "Zeal (PSA)",
 							"source": "PSA"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -7578,7 +7692,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -7626,7 +7740,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -7711,7 +7825,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -7772,7 +7886,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -7944,7 +8058,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -8130,7 +8244,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -8169,6 +8283,9 @@
 			"page": 233,
 			"savingThrow": [
 				"charisma"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -8439,7 +8556,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -8561,7 +8678,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -8697,7 +8814,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -8769,7 +8886,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -8890,6 +9007,16 @@
 							"name": "Order (UA)",
 							"source": "UAOrderDomain"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -8988,7 +9115,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -9112,7 +9239,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -9197,6 +9324,9 @@
 			"page": 237,
 			"damageInflict": [
 				"force"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -9223,7 +9353,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -9346,7 +9476,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -9501,7 +9631,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -9532,6 +9662,16 @@
 							"name": "Giant Soul (UA)",
 							"source": "UAGiantSoulSorcerer",
 							"subSubclass": "Hill"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -9572,7 +9712,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -9648,7 +9788,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -9734,7 +9874,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -9748,6 +9888,18 @@
 					{
 						"name": "Warlock",
 						"source": "PHB"
+					}
+				],
+				"fromSubclass": [
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -9784,7 +9936,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8,
 						"upTo": true
 					}
@@ -9862,7 +10014,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -9894,6 +10046,16 @@
 						"subclass": {
 							"name": "Kraken (Stream)",
 							"source": "Stream"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -9940,7 +10102,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -10008,7 +10170,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -10157,7 +10319,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -10242,7 +10404,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -10356,7 +10518,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -10441,6 +10603,16 @@
 							"name": "Lolth (Twitter)",
 							"source": "Twitter"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -10480,7 +10652,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -10606,7 +10778,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -10663,7 +10835,18 @@
 			],
 			"page": 240,
 			"damageResist": [
-				"acid", "bludgeoning", "cold", "fire", "force", "lightning", "necrotic", "piercing", "poison", "radiant", "slashing", "thunder"
+				"acid",
+				"bludgeoning",
+				"cold",
+				"fire",
+				"force",
+				"lightning",
+				"necrotic",
+				"piercing",
+				"poison",
+				"radiant",
+				"slashing",
+				"thunder"
 			]
 		},
 		{
@@ -10756,7 +10939,7 @@
 			},
 			"source": "PHB",
 			"entries": [
-				"You summon a spirit that assumes the form of an unusually intelligent, strong, and loyal steed, creating a long-lasting bond with it. Appearing in an unoccupied space within range, the steed takes on a form that you choose: a warhorse, a pony, a camel, an elk, or a mastiff. (Your DM might allow other animals to be summoned as steeds.) The steed has the statistics of the chosen form, though it is a celestial, fey, or fiend (your choice) instead of its normal type. Additionally, if your steed has an Intelligence of 5 or less, its Intelligence becomes 6, and it gains the ability to understand one language of your choice that you speak.",
+				"You summon a spirit that assumes the form of an unusually intelligent, strong, and loyal steed, creating a long-lasting bond with it. Appearing in an unoccupied space within range, the steed takes on a form that you choose: a {@creature warhorse}, a {@creature pony}, a {@creature camel}, an {@creature elk}, or a {@creature mastiff}. (Your DM might allow other animals to be summoned as steeds.) The steed has the statistics of the chosen form, though it is a celestial, fey, or fiend (your choice) instead of its normal type. Additionally, if your steed has an Intelligence of 5 or less, its Intelligence becomes 6, and it gains the ability to understand one language of your choice that you speak.",
 				"Your steed serves you as a mount, both in combat and out, and you have an instinctive bond with it that allows you to fight as a seamless unit. While mounted on your steed, you can make any spell you cast that targets only you also target your steed.",
 				"When the steed drops to 0 hit points, it disappears, leaving behind no physical form. You can also dismiss your steed at any time as an action, causing it to disappear. In either case, casting this spell again summons the same steed, restored to its hit point maximum.",
 				"While your steed is within 1 mile of you, you can communicate with it telepathically.",
@@ -10841,7 +11024,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 1,
 						"upTo": true
 					},
@@ -10986,6 +11169,9 @@
 			"page": 242,
 			"damageInflict": [
 				"fire"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -11013,7 +11199,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					}
 				}
@@ -11197,6 +11383,16 @@
 							"name": "Zeal (PSA)",
 							"source": "PSA"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -11247,7 +11443,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -11279,6 +11475,9 @@
 			"page": 242,
 			"damageInflict": [
 				"fire"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -11446,7 +11645,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -11566,7 +11765,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -11621,7 +11820,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -11687,7 +11886,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -11779,7 +11978,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 1
 					}
 				}
@@ -11838,7 +12037,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -11898,7 +12097,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -11955,7 +12154,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -12102,7 +12301,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -12159,7 +12358,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -12248,7 +12447,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -12303,7 +12502,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 30
 					}
 				}
@@ -12392,7 +12591,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 10
 					}
 				}
@@ -12466,7 +12665,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -12544,7 +12743,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -12593,7 +12792,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -12819,7 +13018,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -12885,7 +13084,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -12932,7 +13131,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -13140,7 +13339,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -13276,7 +13475,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -13365,7 +13564,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -13414,7 +13613,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -13465,6 +13664,9 @@
 			"page": 248,
 			"damageInflict": [
 				"radiant"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -13493,7 +13695,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -13583,7 +13785,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -13802,7 +14004,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -13922,7 +14124,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -14162,7 +14364,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -14382,7 +14584,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -14419,6 +14621,16 @@
 							"name": "Giant Soul (UA)",
 							"source": "UAGiantSoulSorcerer",
 							"subSubclass": "Hill"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -14464,7 +14676,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -14475,6 +14687,18 @@
 					{
 						"name": "Warlock",
 						"source": "PHB"
+					}
+				],
+				"fromSubclass": [
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -14524,7 +14748,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -14599,6 +14823,16 @@
 							"name": "Lolth (Twitter)",
 							"source": "Twitter"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -14646,7 +14880,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -14820,7 +15054,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -14869,7 +15103,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -14921,7 +15155,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -14990,7 +15224,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -15034,6 +15268,16 @@
 						"subclass": {
 							"name": "Redemption",
 							"source": "XGE"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -15130,6 +15374,16 @@
 						"subclass": {
 							"name": "Raven Queen (UA)",
 							"source": "UAWarlockAndWizard"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -15268,7 +15522,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 10
 					}
 				}
@@ -15430,7 +15684,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -15514,6 +15768,16 @@
 							"name": "Divine Soul",
 							"source": "XGE"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -15533,6 +15797,9 @@
 			"page": 253,
 			"damageInflict": [
 				"necrotic"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -15561,7 +15828,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -15736,7 +16003,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -15840,7 +16107,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -16130,7 +16397,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -16285,7 +16552,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -16350,7 +16617,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -16409,7 +16676,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -16504,6 +16771,16 @@
 						"subclass": {
 							"name": "City (PSA)",
 							"source": "UAModernMagic"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -16606,7 +16883,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -16726,7 +17003,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -16805,7 +17082,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -16874,7 +17151,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -16922,7 +17199,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -16985,7 +17262,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -17294,7 +17571,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -17429,7 +17706,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -17679,7 +17956,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -17750,7 +18027,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -17796,7 +18073,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -17904,6 +18181,9 @@
 			"page": 259,
 			"damageInflict": [
 				"acid"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -17989,7 +18269,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -18093,7 +18373,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -18147,7 +18427,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -18221,7 +18501,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 10
 					}
 				}
@@ -18275,7 +18555,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -18372,7 +18652,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -18521,7 +18801,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -18610,7 +18890,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -18686,7 +18966,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -18743,7 +19023,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -18794,7 +19074,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -18869,7 +19149,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -18895,6 +19175,9 @@
 			"page": 262,
 			"damageInflict": [
 				"force"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -18923,7 +19206,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 2
 					},
 					"concentration": true
@@ -18984,7 +19267,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -19058,7 +19341,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -19192,7 +19475,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -19293,7 +19576,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -19347,7 +19630,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -19420,7 +19703,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -19499,7 +19782,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -19587,7 +19870,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -19669,7 +19952,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -19728,7 +20011,7 @@
 			},
 			"source": "PHB",
 			"entries": [
-				"You beseech an otherworldly entity for aid. The being must be known to you: a god, a primordial, a demon prince, or some other being of cosmic power. That entity sends a celestial, an elemental, or a fiend loyal to it to aid you, making the creature appear in an unoccupied space within range. If you know a specific creature's name, you can speak that name when you cast this spell to request that creature, though you might get a different creature anyway (DM's choice).",
+				"You beseech an otherworldly entity for aid. The being must be known to you: a god, a primordial, a demon prince, or some other being of cosmic power. That entity sends a {@filter celestial|bestiary|type=celestial|cr=null|miscellaneous=!swarm}, an {@filter elemental|bestiary|type=elemental|cr=null|miscellaneous=!swarm}, or a {@filter fiend|bestiary|type=fiend|cr=null|miscellaneous=!swarm} loyal to it to aid you, making the creature appear in an unoccupied space within range. If you know a specific creature's name, you can speak that name when you cast this spell to request that creature, though you might get a different creature anyway (DM's choice).",
 				"When the creature appears, it is under no compulsion to behave in any particular way. You can ask the creature to perform a service in exchange for payment, but it isn't obliged to do so. The requested task could range from simple (fly us across the chasm, or help us fight a battle) to complex (spy on our enemies, or protect us during our foray into the dungeon). You must be able to communicate with the creature to bargain for its services.",
 				"Payment can take a variety of forms. A celestial might require a sizable donation of gold or magic items to an allied temple, while a fiend might demand a living sacrifice or a gift of treasure. Some creatures might exchange their service for a quest undertaken by you.",
 				"As a rule of thumb, a task that can be measured in minutes requires a payment worth 100 gp per minute. A task measured in hours requires 1,000 gp per hour. And a task measured in days (up to 10 days) requires 10,000 gp per day. The DM can adjust these payments based on the circumstances under which you cast the spell. If the task is aligned with the creature's ethos, the payment might be halved or even waived. Nonhazardous tasks typically require only half the suggested payment, while especially dangerous tasks might require a greater gift. Creatures rarely accept tasks that seem suicidal.",
@@ -19767,7 +20050,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -19846,7 +20129,7 @@
 			},
 			"source": "PHB",
 			"entries": [
-				"With this spell, you attempt to bind a celestial, an elemental, a fey, or a fiend to your service. The creature must be within range for the entire casting of the spell. (Typically, the creature is first summoned into the center of an inverted magic circle in order to keep it trapped while this spell is cast.) At the completion of the casting, the target must make a Charisma saving throw. On a failed save, it is bound to serve you for the duration. If the creature was summoned or created by another spell, that spell's duration is extended to match the duration of this spell.",
+				"With this spell, you attempt to bind a {@filter celestial|bestiary|type=celestial|cr=null|miscellaneous=!swarm}, an {@filter elemental|bestiary|type=elemental|cr=null|miscellaneous=!swarm}, a {@filter fey|bestiary|type=fey|cr=null|miscellaneous=!swarm}, or a {@filter fiend|bestiary|type=fiend|cr=null|miscellaneous=!swarm} to your service. The creature must be within range for the entire casting of the spell. (Typically, the creature is first summoned into the center of an inverted magic circle in order to keep it trapped while this spell is cast.) At the completion of the casting, the target must make a Charisma saving throw. On a failed save, it is bound to serve you for the duration. If the creature was summoned or created by another spell, that spell's duration is extended to match the duration of this spell.",
 				"A bound creature must follow your instructions to the best of its ability. You might command the creature to accompany you on an adventure, to guard a location, or to deliver a message. The creature obeys the letter of your instructions, but if the creature is hostile to you, it strives to twist your words to achieve its own objectives. If the creature carries out your instructions completely before the spell ends, it travels to you to report this fact if you are on the same plane of existence. If you are on a different plane of existence, it returns to the place where you bound it and remains there until the spell ends."
 			],
 			"entriesHigherLevel": [
@@ -19925,6 +20208,9 @@
 			"page": 266,
 			"savingThrow": [
 				"charisma"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -20110,7 +20396,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -20151,7 +20437,7 @@
 			"source": "PHB",
 			"entries": [
 				"This spell transforms a creature with at least 1 hit point that you can see within range into a new form. An unwilling creature must make a Wisdom saving throw to avoid the effect. A shapechanger automatically succeeds on this saving throw.",
-				"The transformation lasts for the duration, or until the target drops to 0 hit points or dies. The new form can be any beast whose challenge rating is equal to or less than the target's (or the target's level, if it doesn't have a challenge rating). The target's game statistics, including mental ability scores, are replaced by the statistics of the chosen beast. It retains its alignment and personality.",
+				"The transformation lasts for the duration, or until the target drops to 0 hit points or dies. The new form can be any {@filter beast|bestiary|cr=null|type=beast|miscellaneous=!swarm} whose challenge rating is equal to or less than the target's (or the target's level, if it doesn't have a challenge rating). The target's game statistics, including mental ability scores, are replaced by the statistics of the chosen beast. It retains its alignment and personality.",
 				"The target assumes the hit points of its new form. When it reverts to its normal form, the creature returns to the number of hit points it had before it transformed. If it reverts as a result of dropping to 0 hit points, any excess damage carries over to its normal form. As long as the excess damage doesn't reduce the creature's normal form to 0 hit points, it isn't knocked {@condition unconscious}.",
 				"The creature is limited in the actions it can perform by the nature of its new form, and it can't speak, cast spells, or take any other action that requires hands or speech.",
 				"The target's gear melds into the new form. The creature can't activate, use, wield, or otherwise benefit from any of its equipment.",
@@ -20380,7 +20666,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1,
 						"upTo": true
 					}
@@ -20562,7 +20848,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					}
 				}
@@ -20671,7 +20957,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					}
 				}
@@ -20693,6 +20979,9 @@
 			"page": 269,
 			"damageInflict": [
 				"fire"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -20781,7 +21070,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "days",
+						"type": "day",
 						"amount": 1,
 						"upTo": true
 					},
@@ -20836,7 +21125,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -21004,7 +21293,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -21173,7 +21462,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -21398,7 +21687,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -21446,7 +21735,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -21524,6 +21813,9 @@
 			"page": 271,
 			"savingThrow": [
 				"constitution"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -21585,6 +21877,9 @@
 			"page": 271,
 			"damageInflict": [
 				"cold"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -21666,6 +21961,9 @@
 			],
 			"savingThrow": [
 				"constitution"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -21693,7 +21991,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -22000,7 +22298,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -22115,7 +22413,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -22277,7 +22575,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -22418,7 +22716,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -22469,7 +22767,7 @@
 			},
 			"source": "PHB",
 			"entries": [
-				"You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell must first make a Wisdom saving throw. On a failed save, the creature must choose a new target or lose the attack or spell. This spell doesn't protect the warded creature from area effects, such as the explosion of a fireball.",
+				"You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell must first make a Wisdom saving throw. On a failed save, the creature must choose a new target or lose the attack or spell. This spell doesn't protect the warded creature from area effects, such as the explosion of a {@spell fireball}.",
 				"If the warded creature makes an attack or casts a spell that affects an enemy creature, this spell ends."
 			],
 			"page": 272,
@@ -22554,6 +22852,9 @@
 			"page": 273,
 			"damageInflict": [
 				"fire"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -22584,7 +22885,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -22765,7 +23066,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -22867,7 +23168,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -22919,7 +23220,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -23032,7 +23333,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -23159,7 +23460,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -23254,6 +23555,16 @@
 							"name": "Zeal (PSA)",
 							"source": "PSA"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -23304,7 +23615,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -23395,7 +23706,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -23470,7 +23781,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -23560,6 +23871,9 @@
 			"page": 275,
 			"damageInflict": [
 				"lightning"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -23587,7 +23901,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -23677,7 +23991,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -23786,7 +24100,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -23882,7 +24196,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -23965,7 +24279,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -24092,7 +24406,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					}
 				}
@@ -24170,7 +24484,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					}
 				}
@@ -24261,7 +24575,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					}
 				}
@@ -24317,7 +24631,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -24410,7 +24724,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -24512,7 +24826,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -24596,7 +24910,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					}
 				}
@@ -24689,6 +25003,9 @@
 			"page": 278,
 			"damageInflict": [
 				"force"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -24714,7 +25031,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -24757,6 +25074,16 @@
 							"name": "Stone",
 							"source": "UASorcerer"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -24798,7 +25125,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -24970,7 +25297,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -25117,7 +25444,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -25202,7 +25529,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					},
 					"concentration": true
@@ -25247,6 +25574,16 @@
 							"name": "Knowledge (PSA)",
 							"source": "PSA"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Beauty (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -25288,7 +25625,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -25406,7 +25743,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -25581,7 +25918,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -25646,7 +25983,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -25724,7 +26061,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -25927,7 +26264,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -26035,7 +26372,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -26083,7 +26420,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1,
 						"upTo": true
 					}
@@ -26158,6 +26495,9 @@
 			"page": 282,
 			"damageInflict": [
 				"piercing"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -26183,7 +26523,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -26399,7 +26739,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -26459,7 +26799,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1
 					}
 				}
@@ -26502,7 +26842,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -26585,7 +26925,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -26609,7 +26949,7 @@
 			},
 			"source": "PHB",
 			"entries": [
-				"Choose one creature with at least 1 hit point or nonmagical object that you can see within range. You transform the creature into a different creature, the creature into an object, or the object into a creature (the object must be neither worn nor carried by another creature). The transformation lasts for the duration, or until the target drops to 0 hit points or dies. If you concentrate on this spell for the full duration, the transformation becomes permanent.",
+				"Choose one creature with at least 1 hit point or nonmagical object that you can see within range. You transform the creature into a different creature, the creature into an object, or the object into a creature (the object must be neither worn nor carried by another creature). The transformation lasts for the duration, or until the target drops to 0 hit points or dies. If you concentrate on this spell for the full duration, the transformation lasts until it is dispelled.",
 				"Shapechangers aren't affected by this spell. An unwilling creature can make a Wisdom saving throw, and if it succeeds, it isn't affected by this spell.",
 				{
 					"type": "entries",
@@ -26724,7 +27064,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -26783,7 +27123,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 1,
 						"upTo": true
 					},
@@ -26840,7 +27180,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "rounds",
+						"type": "round",
 						"amount": 6,
 						"upTo": true
 					},
@@ -26899,7 +27239,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -26955,7 +27295,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -27022,6 +27362,16 @@
 							"name": "Lolth (Twitter)",
 							"source": "Twitter"
 						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Darkness (Stream)",
+							"source": "Twitter"
+						}
 					}
 				]
 			},
@@ -27041,6 +27391,9 @@
 			"page": 285,
 			"damageInflict": [
 				"necrotic"
+			],
+			"spellAttack": [
+				"M"
 			]
 		},
 		{
@@ -27115,7 +27468,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -27248,7 +27601,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -27330,7 +27683,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -27394,7 +27747,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -27481,7 +27834,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					},
 					"concentration": true
@@ -27547,7 +27900,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -27615,7 +27968,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 24
 					}
 				}
@@ -27702,7 +28055,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					}
 				}
@@ -27791,7 +28144,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 1
 					},
 					"concentration": true
@@ -27876,7 +28229,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -27928,7 +28281,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "hours",
+						"type": "hour",
 						"amount": 8
 					}
 				}
@@ -27974,7 +28327,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -28117,7 +28470,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -28155,6 +28508,9 @@
 			"page": 289,
 			"damageInflict": [
 				"lightning"
+			],
+			"spellAttack": [
+				"R"
 			]
 		},
 		{
@@ -28220,7 +28576,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 1
 					},
 					"concentration": true
@@ -28262,6 +28618,16 @@
 						"subclass": {
 							"name": "Stone",
 							"source": "UASorcerer"
+						}
+					},
+					{
+						"class": {
+							"name": "Cleric",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Destruction (Stream)",
+							"source": "Twitter"
 						}
 					}
 				]
@@ -28306,7 +28672,7 @@
 				{
 					"type": "timed",
 					"duration": {
-						"type": "minutes",
+						"type": "minute",
 						"amount": 10
 					}
 				}
