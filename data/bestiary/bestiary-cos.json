@@ -161,7 +161,13 @@
 					]
 				}
 			],
-			"page": 228
+			"page": 228,
+			"traitTags": [
+				"Shapechanger"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Baba Lysaga's Creeping Hut",
@@ -256,7 +262,14 @@
 					]
 				}
 			],
-			"page": 226
+			"page": 226,
+			"traitTags": [
+				"Antimagic Susceptibility",
+				"Siege Monster"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Barovian Witch",
@@ -439,7 +452,14 @@
 					]
 				}
 			],
-			"page": 226
+			"page": 226,
+			"traitTags": [
+				"Antimagic Susceptibility",
+				"False Appearance"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Ezmerelda d'Avenir",
@@ -589,7 +609,10 @@
 					]
 				}
 			],
-			"page": 231
+			"page": 231,
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Guardian Portrait",
@@ -675,7 +698,11 @@
 					]
 				}
 			],
-			"page": 227
+			"page": 227,
+			"traitTags": [
+				"Antimagic Susceptibility",
+				"False Appearance"
+			]
 		},
 		{
 			"name": "Izek Strazni",
@@ -748,7 +775,13 @@
 					]
 				}
 			],
-			"page": 232
+			"page": 232,
+			"traitTags": [
+				"Brute"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Madam Eva",
@@ -985,7 +1018,10 @@
 					]
 				}
 			],
-			"page": 234
+			"page": 234,
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Phantom Warrior",
@@ -1085,7 +1121,13 @@
 					]
 				}
 			],
-			"page": 235
+			"page": 235,
+			"traitTags": [
+				"Incorporeal Movement"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Pidlwick II",
@@ -1154,7 +1196,10 @@
 					]
 				}
 			],
-			"page": 236
+			"page": 236,
+			"traitTags": [
+				"Ambusher"
+			]
 		},
 		{
 			"name": "Rahadin",
@@ -1265,7 +1310,13 @@
 					]
 				}
 			],
-			"page": 237
+			"page": 237,
+			"traitTags": [
+				"Fey Ancestry"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Rictavio",
@@ -1402,7 +1453,10 @@
 					]
 				}
 			],
-			"page": 238
+			"page": 238,
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Strahd von Zarovich",
@@ -1622,7 +1676,13 @@
 			],
 			"page": 240,
 			"isNamedCreature": true,
-			"isNPC": true
+			"isNPC": true,
+			"traitTags": [
+				"Shapechanger",
+				"Legendary Resistances",
+				"Regeneration",
+				"Spider Climb"
+			]
 		},
 		{
 			"name": "Strahd Zombie",
@@ -1697,7 +1757,10 @@
 					]
 				}
 			],
-			"page": 241
+			"page": 241,
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Strahd's Animated Armor",
@@ -1795,7 +1858,14 @@
 					]
 				}
 			],
-			"page": 227
+			"page": 227,
+			"traitTags": [
+				"Antimagic Susceptibility",
+				"False Appearance"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Tree Blight",
@@ -1875,7 +1945,14 @@
 					]
 				}
 			],
-			"page": 230
+			"page": 230,
+			"traitTags": [
+				"False Appearance",
+				"Siege Monster"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Vladimir Horngaard",
@@ -1991,7 +2068,15 @@
 					]
 				}
 			],
-			"page": 241
+			"page": 241,
+			"traitTags": [
+				"Regeneration",
+				"Rejuvenation",
+				"Turn Immunity"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Wereraven",
@@ -2085,7 +2170,10 @@
 					]
 				}
 			],
-			"page": 242
+			"page": 242,
+			"traitTags": [
+				"Shapechanger"
+			]
 		}
 	]
 }

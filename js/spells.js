@@ -10,6 +10,7 @@ const META_ADD_S = "Somatic";
 const META_ADD_M = "Material";
 const META_ADD_M_COST = "Material with Cost";
 const META_ADD_MB_PERMANENT = "Permanent Effects";
+const META_ADD_MB_SCALING = "Scaling Effects";
 // real meta tags
 const META_RITUAL = "Ritual";
 const META_TECHNOMAGIC = "Technomagic";
@@ -204,6 +205,7 @@ function getMetaFilterObj (s) {
 	if (s.components.m) out.push(META_ADD_M);
 	if (s.components.m && s.components.m.cost) out.push(META_ADD_M_COST);
 	if (s.permanentEffects || s.duration.filter(it => it.type === "permanent").length) out.push(META_ADD_MB_PERMANENT);
+	if (s.scalingEffects || s.entriesHigherLevel) out.push(META_ADD_MB_SCALING);
 	return out;
 }
 
@@ -219,14 +221,23 @@ function handleBrew (homebrew) {
 	addSpells(homebrew.spell);
 }
 
+function pPostLoad () {
+	return new Promise(resolve => {
+		BrewUtil.pAddBrewData()
+			.then(handleBrew)
+			.catch(BrewUtil.purgeBrew)
+			.then(() => {
+				BrewUtil.makeBrewButton("manage-brew");
+				BrewUtil.bind({list, filterBox, sourceFilter});
+				ListUtil.loadState();
+				resolve();
+			});
+	})
+}
+
 window.onload = function load () {
 	ExcludeUtil.initialise();
-	multisourceLoad(JSON_DIR, JSON_LIST_NAME, pageInit, addSpells, () => {
-		BrewUtil.addBrewData(handleBrew);
-		BrewUtil.makeBrewButton("manage-brew");
-		BrewUtil.bind({list, filterBox, sourceFilter});
-		ListUtil.loadState();
-	});
+	multisourceLoad(JSON_DIR, JSON_LIST_NAME, pageInit, addSpells, pPostLoad);
 };
 
 let list;
@@ -247,8 +258,8 @@ const subclassFilter = new GroupedFilter({
 });
 const classAndSubclassFilter = new MultiFilter("Classes", classFilter, subclassFilter);
 const metaFilter = new Filter({
-	header: "Components/Miscellaneous",
-	items: [META_ADD_CONC, META_ADD_V, META_ADD_S, META_ADD_M, META_ADD_M_COST, META_RITUAL, META_TECHNOMAGIC, META_ADD_MB_PERMANENT]
+	header: "Components & Miscellaneous",
+	items: [META_ADD_CONC, META_ADD_V, META_ADD_S, META_ADD_M, META_ADD_M_COST, META_RITUAL, META_TECHNOMAGIC, META_ADD_MB_PERMANENT, META_ADD_MB_SCALING]
 });
 const schoolFilter = new Filter({
 	header: "School",
@@ -396,44 +407,46 @@ function pageInit (loadedSources) {
 
 	// load homebrew class spell list addons
 	brewSpellClasses = {PHB: {}};
-	BrewUtil.addBrewData((homebrew) => {
-		function handleSubclass (className, classSource = SRC_PHB, sc) {
-			if (sc.subclassSpells) {
-				sc.subclassSpells.forEach(it => {
-					const name = typeof it === "string" ? it : it.name;
-					const source = typeof it === "string" ? "PHB" : it.source;
-					brewSpellClasses[source] = brewSpellClasses[source] || {fromClassList: [], fromSubclass: []};
-					brewSpellClasses[source][name] = brewSpellClasses[source][name] || {fromClassList: [], fromSubclass: []};
-					brewSpellClasses[source][name].fromSubclass.push({
-						class: {
-							name: className,
-							source: classSource
-						},
-						subclass: {
-							name: sc.shortName,
-							source: sc.source
-						}
-					});
-				});
-			}
-		}
-
-		if (homebrew.class) {
-			homebrew.class.forEach(c => {
-				if (c.classSpells) {
-					c.classSpells.forEach(it => {
+	BrewUtil.pAddBrewData()
+		.then((homebrew) => {
+			function handleSubclass (className, classSource = SRC_PHB, sc) {
+				if (sc.subclassSpells) {
+					sc.subclassSpells.forEach(it => {
 						const name = typeof it === "string" ? it : it.name;
 						const source = typeof it === "string" ? "PHB" : it.source;
-						brewSpellClasses[source] = brewSpellClasses[source] || {};
+						brewSpellClasses[source] = brewSpellClasses[source] || {fromClassList: [], fromSubclass: []};
 						brewSpellClasses[source][name] = brewSpellClasses[source][name] || {fromClassList: [], fromSubclass: []};
-						brewSpellClasses[source][name].fromClassList.push({name: c.name, source: c.source});
+						brewSpellClasses[source][name].fromSubclass.push({
+							class: {
+								name: className,
+								source: classSource
+							},
+							subclass: {
+								name: sc.shortName,
+								source: sc.source
+							}
+						});
 					});
 				}
-				if (c.subclasses) c.subclasses.forEach(sc => handleSubclass(c.name, c.source, sc));
-			})
-		}
-		if (homebrew.subclass) homebrew.subclass.forEach(sc => handleSubclass(sc.class, sc.classSource, sc));
-	});
+			}
+
+			if (homebrew.class) {
+				homebrew.class.forEach(c => {
+					if (c.classSpells) {
+						c.classSpells.forEach(it => {
+							const name = typeof it === "string" ? it : it.name;
+							const source = typeof it === "string" ? "PHB" : it.source;
+							brewSpellClasses[source] = brewSpellClasses[source] || {};
+							brewSpellClasses[source][name] = brewSpellClasses[source][name] || {fromClassList: [], fromSubclass: []};
+							brewSpellClasses[source][name].fromClassList.push({name: c.name, source: c.source});
+						});
+					}
+					if (c.subclasses) c.subclasses.forEach(sc => handleSubclass(c.name, c.source, sc));
+				})
+			}
+			if (homebrew.subclass) homebrew.subclass.forEach(sc => handleSubclass(sc.class, sc.classSource, sc));
+		})
+		.catch(BrewUtil.purgeBrew);
 }
 
 function getSublistItem (spell, pinId) {

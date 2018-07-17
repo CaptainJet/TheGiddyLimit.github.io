@@ -99,6 +99,9 @@
 								},
 								"darkvision": {
 									"type": "integer"
+								},
+								"hasSpellcasting": {
+									"type": "boolean"
 								}
 							},
 							"additionalProperties": false
@@ -108,6 +111,9 @@
 						"type": "integer"
 					},
 					"npc": {
+						"type": "boolean"
+					},
+					"hasSpellcasting": {
 						"type": "boolean"
 					}
 				},

@@ -62,7 +62,10 @@
 					]
 				}
 			],
-			"page": 88
+			"page": 88,
+			"traitTags": [
+				"Pack Tactics"
+			]
 		},
 		{
 			"name": "Azbara Jos",
@@ -311,7 +314,13 @@
 					]
 				}
 			],
-			"page": 89
+			"page": 89,
+			"traitTags": [
+				"Keen Senses"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Captain Othelstan",
@@ -397,7 +406,10 @@
 					]
 				}
 			],
-			"page": 89
+			"page": 89,
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Dralmorrer Borngray",
@@ -524,7 +536,13 @@
 					]
 				}
 			],
-			"page": 90
+			"page": 90,
+			"traitTags": [
+				"Fey Ancestry"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Frulam Mondath",
@@ -629,7 +647,10 @@
 					]
 				}
 			],
-			"page": 90
+			"page": 90,
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Jamna Gleamsilver",
@@ -737,7 +758,10 @@
 					]
 				}
 			],
-			"page": 91
+			"page": 91,
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Langdedrosa Cyanwrath",
@@ -831,7 +855,10 @@
 					]
 				}
 			],
-			"page": 91
+			"page": 91,
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Pharblex Spattergoo",
@@ -970,7 +997,13 @@
 					]
 				}
 			],
-			"page": 91
+			"page": 91,
+			"traitTags": [
+				"Amphibious"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		},
 		{
 			"name": "Rezmir",
@@ -1107,7 +1140,11 @@
 			],
 			"page": 93,
 			"isNamedCreature": true,
-			"isNPC": true
+			"isNPC": true,
+			"traitTags": [
+				"Amphibious",
+				"Legendary Resistances"
+			]
 		},
 		{
 			"name": "Talis the White",
@@ -1243,7 +1280,10 @@
 					]
 				}
 			],
-			"page": 93
+			"page": 93,
+			"traitTags": [
+				"Fey Ancestry"
+			]
 		},
 		{
 			"name": "Trepsin",
@@ -1316,7 +1356,14 @@
 					]
 				}
 			],
-			"page": 63
+			"page": 63,
+			"traitTags": [
+				"Keen Senses",
+				"Regeneration"
+			],
+			"actionTags": [
+				"Multiattack"
+			]
 		}
 	]
 }

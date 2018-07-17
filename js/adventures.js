@@ -40,8 +40,10 @@ function onJsonLoad (data) {
 	});
 
 	handleBrew(data);
-	BrewUtil.addBrewData(addAdventures);
-	BrewUtil.makeBrewButton("manage-brew");
+	BrewUtil.pAddBrewData()
+		.then(addAdventures)
+		.catch(BrewUtil.purgeBrew)
+		.then(() => BrewUtil.makeBrewButton("manage-brew"));
 }
 
 function handleBrew (homebrew) {

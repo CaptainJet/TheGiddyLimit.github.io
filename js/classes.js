@@ -1191,7 +1191,6 @@ ClassList.classList = ListUtil.search({
 BrewUtil.makeBrewButton("manage-brew");
 BrewUtil.bind({list: ClassList.classList, filterBox, sourceFilter});
 
-History.init();
 initCompareMode();
 ClassBookView.initButton();
 ExcludeUtil.initialise();
@@ -1203,10 +1202,13 @@ let classTableDefault = $("#classtable").html();
 DataUtil.class.loadJSON().then((data) => {
 	addClassData(data);
 
-	BrewUtil.addBrewData(handleBrew);
-
-	History.initialLoad = false;
-	RollerUtil.addListRollButton();
+	BrewUtil.pAddBrewData()
+		.then(handleBrew)
+		.catch(BrewUtil.purgeBrew)
+		.then(() => {
+			RollerUtil.addListRollButton();
+			History.init(true);
+		});
 });
 
 function handleBrew (homebrew) {

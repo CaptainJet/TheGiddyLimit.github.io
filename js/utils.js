@@ -107,6 +107,7 @@ ABIL_CHA = "Charisma";
 ABIL_CH_ANY = "Choose Any";
 
 HOMEBREW_STORAGE = "HOMEBREW_STORAGE";
+HOMEBREW_META_STORAGE = "HOMEBREW_META_STORAGE";
 EXCLUDES_STORAGE = "EXCLUDES_STORAGE";
 DMSCREEN_STORAGE = "DMSCREEN_STORAGE";
 ROLLER_MACRO_STORAGE = "ROLLER_MACRO_STORAGE";
@@ -201,6 +202,47 @@ String.prototype.escapeQuotes = String.prototype.escapeQuotes ||
 String.prototype.unescapeQuotes = String.prototype.unescapeQuotes ||
 	function () {
 		return this.replace(/&singlequot;/g, `'`).replace(/&quot;/g, `"`);
+	};
+
+/**
+ * Calculates the Damerau-Levenshtein distance between two strings.
+ * https://gist.github.com/IceCreamYou/8396172
+ */
+String.prototype.distance = String.prototype.distance ||
+	function (target) {
+		let source = this; let i; let j;
+		if (!source) return target ? target.length : 0;
+		else if (!target) return source.length;
+
+		const m = source.length; const n = target.length; const INF = m + n; const score = new Array(m + 2); const sd = {};
+		for (i = 0; i < m + 2; i++) score[i] = new Array(n + 2);
+		score[0][0] = INF;
+		for (i = 0; i <= m; i++) {
+			score[i + 1][1] = i;
+			score[i + 1][0] = INF;
+			sd[source[i]] = 0;
+		}
+		for (j = 0; j <= n; j++) {
+			score[1][j + 1] = j;
+			score[0][j + 1] = INF;
+			sd[target[j]] = 0;
+		}
+
+		for (i = 1; i <= m; i++) {
+			let DB = 0;
+			for (j = 1; j <= n; j++) {
+				const i1 = sd[target[j - 1]]; const j1 = DB;
+				if (source[i - 1] === target[j - 1]) {
+					score[i + 1][j + 1] = score[i][j];
+					DB = j;
+				} else {
+					score[i + 1][j + 1] = Math.min(score[i][j], Math.min(score[i + 1][j], score[i][j + 1])) + 1;
+				}
+				score[i + 1][j + 1] = Math.min(score[i + 1][j + 1], score[i1] ? score[i1][j1] + (i - i1 - 1) + 1 + (j - j1 - 1) : Infinity);
+			}
+			sd[source[i - 1]] = i;
+		}
+		return score[m + 1][n + 1];
 	};
 
 StrUtil = {
@@ -312,7 +354,7 @@ function utils_getAbilityData (abObj) {
 						outStack += "any other ";
 					}
 					if (item.count !== undefined && item.count > 1) {
-						outStack += getNumberString(item.count) + " ";
+						outStack += Parser.numberToText(item.count) + " ";
 					}
 					if (allAbilities || allAbilitiesWithParent) {
 						outStack += amount;
@@ -354,13 +396,6 @@ function utils_getAbilityData (abObj) {
 		}
 		return tempAbilities.length === 6;
 	}
-
-	function getNumberString (amount) {
-		if (amount === 1) return "one";
-		if (amount === 2) return "two";
-		if (amount === 3) return "three";
-		else return amount;
-	}
 }
 
 // PARSING =============================================================================================================
@@ -380,6 +415,49 @@ Parser._parse_bToA = function (abMap, b) {
 		if (abMap[v] === b) return v
 	}
 	return b;
+};
+
+Parser.numberToText = function (number) {
+	if (Math.abs(number) >= 100) return number;
+
+	function getAsText (num) {
+		const abs = Math.abs(num);
+		switch (abs) {
+			case 0: return "zero";
+			case 1: return "one";
+			case 2: return "two";
+			case 3: return "three";
+			case 4: return "four";
+			case 5: return "five";
+			case 6: return "six";
+			case 7: return "seven";
+			case 8: return "eight";
+			case 9: return "nine";
+			case 10: return "ten";
+			case 11: return "eleven";
+			case 12: return "twelve";
+			case 13: return "thirteen";
+			case 14: return "fourteen";
+			case 15: return "fifteen";
+			case 16: return "sixteen";
+			case 17: return "seventeen";
+			case 18: return "eighteen";
+			case 19: return "nineteen";
+			case 20: return "twenty";
+			case 30: return "thirty";
+			case 40: return "forty";
+			case 50: return "fiddy"; // :^)
+			case 60: return "sixty";
+			case 70: return "seventy";
+			case 80: return "eighty";
+			case 90: return "ninety";
+			default: {
+				const str = String(abs);
+				return `${getAsText(Number(`${str[0]}0`))}-${getAsText(Number(str[1]))}`;
+			}
+		}
+	}
+	return `${number < 0 ? "negative " : ""}${getAsText(number)}`;
 };
 
 Parser.attAbvToFull = function (abv) {
@@ -478,6 +556,30 @@ Parser.crToNumber = function (cr) {
 	if (parts.length === 1) return Number(parts[0]);
 	else if (parts.length === 2) return Number(parts[0]) / Number(parts[1]);
 	else return 0;
+};
+
+Parser.crToPb = function (cr) {
+	if (cr === "Unknown" || cr == null) return 0;
+	cr = cr.cr || cr;
+	if (Parser.crToNumber(cr) < 5) return 2;
+	return Math.ceil(cr / 4) + 1;
+};
+
+Parser.dragonColorToFull = function (c) {
+	return Parser._parse_bToA(DRAGON_COLOR_TO_FULL, c);
+};
+
+DRAGON_COLOR_TO_FULL = {
+	B: "black",
+	U: "blue",
+	G: "green",
+	R: "red",
+	W: "white",
+	A: "brass",
+	Z: "bronze",
+	C: "copper",
+	O: "gold",
+	S: "silver"
 };
 
 Parser.acToFull = function (ac) {
@@ -828,7 +930,7 @@ Parser.monTypeToPlural = function (type) {
 };
 
 Parser.monCrToFull = function (cr) {
-	if (typeof cr === "string") return `${cr} (${Parser.crToXp(cr)} XP)`;
+	if (typeof cr === "string" || !cr) return `${cr || "Unknown"} (${Parser.crToXp(cr)} XP)`;
 	else {
 		const stack = [Parser.monCrToFull(cr.cr)];
 		if (cr.lair) stack.push(`${Parser.monCrToFull(cr.lair)} when encountered in lair`);
@@ -1704,7 +1806,7 @@ MiscUtil = {
 		}
 	},
 
-	randomColour () {
+	randomColor () {
 		let r; let g; let b;
 		const h = RollerUtil.randomise(30, 0) / 30;
 		const i = ~~(h * 6);
@@ -2602,19 +2704,11 @@ DataUtil = {
 
 	multiLoadJSON: function (toLoads, onEachLoadFunction, onFinalLoadFunction) {
 		if (!toLoads.length) onFinalLoadFunction([]);
-		const dataStack = [];
-
-		let loadedCount = 0;
-		toLoads.forEach(tl => {
-			this.loadJSON(tl.url).then((data) => {
-				if (onEachLoadFunction) onEachLoadFunction(tl, data);
-				dataStack.push(data);
-
-				loadedCount++;
-				if (loadedCount >= toLoads.length) {
-					onFinalLoadFunction(dataStack);
-				}
+		Promise.all(toLoads.map(tl => this.loadJSON(tl.url))).then(datas => {
+			datas.forEach((data, i) => {
+				if (onEachLoadFunction) onEachLoadFunction(toLoads[i], data);
 			});
+			onFinalLoadFunction(datas);
 		});
 	},
 
@@ -2868,7 +2962,7 @@ StorageUtil = {
 // HOMEBREW ============================================================================================================
 BrewUtil = {
 	homebrew: null,
-	_homebrewMeta: null,
+	homebrewMeta: null, // TODO
 	_lists: null,
 	storage: StorageUtil.getStorage(),
 	_sourceCache: null,
@@ -2884,38 +2978,58 @@ BrewUtil = {
 		if (options.sourceFilter) BrewUtil._sourceFilter = options.sourceFilter;
 	},
 
-	addBrewData: (brewHandler) => {
-		if (BrewUtil.homebrew) {
-			brewHandler(BrewUtil.homebrew);
-		} else {
-			const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
-			if (rawBrew) {
-				try {
-					BrewUtil.homebrew = JSON.parse(rawBrew);
-					BrewUtil._pLoadLocal().then(() => brewHandler(BrewUtil.homebrew));
-				} catch (e) {
-					// on error, purge all brew and reset hash
-					purgeBrew();
-					setTimeout(() => {
-						throw e
-					});
-				}
+	pAddBrewData: () => {
+		return new Promise(resolve => {
+			if (BrewUtil.homebrew) {
+				resolve(BrewUtil.homebrew);
 			} else {
-				BrewUtil.homebrew = {};
-				BrewUtil._pLoadLocal().then(() => brewHandler(BrewUtil.homebrew));
-			}
-		}
+				const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
+				const rawBrewMeta = BrewUtil.storage.getItem(HOMEBREW_META_STORAGE);
 
-		function purgeBrew () {
-			window.alert("Error when loading homebrew! Purging corrupt data...");
-			BrewUtil.storage.removeItem(HOMEBREW_STORAGE);
-			BrewUtil.homebrew = null;
-			window.location.hash = "";
+				new Promise((resolve) => {
+					if (rawBrewMeta) {
+						BrewUtil.homebrewMeta = JSON.parse(rawBrewMeta);
+						BrewUtil.homebrewMeta.sources = BrewUtil.homebrewMeta.sources || [];
+						resolve();
+					} else {
+						BrewUtil.homebrewMeta = {sources: []};
+						resolve();
+					}
+				}).then(new Promise((resolve) => {
+					if (rawBrew) {
+						BrewUtil.homebrew = JSON.parse(rawBrew);
+						resolve();
+					} else {
+						BrewUtil.homebrew = {};
+						resolve();
+					}
+				}).then(BrewUtil._pLoadLocal()).then(() => {
+					BrewUtil._resetSourceCache();
+				}).then(() => resolve(BrewUtil.homebrew))).catch(error => {
+					// on error, purge all brew and reset hash
+					BrewUtil.purgeBrew();
+					setTimeout(() => {
+						throw error
+					});
+				});
+			}
+		});
+	},
+
+	purgeBrew (error) {
+		window.alert("Error when loading homebrew! Purging corrupt data...");
+		BrewUtil.storage.removeItem(HOMEBREW_STORAGE);
+		BrewUtil.homebrew = null;
+		window.location.hash = "";
+		if (error) {
+			setTimeout(() => {
+				throw error
+			}, 1);
 		}
 	},
 
 	_pLoadLocal (callbackFn = (d, page) => BrewUtil.doHandleBrewJson(d, page, null)) {
-		return DataUtil.loadJSON(JSON_HOMEBREW_INDEX).then((data) => {
+		return DataUtil.loadJSON(`${EntryRenderer.getDefaultRenderer().baseUrl}${JSON_HOMEBREW_INDEX}`).then((data) => {
 			// auto-load from `homebrew/`, for custom versions of the site
 			if (data.toImport.length) {
 				const page = UrlUtil.getCurrentPage();
@@ -3223,6 +3337,7 @@ BrewUtil = {
 		$btnDelAll.on("click", () => {
 			if (!window.confirm("Are you sure?")) return;
 			BrewUtil.storage.setItem(HOMEBREW_STORAGE, "{}");
+			BrewUtil.storage.setItem(HOMEBREW_META_STORAGE, "{}");
 			window.location.hash = "";
 			location.reload();
 		});
@@ -3415,11 +3530,11 @@ BrewUtil = {
 		function checkAndAddSources () {
 			if (!json._meta || !json._meta.sources) return [];
 			const areNew = [];
-			if (!BrewUtil.homebrew._meta) BrewUtil.homebrew._meta = {sources: []};
-			const existing = BrewUtil.homebrew._meta.sources.map(src => src.json);
+			if (!BrewUtil.homebrewMeta) BrewUtil.homebrewMeta = {sources: []};
+			const existing = BrewUtil.homebrewMeta.sources.map(src => src.json);
 			json._meta.sources.forEach(src => {
 				if (!existing.find(it => it === src.json)) {
-					BrewUtil.homebrew._meta.sources.push(src);
+					BrewUtil.homebrewMeta.sources.push(src);
 					areNew.push(src);
 				}
 			});
@@ -3436,13 +3551,14 @@ BrewUtil = {
 			storable.forEach(k => toAdd[k] = checkAndAdd(k)); // only add if unique ID not already present
 		}
 		BrewUtil.storage.setItem(HOMEBREW_STORAGE, JSON.stringify(BrewUtil.homebrew));
+		BrewUtil.storage.setItem(HOMEBREW_META_STORAGE, JSON.stringify(BrewUtil.homebrewMeta));
 
 		// wipe old cache
 		BrewUtil._resetSourceCache();
 
 		// display on page
-		// FIXME this requires changing the addBrewData in the page JS, as well as here
-		// TODO complete refactoring so this alwayss call `handleBrew` which can be defined per-page
+		// FIXME this requires changing the pAddBrewData in the page JS, as well as here
+		// TODO complete refactoring so this always call `handleBrew` which can be defined per-page
 		switch (page) {
 			case UrlUtil.PG_SPELLS:
 				handleBrew(toAdd);
@@ -3529,16 +3645,16 @@ BrewUtil = {
 
 	_buildSourceCache () {
 		function doBuild () {
-			if (BrewUtil._homebrewMeta && BrewUtil._homebrewMeta.sources) {
-				BrewUtil._homebrewMeta.sources.forEach(src => BrewUtil._sourceCache[src.json] = ({abbreviation: src.abbreviation, full: src.full}));
+			if (BrewUtil.homebrewMeta && BrewUtil.homebrewMeta.sources) {
+				BrewUtil.homebrewMeta.sources.forEach(src => BrewUtil._sourceCache[src.json] = ({abbreviation: src.abbreviation, full: src.full}));
 			}
 		}
 
 		if (!BrewUtil._sourceCache) {
 			BrewUtil._sourceCache = {};
 
-			if (!BrewUtil._homebrewMeta) {
-				const rawBrew = BrewUtil.storage.getItem(HOMEBREW_STORAGE);
+			if (!BrewUtil.homebrewMeta) {
+				const rawBrew = BrewUtil.storage.getItem(HOMEBREW_META_STORAGE);
 				const temp = rawBrew ? ((JSON.parse(rawBrew) || {})._meta || {}) : {};
 				temp.sources = temp.sources || [];
 
@@ -3556,7 +3672,7 @@ BrewUtil = {
 						});
 					}
 				});
-				BrewUtil._homebrewMeta = temp;
+				BrewUtil.homebrewMeta = temp;
 				doBuild();
 			} else {
 				doBuild();
@@ -3570,14 +3686,14 @@ BrewUtil = {
 
 	removeJsonSource (source) {
 		BrewUtil._resetSourceCache();
-		const ix = BrewUtil.homebrew._meta.sources.findIndex(it => it.json === source);
-		if (~ix) BrewUtil.homebrew._meta.sources.splice(ix, 1);
-		BrewUtil.storage.setItem(HOMEBREW_STORAGE, JSON.stringify(BrewUtil.homebrew));
+		const ix = BrewUtil.homebrewMeta.sources.findIndex(it => it.json === source);
+		if (~ix) BrewUtil.homebrewMeta.sources.splice(ix, 1);
+		BrewUtil.storage.setItem(HOMEBREW_META_STORAGE, JSON.stringify(BrewUtil.homebrewMeta));
 	},
 
 	getJsonSources () {
 		BrewUtil._buildSourceCache();
-		return BrewUtil.homebrew && BrewUtil.homebrew._meta && BrewUtil.homebrew._meta.sources ? BrewUtil.homebrew._meta.sources : [];
+		return BrewUtil.homebrewMeta && BrewUtil.homebrewMeta.sources ? BrewUtil.homebrewMeta.sources : [];
 	},
 
 	hasSourceJson (source) {
