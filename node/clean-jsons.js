@@ -14,7 +14,9 @@ function readJSON (path) {
 }
 
 function listFiles (dir) {
-	const dirContent = fs.readdirSync(dir, "utf8").map(file => `${dir}/${file}`);
+	const dirContent = fs.readdirSync(dir, "utf8")
+		.filter(file => !file.startsWith("bookref-"))
+		.map(file => `${dir}/${file}`);
 	return dirContent.reduce((acc, file) => {
 		if (isDirectory(file)) {
 			acc.push(...listFiles(file));
@@ -27,7 +29,8 @@ function listFiles (dir) {
 
 const replacements = {
 	"—": "\\u2014",
-	"–": "\\u2014",
+	"–": "\\u2013",
+	"−": "\\u2212",
 	"’": "'",
 	"“": '\\"',
 	"”": '\\"'

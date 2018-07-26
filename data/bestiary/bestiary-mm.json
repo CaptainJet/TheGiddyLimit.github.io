@@ -6278,7 +6278,7 @@
 				{
 					"name": "Corrosive Form",
 					"entries": [
-						"A creature that touches the pudding or hits it with a melee attack while within 5 feet of it takes 4 ({@dice 1d8}) acid damage. Any nonmagical weapon made of metal or wood that hits the pudding corrodes. After dealing damage, the weapon takes a permanent and cumulative -1 penalty to damage rolls. If its penalty drops to -5, the weapon is destroyed. Nonmagical ammunition made of metal or wood that hits the pudding is destroyed after dealing damage. The pudding can eat through 2-inch-thick, nonmagical wood or metal in 1 round."
+						"A creature that touches the pudding or hits it with a melee attack while within 5 feet of it takes 4 ({@dice 1d8}) acid damage. Any nonmagical weapon made of metal or wood that hits the pudding corrodes. After dealing damage, the weapon takes a permanent and cumulative \u20131 penalty to damage rolls. If its penalty drops to \u20135, the weapon is destroyed. Nonmagical ammunition made of metal or wood that hits the pudding is destroyed after dealing damage. The pudding can eat through 2-inch-thick, nonmagical wood or metal in 1 round."
 					]
 				},
 				{
@@ -6292,7 +6292,7 @@
 				{
 					"name": "Pseudopod",
 					"entries": [
-						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) bludgeoning damage plus 18 ({@dice 4d8}) acid damage. In addition, nonmagical armor worn by the target is partly dissolved and takes a permanent and cumulative -1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 6 ({@dice 1d6+3}) bludgeoning damage plus 18 ({@dice 4d8}) acid damage. In addition, nonmagical armor worn by the target is partly dissolved and takes a permanent and cumulative \u20131 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10."
 					]
 				}
 			],
@@ -6659,7 +6659,7 @@
 				{
 					"name": "Tusk",
 					"entries": [
-						"Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) slashing damage."
+						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) slashing damage."
 					]
 				}
 			],
@@ -7317,7 +7317,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 8 ({@dice 1d8+4}) piercing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 8 ({@dice 1d8+4}) piercing damage."
 					]
 				},
 				{
@@ -17482,7 +17482,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Weapon Attack: {@hit 9} to hit, reach 5 ft., one target. Hit: 22 ({@dice 3d10+6}) piercing damage."
+						"Melee Weapon Attack: {@hit 9} to hit, reach 5 ft., one target. Hit: 22 ({@dice 3d10+6}) piercing damage."
 					]
 				}
 			],
@@ -17819,7 +17819,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d4+3}) piercing damage."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 5 ({@dice 1d4+3}) piercing damage."
 					]
 				}
 			],
@@ -17890,7 +17890,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Weapon Attack: {@hit 3} to hit, reach 5 ft., one creature. Hit: 4 ({@dice 1d6+1}) piercing damage, and the target must make a DC 11 Constitution saving throw, taking 7 ({@dice 2d6}) poison damage on a failed save, or half as much damage on a successful one. If the poison damage reduces the target to 0 hit points, the target is stable but poisoned for 1 hour, even after regaining hit points, and is paralyzed while poisoned in this way."
+						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one creature. Hit: 4 ({@dice 1d6+1}) piercing damage, and the target must make a DC 11 Constitution saving throw, taking 7 ({@dice 2d6}) poison damage on a failed save, or half as much damage on a successful one. If the poison damage reduces the target to 0 hit points, the target is stable but poisoned for 1 hour, even after regaining hit points, and is paralyzed while poisoned in this way."
 					]
 				}
 			],
@@ -19399,7 +19399,7 @@
 				{
 					"name": "Corrode Metal",
 					"entries": [
-						"Any nonmagical weapon made of metal that hits the ooze corrodes. After dealing damage, the weapon takes a permanent and cumulative -1 penalty to damage rolls. If its penalty drops to -5, the weapon is destroyed. Nonmagical ammunition made of metal that hits the ooze is destroyed after dealing damage.",
+						"Any nonmagical weapon made of metal that hits the ooze corrodes. After dealing damage, the weapon takes a permanent and cumulative \u20131 penalty to damage rolls. If its penalty drops to \u20135, the weapon is destroyed. Nonmagical ammunition made of metal that hits the ooze is destroyed after dealing damage.",
 						"The ooze can eat through 2-inch-thick, nonmagical metal in 1 round."
 					]
 				},
@@ -19414,7 +19414,7 @@
 				{
 					"name": "Pseudopod",
 					"entries": [
-						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) bludgeoning damage plus 7 ({@dice 2d6}) acid damage, and if the target is wearing nonmagical metal armor, its armor is partly corroded and takes a permanent and cumulative -1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10."
+						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) bludgeoning damage plus 7 ({@dice 2d6}) acid damage, and if the target is wearing nonmagical metal armor, its armor is partly corroded and takes a permanent and cumulative \u20131 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10."
 					]
 				}
 			],
@@ -19482,7 +19482,7 @@
 				{
 					"name": "Corrode Metal",
 					"entries": [
-						"Any nonmagical weapon made of metal that hits the ooze corrodes. After dealing damage, the weapon takes a permanent and cumulative -1 penalty to damage rolls. If its penalty drops to -5, the weapon is destroyed. Nonmagical ammunition made of metal that hits the ooze is destroyed after dealing damage.",
+						"Any nonmagical weapon made of metal that hits the ooze corrodes. After dealing damage, the weapon takes a permanent and cumulative \u20131 penalty to damage rolls. If its penalty drops to \u20135, the weapon is destroyed. Nonmagical ammunition made of metal that hits the ooze is destroyed after dealing damage.",
 						"The ooze can eat through 2-inch-thick, nonmagical metal in 1 round."
 					]
 				},
@@ -19497,7 +19497,7 @@
 				{
 					"name": "Pseudopod",
 					"entries": [
-						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) bludgeoning damage plus 7 ({@dice 2d6}) acid damage, and if the target is wearing nonmagical metal armor, its armor is partly corroded and takes a permanent and cumulative -1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10."
+						"Melee Weapon Attack: {@hit 3} to hit, reach 5 ft., one target. Hit: 4 ({@dice 1d6+1}) bludgeoning damage plus 7 ({@dice 2d6}) acid damage, and if the target is wearing nonmagical metal armor, its armor is partly corroded and takes a permanent and cumulative \u20131 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10."
 					]
 				},
 				{
@@ -20949,7 +20949,7 @@
 				{
 					"name": "Longsword",
 					"entries": [
-						"Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d8+3}) slashing damage, or 8 ({@dice 1d10+3}) slashing damage if used with two hands."
+						"Melee Weapon Attack: {@hit 5} to hit, reach 5 ft., one target. Hit: 7 ({@dice 1d8+3}) slashing damage, or 8 ({@dice 1d10+3}) slashing damage if used with two hands."
 					]
 				},
 				{
@@ -22266,7 +22266,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"Weapon Attack: {@hit 2} to hit, reach 5 ft., one target. Hit: 3 ({@dice 1d6}) piercing damage."
+						"Melee Weapon Attack: {@hit 2} to hit, reach 5 ft., one target. Hit: 3 ({@dice 1d6}) piercing damage."
 					]
 				}
 			],
@@ -32430,7 +32430,7 @@
 				{
 					"name": "Rust Metal",
 					"entries": [
-						"Any nonmagical weapon made of metal that hits the rust monster corrodes. After dealing damage, the weapon takes a permanent and cumulative -1 penalty to damage rolls. If its penalty drops to -5, the weapon is destroyed. Non magical ammunition made of metal that hits the rust monster is destroyed after dealing damage."
+						"Any nonmagical weapon made of metal that hits the rust monster corrodes. After dealing damage, the weapon takes a permanent and cumulative \u20131 penalty to damage rolls. If its penalty drops to \u20135, the weapon is destroyed. Non magical ammunition made of metal that hits the rust monster is destroyed after dealing damage."
 					]
 				}
 			],
@@ -32445,7 +32445,7 @@
 					"name": "Antennae",
 					"entries": [
 						"The rust monster corrodes a nonmagical ferrous metal object it can see within 5 feet of it. If the object isn't being worn or carried, the touch destroys a 1-foot cube of it. If the object is being worn or carried by a creature, the creature can make a DC 11 Dexterity saving throw to avoid the rust monster's touch.",
-						"If the object touched is either metal armor or a metal shield being worn or carried, its takes a permanent and cumulative -1 penalty to the AC it offers. Armor reduced to an AC of 10 or a shield that drops to a +0 bonus is destroyed. If the object touched is a held metal weapon, it rusts as described in the Rust Metal trait."
+						"If the object touched is either metal armor or a metal shield being worn or carried, its takes a permanent and cumulative \u20131 penalty to the AC it offers. Armor reduced to an AC of 10 or a shield that drops to a +0 bonus is destroyed. If the object touched is a held metal weapon, it rusts as described in the Rust Metal trait."
 					]
 				}
 			],

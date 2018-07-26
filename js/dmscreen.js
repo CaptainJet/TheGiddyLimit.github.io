@@ -15,6 +15,7 @@ const PANEL_TYP_ROLLBOX = 2;
 const PANEL_TYP_TEXTBOX = 3;
 const PANEL_TYP_RULES = 4;
 const PANEL_TYP_INITIATIVE_TRACKER = 5;
+const PANEL_TYP_UNIT_CONVERTER = 6;
 const PANEL_TYP_TUBE = 10;
 const PANEL_TYP_TWITCH = 11;
 const PANEL_TYP_TWITCH_CHAT = 12;
@@ -255,6 +256,16 @@ class Board {
 		});
 	}
 
+	getPanels (x, y, w = 1, h = 1) {
+		const out = [];
+		for (let wOffset = 0; wOffset < w; ++wOffset) {
+			for (let hOffset = 0; hOffset < h; ++hOffset) {
+				out.push(this.getPanel(x + wOffset, y + hOffset));
+			}
+		}
+		return out.filter(it => it);
+	}
+
 	getPanelPx (xPx, hPx) {
 		const dim = this.getPanelDimensions();
 		return this.getPanel(Math.floor(xPx / dim.pxWidth), Math.floor(hPx / dim.pxHeight));
@@ -346,15 +357,11 @@ class Board {
 				p.exile();
 			}
 		});
-		this.setDimensions(toLoad.w, toLoad.h);
+		this.setDimensions(toLoad.w, toLoad.h); // FIXME is this necessary?
 
 		// reload
 		// fill content first; empties can fill any remaining space
 		toLoad.ps.filter(Boolean).filter(saved => saved.t !== PANEL_TYP_EMPTY).forEach(saved => {
-			const p = Panel.fromSavedState(this, saved);
-			if (p) this.panels[p.id] = p;
-		});
-		toLoad.ps.filter(Boolean).filter(saved => saved.t === PANEL_TYP_EMPTY).forEach(saved => {
 			const p = Panel.fromSavedState(this, saved);
 			if (p) this.panels[p.id] = p;
 		});
@@ -615,9 +622,9 @@ class Panel {
 	}
 
 	static fromSavedState (board, saved) {
-		const existing = board.getPanel(saved.x, saved.y);
-		if (saved.t === PANEL_TYP_EMPTY && existing) return null; // cull empties
-		else if (existing) existing.destroy(); // prefer more recent panels
+		const existing = board.getPanels(saved.x, saved.y, saved.w, saved.h);
+		if (saved.t === PANEL_TYP_EMPTY && existing.length) return null; // cull empties
+		else if (existing.length) existing.forEach(p => p.destroy()); // prefer more recent panels
 		const p = new Panel(board, saved.x, saved.y, saved.w, saved.h);
 		p.render();
 
@@ -643,10 +650,13 @@ class Panel {
 					EntryRenderer.dice.bindDmScreenPanel(p);
 					return p;
 				case PANEL_TYP_TEXTBOX:
-					p.doPopulate_TextBox(saved.c.x);
+					p.doPopulate_TextBox(saved.s.x);
 					return p;
 				case PANEL_TYP_INITIATIVE_TRACKER:
 					p.doPopulate_InitiativeTracker(saved.s);
+					return p;
+				case PANEL_TYP_UNIT_CONVERTER:
+					p.doPopulate_UnitConverter(saved.s);
 					return p;
 				case PANEL_TYP_TUBE:
 					p.doPopulate_YouTube(saved.c.u);
@@ -720,6 +730,10 @@ class Panel {
 				left: e.clientX - offsetX
 			});
 		});
+	}
+
+	static isNonExilableType (type) {
+		return type === PANEL_TYP_ROLLBOX || type === PANEL_TYP_TUBE || type === PANEL_TYP_TWITCH;
 	}
 
 	doPopulate_Empty (ixOpt) {
@@ -798,6 +812,15 @@ class Panel {
 			state,
 			$(`<div class="panel-content-wrapper-inner"/>`).append(InitiativeTracker.make$Tracker(this.board, state)),
 			"Initiative Tracker"
+		);
+	}
+
+	doPopulate_UnitConverter (state = {}) {
+		this.set$ContentTab(
+			PANEL_TYP_UNIT_CONVERTER,
+			state,
+			$(`<div class="panel-content-wrapper-inner"/>`).append(UnitConverter.make$Converter(this.board, state)),
+			"Unit Converter"
 		);
 	}
 
@@ -1112,6 +1135,20 @@ class Panel {
 
 	getReplacementPanel () {
 		const replacement = new Panel(this.board, this.x, this.y, this.width, this.height);
+
+		if (this.tabDatas.length > 1 && this.tabDatas.filter(it => !it.isDeleted && (Panel.isNonExilableType(it.type))).length) {
+			const prevTabIx = this.tabDatas.findIndex(it => !it.isDeleted);
+			if (~prevTabIx) {
+				this.setActiveTab(prevTabIx);
+			}
+			// otherwise, it should be the currently displayed panel, and so will be destroyed on exile
+
+			this.tabDatas.filter(it => it.type === PANEL_TYP_ROLLBOX).forEach(it => {
+				it.isDeleted = true;
+				EntryRenderer.dice.unbindDmScreenPanel();
+			});
+		}
+
 		this.exile();
 		this.board.addPanel(replacement);
 		this.board.doCheckFillSpaces();
@@ -1265,7 +1302,15 @@ class Panel {
 		this.tabDatas = hisMeta.tabDatas;
 
 		this.set$Tab(hisMeta.tabIndex, hisMeta.type, hisMeta.contentMeta, $hisContent, hisMeta.title);
-		hisMeta.tabDatas.filter(it => !it.isDeleted && it.$tabButton).forEach(it => this.$pnlTabs.children().last().before(it.$tabButton));
+		hisMeta.tabDatas
+			.forEach((it, ix) => {
+				if (!it.isDeleted && it.$tabButton) {
+					// regenerate tab buttons to refer to the correct tab
+					it.$tabButton.remove();
+					it.$tabButton = this._get$BtnSelTab(ix, it.title);
+					this.$pnlTabs.children().last().before(it.$tabButton);
+				}
+			});
 	}
 
 	getNextTabIndex () {
@@ -1281,12 +1326,33 @@ class Panel {
 		);
 	}
 
+	_get$BtnSelTab (ix, title) {
+		title = title || "[Untitled]";
+		const $btnSelTab = $(`<div class="btn btn-default content-tab"><span class="content-tab-title">${title}</span></div>`)
+			.on("mousedown", (evt) => {
+				if (evt.which === 1) {
+					this.setActiveTab(ix);
+				} else if (evt.which === 2) {
+					this.doCloseTab(ix);
+				}
+			});
+		const $btnCloseTab = $(`<span class="glyphicon glyphicon-remove content-tab-remove"/>`)
+			.on("mousedown", (evt) => {
+				evt.stopPropagation();
+				this.doCloseTab(ix);
+			}).appendTo($btnSelTab);
+		return $btnSelTab;
+	}
+
 	set$Tab (ix, type, contentMeta, $content, title) {
+		if (ix === null) ix = 0;
 		if (ix < 0) {
 			const ixPos = Math.abs(ix + 1);
 			const td = this.tabDatas[ixPos];
-			td.isDeleted = true;
-			if (td.$tabButton) td.$tabButton.detach();
+			if (td) {
+				td.isDeleted = true;
+				if (td.$tabButton) td.$tabButton.detach();
+			}
 		} else {
 			const $btnOld = (this.tabDatas[ix] || {}).$tabButton; // preserve tab button
 			this.tabDatas[ix] = {
@@ -1298,20 +1364,7 @@ class Panel {
 			if ($btnOld) this.tabDatas[ix].$tabButton = $btnOld;
 
 			const doAdd$BtnSelTab = (ix, title) => {
-				title = title || "[Untitled]";
-				const $btnSelTab = $(`<div class="btn btn-default content-tab"><span class="content-tab-title">${title}</span></div>`)
-					.on("mousedown", (evt) => {
-						if (evt.which === 1) {
-							this.setActiveTab(ix);
-						} else if (evt.which === 2) {
-							this.doCloseTab(ix);
-						}
-					});
-				const $btnCloseTab = $(`<span class="glyphicon glyphicon-remove content-tab-remove"/>`)
-					.on("mousedown", (evt) => {
-						evt.stopPropagation();
-						this.doCloseTab(ix);
-					}).appendTo($btnSelTab);
+				const $btnSelTab = this._get$BtnSelTab(ix, title);
 				this.$pnlTabs.children().last().before($btnSelTab);
 				return $btnSelTab;
 			};
@@ -1354,7 +1407,7 @@ class Panel {
 	}
 
 	exile () {
-		if (this.type === PANEL_TYP_ROLLBOX || this.type === PANEL_TYP_TUBE || this.type === PANEL_TYP_TWITCH) this.destroy();
+		if (Panel.isNonExilableType(this.type)) this.destroy();
 		else {
 			if (this.$pnl) this.$pnl.detach();
 			this.board.exilePanel(this.id);
@@ -1422,6 +1475,12 @@ class Panel {
 					return {
 						t: type,
 						s: $content.find(`.dm-init`).data("getState")()
+					};
+				}
+				case PANEL_TYP_UNIT_CONVERTER: {
+					return {
+						t: type,
+						s: $content.find(`.dm-unitconv`).data("getState")()
 					};
 				}
 				case PANEL_TYP_TUBE:
@@ -1519,15 +1578,11 @@ class JoystickMenu {
 				} else {
 					const her = this.panel.board.hoveringPanel;
 					// TODO this should ideally peel off the selected tab and transfer it to the target pane, instead of swapping
-					if (her.getEmpty()) {
-						her.setFromPeer(this.panel.getPanelMeta(), this.panel.$content);
-						this.panel = this.panel.getReplacementPanel();
-					} else {
-						const herMeta = her.getPanelMeta();
-						const $herContent = her.get$Content();
-						her.setFromPeer(this.panel.getPanelMeta(), this.panel.get$Content());
-						this.panel.setFromPeer(herMeta, $herContent);
-					}
+					const herMeta = her.getPanelMeta();
+					const $herContent = her.get$Content();
+					her.setFromPeer(this.panel.getPanelMeta(), this.panel.get$Content());
+					this.panel.setFromPeer(herMeta, $herContent);
+
 					this.panel.doHideJoystick();
 					her.doShowJoystick();
 				}
@@ -1643,7 +1698,7 @@ class JoystickMenu {
 				const canShrink = axis === AX_X ? this.panel.width - 1 : this.panel.height - 1;
 				if (canShrink + numPanelsCovered <= 0) numPanelsCovered = -canShrink;
 				if (numPanelsCovered === 0) return;
-				const isGrowth = ~Math.sign(numPanelsCovered);
+				const isGrowth = !!~Math.sign(numPanelsCovered);
 				if (isGrowth) {
 					switch (dir) {
 						case UP:
@@ -1663,48 +1718,72 @@ class JoystickMenu {
 
 				for (let i = Math.abs(numPanelsCovered); i > 0; --i) {
 					switch (dir) {
-						case UP:
+						case UP: {
 							if (isGrowth) {
-								this.panel.getTopNeighbours().forEach(p => {
-									if (p.canBumpTop()) p.doBumpTop();
-									else if (p.canShrinkBottom()) p.doShrinkBottom();
-									else p.exile();
-								});
+								const tNeighbours = this.panel.getTopNeighbours();
+								if (tNeighbours.filter(it => it.getEmpty()).length === tNeighbours.length) {
+									tNeighbours.forEach(p => p.destroy());
+								} else {
+									tNeighbours.forEach(p => {
+										if (p.canBumpTop()) p.doBumpTop();
+										else if (p.canShrinkBottom()) p.doShrinkBottom();
+										else p.exile();
+									});
+								}
 							}
 							this.panel.height += Math.sign(numPanelsCovered);
 							this.panel.y -= Math.sign(numPanelsCovered);
 							break;
-						case RIGHT:
+						}
+						case RIGHT: {
 							if (isGrowth) {
-								this.panel.getRightNeighbours().forEach(p => {
-									if (p.canBumpRight()) p.doBumpRight();
-									else if (p.canShrinkLeft()) p.doShrinkLeft();
-									else p.exile();
-								});
+								const rNeighbours = this.panel.getRightNeighbours();
+								if (rNeighbours.filter(it => it.getEmpty()).length === rNeighbours.length) {
+									rNeighbours.forEach(p => p.destroy());
+								} else {
+									rNeighbours.forEach(p => {
+										if (p.canBumpRight()) p.doBumpRight();
+										else if (p.canShrinkLeft()) p.doShrinkLeft();
+										else p.exile();
+									});
+								}
 							}
 							this.panel.width += Math.sign(numPanelsCovered);
 							break;
-						case DOWN:
+						}
+						case DOWN: {
 							if (isGrowth) {
-								this.panel.getBottomNeighbours().forEach(p => {
-									if (p.canBumpBottom()) p.doBumpBottom();
-									else if (p.canShrinkTop()) p.doShrinkTop();
-									else p.exile();
-								});
+								const bNeighbours = this.panel.getBottomNeighbours();
+								if (bNeighbours.filter(it => it.getEmpty()).length === bNeighbours.length) {
+									bNeighbours.forEach(p => p.destroy());
+								} else {
+									bNeighbours.forEach(p => {
+										if (p.canBumpBottom()) p.doBumpBottom();
+										else if (p.canShrinkTop()) p.doShrinkTop();
+										else p.exile();
+									});
+								}
 							}
 							this.panel.height += Math.sign(numPanelsCovered);
 							break;
-						case LEFT:
+						}
+						case LEFT: {
 							if (isGrowth) {
-								this.panel.getLeftNeighbours().forEach(p => {
-									if (p.canBumpLeft()) p.doBumpLeft();
-									else if (p.canShrinkRight()) p.doShrinkRight();
-									else p.exile();
-								});
+								const lNeighbours = this.panel.getLeftNeighbours();
+								if (lNeighbours.filter(it => it.getEmpty()).length === lNeighbours.length) {
+									lNeighbours.forEach(p => p.destroy());
+								} else {
+									lNeighbours.forEach(p => {
+										if (p.canBumpLeft()) p.doBumpLeft();
+										else if (p.canShrinkRight()) p.doShrinkRight();
+										else p.exile();
+									});
+								}
 							}
 							this.panel.width += Math.sign(numPanelsCovered);
 							this.panel.x -= Math.sign(numPanelsCovered);
 							break;
+						}
 					}
 				}
 				this.panel.setDirty(true);
@@ -2029,6 +2108,14 @@ class AddMenuSpecialTab extends AddMenuTab {
 			const $btnText = $(`<div class="btn btn-primary">Add</div>`).appendTo($wrpText);
 			$btnText.on("click", () => {
 				this.menu.pnl.doPopulate_TextBox();
+				this.menu.doClose();
+			});
+			$(`<hr class="tab-body-row-sep"/>`).appendTo($tab);
+
+			const $wrpConverter = $(`<div class="tab-body-row"><span>Imperial-Metric Unit Converter</span></div>`).appendTo($tab);
+			const $btnConverter = $(`<div class="btn btn-primary">Add</div>`).appendTo($wrpConverter);
+			$btnConverter.on("click", () => {
+				this.menu.pnl.doPopulate_UnitConverter();
 				this.menu.doClose();
 			});
 
@@ -2657,8 +2744,8 @@ background-size: 8.49px 8.49px;`
 			const $btnCond = $(`<div class="btn btn-warning btn-xs dm-init-row-btn dm-init-row-btn-flag" title="Add Condition"><span class="glyphicon glyphicon-flag"/></div>`)
 				.appendTo($wrpConds)
 				.on("click", () => {
-					const $modal = $(`<dialog class="dialog-modal"/>`);
-					const $wrpModal = $(`<div class="dialog-wrapper">`).appendTo($(`body`)).click(() => $wrpModal.remove());
+					const $modal = $(`<div class="panel-addmenu-inner dropdown-menu" style="height: initial"/>`);
+					const $wrpModal = $(`<div class="panel-addmenu">`).appendTo($(`body`)).click(() => $wrpModal.remove());
 					$modal.appendTo($wrpModal);
 					const $modalInner = $(`<div class="modal-inner"/>`).appendTo($modal).click((evt) => evt.stopPropagation());
 
@@ -2699,8 +2786,6 @@ background-size: 8.49px 8.49px;`
 							$wrpModal.remove();
 						})
 						.appendTo($wrpAddInner);
-
-					$modal[0].showModal();
 				});
 
 			const $wrpRhs = $(`<div class="dm-init-row-rhs"/>`).appendTo($wrpRow);
@@ -2896,6 +2981,118 @@ class NoteBox {
 	}
 }
 
+class UnitConverter {
+	static make$Converter (board, state) {
+		const units = [
+			new UnitConverterUnit("Feet", "0.305", "Metres", "3.28"),
+			new UnitConverterUnit("Miles", "1.61", "Kilometres", "0.620"),
+			new UnitConverterUnit("Pounds", "0.454", "Kilograms", "2.20"),
+			new UnitConverterUnit("Gallons", "3.79", "Litres", "0.264")
+		];
+
+		let ixConv = state.c || 0;
+		let dirConv = state.d || 0;
+
+		const $wrpConverter = $(`<div class="dm-unitconv split-column"/>`);
+
+		const $tblConvert = $(`<table class="table-striped"/>`).appendTo($wrpConverter);
+		const $tbodyConvert = $(`<tbody/>`).appendTo($tblConvert);
+		units.forEach((u, i) => {
+			const $tr = $(`<tr class="row clickable"/>`).appendTo($tbodyConvert);
+			const clickL = () => {
+				ixConv = i;
+				dirConv = 0;
+				updateDisplay();
+			};
+			const clickR = () => {
+				ixConv = i;
+				dirConv = 1;
+				updateDisplay();
+			};
+			$(`<td class="col-xs-3">${u.n1}</td>`).click(clickL).appendTo($tr);
+			$(`<td class="col-xs-3 code">×${u.x1.padStart(5)}</td>`).click(clickL).appendTo($tr);
+			$(`<td class="col-xs-3">${u.n2}</td>`).click(clickR).appendTo($tr);
+			$(`<td class="col-xs-3 code">×${u.x2.padStart(5)}</td>`).click(clickR).appendTo($tr);
+		});
+
+		const $wrpIpt = $(`<div class="split wrp-ipt"/>`).appendTo($wrpConverter);
+
+		const $wrpLeft = $(`<div class="split-column wrp-ipt-inner"/>`).appendTo($wrpIpt);
+		const $lblLeft = $(`<span class="bold"/>`).appendTo($wrpLeft);
+		const $iptLeft = $(`<textarea class="ipt form-control">${state.i || ""}</textarea>`).appendTo($wrpLeft);
+
+		const $btnSwitch = $(`<div class="btn btn-primary btn-switch"><span class="glyphicon glyphicon-refresh"></span></div>`).click(() => {
+			dirConv = Number(!dirConv);
+			updateDisplay();
+		}).appendTo($wrpIpt);
+
+		const $wrpRight = $(`<div class="split-column wrp-ipt-inner"/>`).appendTo($wrpIpt);
+		const $lblRight = $(`<span class="bold"/>`).appendTo($wrpRight);
+		const $iptRight = $(`<textarea class="ipt form-control" disabled/>`).appendTo($wrpRight);
+
+		const updateDisplay = () => {
+			const it = units[ixConv];
+			const [lblL, lblR] = dirConv === 0 ? [it.n1, it.n2] : [it.n2, it.n1];
+			$lblLeft.text(lblL);
+			$lblRight.text(lblR);
+			handleInput();
+		};
+
+		const mMaths = /^([0-9.+\-*/ ()])*$/;
+		const handleInput = () => {
+			const showInvalid = () => {
+				$iptLeft.addClass(`ipt-invalid`);
+				$iptRight.val("");
+			};
+			const showValid = () => {
+				$iptLeft.removeClass(`ipt-invalid`);
+			};
+
+			const val = $iptLeft.val();
+			if (!val && !val.trim()) {
+				showValid();
+				$iptRight.val("");
+			} else if (mMaths.exec(val)) {
+				showValid();
+				const it = units[ixConv];
+				const mL = [Number(it.x1), Number(it.x2)][dirConv];
+				try {
+					/* eslint-disable */
+					const total = eval(val);
+					/* eslint-enable */
+					$iptRight.val(total * mL);
+				} catch (e) {
+					$iptLeft.addClass(`ipt-invalid`);
+					$iptRight.val("")
+				}
+			} else showInvalid();
+		};
+
+		DmScreenUtil.bindTypingEnd($iptLeft, handleInput);
+
+		updateDisplay();
+
+		$wrpConverter.data("getState", () => {
+			return {
+				c: ixConv,
+				d: dirConv,
+				i: $iptLeft.val()
+			};
+		});
+
+		return $wrpConverter;
+	}
+}
+
+class UnitConverterUnit {
+	constructor (n1, x1, n2, x2) {
+		this.n1 = n1;
+		this.x1 = x1;
+		this.n2 = n2;
+		this.x2 = x2;
+	}
+}
+
 class DmScreenUtil {
 	static getSearchNoResults () {
 		return `<div class="panel-tab-message"><i>No results.</i></div>`;
@@ -2919,33 +3116,50 @@ class DmScreenUtil {
 	 *  `showWait` -- function which displays loading dots
 	 */
 	static bindAutoSearch ($srch, opt) {
-		// auto-search after 100ms
-		const TYPE_TIMEOUT_MS = 100;
+		DmScreenUtil.bindTypingEnd(
+			$srch,
+			() => {
+				opt.search();
+			},
+			(e) => {
+				if (e.which === 13) {
+					opt.flags.doClickFirst = true;
+					opt.search();
+				}
+			},
+			() => {
+				if (opt.flags.isWait) {
+					opt.flags.isWait = false;
+					opt.showWait();
+				}
+			},
+			() => {
+				if ($srch.val() && $srch.val().trim().length) opt.search();
+			}
+		);
+	}
+
+	static bindTypingEnd ($ipt, fnKeyup, fnKeypress, fnKeydown, fnClick) {
 		let typeTimer;
-		$srch.on("keyup", () => {
+		$ipt.on("keyup", (e) => {
 			clearTimeout(typeTimer);
 			typeTimer = setTimeout(() => {
-				opt.search();
-			}, TYPE_TIMEOUT_MS);
+				fnKeyup(e);
+			}, DmScreenUtil.TYPE_TIMEOUT_MS);
 		});
-		$srch.on("keydown", () => {
-			if (opt.flags.isWait) {
-				opt.flags.isWait = false;
-				opt.showWait();
-			}
-			clearTimeout(typeTimer)
+		$ipt.on("keypress", (e) => {
+			if (fnKeypress) fnKeypress(e);
 		});
-		$srch.on("click", () => {
-			if ($srch.val() && $srch.val().trim().length) opt.search();
+		$ipt.on("keydown", (e) => {
+			if (fnKeydown) fnKeydown(e);
+			clearTimeout(typeTimer);
 		});
-		$srch.on("keypress", (e) => {
-			if (e.which === 13) {
-				opt.flags.doClickFirst = true;
-				opt.search();
-			}
+		$ipt.on("click", () => {
+			if (fnClick) fnClick();
 		});
 	}
 }
+DmScreenUtil.TYPE_TIMEOUT_MS = 100; // auto-search after 100ms
 
 window.addEventListener("load", () => {
 	// expose it for dbg purposes

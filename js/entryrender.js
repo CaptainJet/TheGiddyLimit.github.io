@@ -1115,7 +1115,7 @@ EntryRenderer.utils = {
 		return `<tr>
 					<th class="name" colspan="6">
 						<div class="name-inner">
-							<span class="stats-name" onclick="EntryRenderer.utils._handleNameClick(this, '${it.source}')">${prefix || ""}${it.name}${suffix || ""}</span>
+							<span class="stats-name copyable" onclick="EntryRenderer.utils._handleNameClick(this, '${it.source.escapeQuotes()}')">${prefix || ""}${it.name}${suffix || ""}</span>
 							<span class="stats-source source${it.source}" title="${Parser.sourceJsonToFull(it.source)}${EntryRenderer.utils.getSourceSubText(it)}">
 								${Parser.sourceJsonToAbv(it.source)}${addPageNum && it.page ? ` p${it.page}` : ""}
 							</span>
@@ -1125,7 +1125,8 @@ EntryRenderer.utils = {
 	},
 
 	_handleNameClick (ele, source) {
-		copyText(`"${$(ele).text().toLowerCase()}${source === SRC_PHB ? "" : `|${source}`}"`);
+		source = source.unescapeQuotes();
+		copyText($(ele).text());
 		showCopiedEffect($(ele));
 	},
 
@@ -1134,9 +1135,15 @@ EntryRenderer.utils = {
 	},
 
 	_getPageTrText: (it) => {
-		const addSourceText = it.additionalSources && it.additionalSources.length ? `. Additional information from ${it.additionalSources.map(as => `<i title="${Parser.sourceJsonToFull(as.source)}">${Parser.sourceJsonToAbv(as.source)}</i>, page ${as.page}`).join("; ")}.` : "";
+		function getAltSourceText (prop, introText) {
+			return it[prop] && it[prop].length ? `${introText} ${it[prop].map(as => `<i title="${Parser.sourceJsonToFull(as.source)}">${Parser.sourceJsonToAbv(as.source)}</i>, page ${as.page}`).join("; ")}` : "";
+		}
 		const sourceSub = EntryRenderer.utils.getSourceSubText(it);
-		return it.page ? `<b>Source: </b> <i title="${Parser.sourceJsonToFull(it.source)}${sourceSub}">${Parser.sourceJsonToAbv(it.source)}${sourceSub}</i>, page ${it.page}${addSourceText}` : ""
+		const baseText = it.page ? `<b>Source: </b> <i title="${Parser.sourceJsonToFull(it.source)}${sourceSub}">${Parser.sourceJsonToAbv(it.source)}${sourceSub}</i>, page ${it.page}` : "";
+		const addSourceText = getAltSourceText("additionalSources", "Additional information from");
+		const otherSourceText = getAltSourceText("otherSources", "Also printed in");
+
+		return `${[baseText, addSourceText, otherSourceText].filter(it => it).join(". ")}${baseText && (addSourceText || otherSourceText) ? "." : ""}`;
 	},
 
 	tabButton: (label, funcChange, funcPopulate) => {
@@ -1416,6 +1423,10 @@ EntryRenderer.spell = {
 			if (currentAndLegacy[1]) {
 				renderStack.push(`<tr class="text"><td colspan="6"><section class="text-muted"><span class="bold">Subclasses (legacy): </span>${currentAndLegacy[1]}</section></td></tr>`);
 			}
+		}
+
+		if (spell.races) {
+			renderStack.push(`<tr class="text"><td class="classes" colspan="6"><span class="bold">Races: </span>${spell.races.map(r => renderer.renderEntry(`{@race ${r.name}|${r.source}}`)).join(", ")}</td></tr>`);
 		}
 
 		if (spell.scrollNote) {
@@ -2864,6 +2875,7 @@ EntryRenderer.hover = {
 			reset();
 			return;
 		}
+
 		const hoverId = EntryRenderer.hover._curHovering.hoverId;
 		const ele = EntryRenderer.hover._curHovering.ele;
 		const page = EntryRenderer.hover._curHovering.cPage;
@@ -2917,7 +2929,10 @@ EntryRenderer.hover = {
 		let drag = {};
 		const $brdrTop = $(`<div class="hoverborder top" ${permanent ? `data-perm="true"` : ""} data-hover-id="${hoverId}"></div>`)
 			.on("mousedown", (evt) => {
-				$hov.css("z-index", 201); // temporarily display it on top
+				$hov.css({
+					"z-index": 201, // temporarily display it on top
+					"animation": "initial"
+				});
 				drag.on = true;
 				drag.startX = evt.clientX;
 				drag.startY = evt.clientY;
@@ -3016,8 +3031,8 @@ EntryRenderer.hover = {
 		if (fromBottom) $hov.css("top", vpOffsetT - $hov.height());
 		else $hov.css("top", vpOffsetT + $(ele).height() + 1);
 
-		if (fromRight) $hov.css("left", (clientX || vpOffsetL) - $hov.width());
-		else $hov.css("left", (clientX || (vpOffsetL + $(ele).width())) + 5);
+		if (fromRight) $hov.css("left", (clientX || vpOffsetL) - ($hov.width() + 6));
+		else $hov.css("left", (clientX || (vpOffsetL + $(ele).width())) + 6);
 
 		adjustPosition(true);
 
@@ -3046,8 +3061,8 @@ EntryRenderer.hover = {
 			EntryRenderer.hover._teardownWindow(hoverId);
 		}
 
+		// alternate teardown for 'x' button
 		function altTeardown () {
-			// alternate teardown for 'x' button
 			$ele.attr("data-hover-active", false);
 			$hov.remove();
 			$(document).off(mouseUpId);
@@ -3206,7 +3221,7 @@ EntryRenderer.hover = {
 	doPopout: ($btnPop, list, index, clientX) => {
 		$btnPop.attr("data-hover-active", false);
 		const it = list[index];
-		EntryRenderer.hover.mouseOver({shiftKey: true, clientX: clientX}, $btnPop.get(), UrlUtil.getCurrentPage(), it.source, UrlUtil.autoEncodeHash(it), true);
+		EntryRenderer.hover.mouseOver({shiftKey: true, clientX: clientX}, $btnPop.get(0), UrlUtil.getCurrentPage(), it.source, UrlUtil.autoEncodeHash(it), true);
 	}
 };
 
@@ -3496,7 +3511,9 @@ EntryRenderer.dice = {
 
 		if (com === "/help") {
 			EntryRenderer.dice._showMessage(
-				`Use <span class="out-roll-item-code">${PREF_MACRO} list</span> to list saved macros.<br>
+				`Drop highest (<span class="out-roll-item-code">2d4dh1</span>) and lowest (<span class="out-roll-item-code">4d6dl1</span>) are supported.<br>
+				Up and down arrow keys cycle input history.<br>
+Use <span class="out-roll-item-code">${PREF_MACRO} list</span> to list saved macros.<br>
 				Use <span class="out-roll-item-code">${PREF_MACRO} add myName 1d2+3</span> to add (or update) a macro. Macro names should not contain spaces or hashes.<br>
 				Use <span class="out-roll-item-code">${PREF_MACRO} remove myName</span> to remove a macro.<br>
 				Use <span class="out-roll-item-code">#myName</span> to roll a macro.`,
