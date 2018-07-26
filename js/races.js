@@ -43,6 +43,10 @@ function getSpeedRating (speed) {
 	return speed > 30 ? "Walk (Fast)" : speed < 30 ? "Walk (Slow)" : "Walk";
 }
 
+function basename (str, sep) {
+	return str.substr(str.lastIndexOf(sep) + 1);
+}
+
 let list;
 const sourceFilter = getSourceFilter();
 const sizeFilter = new Filter({header: "Size", displayFn: Parser.sizeAbvToFull});
@@ -291,7 +295,7 @@ function loadhash (id) {
 				<span class="glyphicon glyphicon-volume-up name-pronounce-icon"></span>
 				<audio class="name-pronounce">
 				   <source src="${race.soundClip}" type="audio/mpeg">
-				   <source src="audio/races/${/^(.*?)(\(.*?\))?$/.exec(race._baseName || race.name)[1].trim().toLowerCase()}.mp3" type="audio/mpeg">
+				   <source src="audio/races/${basename(race.soundClip, '/')}.mp3" type="audio/mpeg">
 				</audio>
 			</span>`;
 		}
