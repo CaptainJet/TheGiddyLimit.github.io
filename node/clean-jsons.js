@@ -1,3 +1,5 @@
+"use strict";
+
 const fs = require("fs");
 
 function isDirectory (path) {
@@ -33,7 +35,8 @@ const replacements = {
 	"−": "\\u2212",
 	"’": "'",
 	"“": '\\"',
-	"”": '\\"'
+	"”": '\\"',
+	"…": "..."
 };
 
 const replacementRegex = new RegExp(Object.keys(replacements).join("|"), 'g');

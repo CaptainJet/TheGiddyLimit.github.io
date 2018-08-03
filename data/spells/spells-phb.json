@@ -6868,6 +6868,10 @@
 						"Material",
 						"Duration"
 					],
+					"colStyles": [
+						"col-xs-8",
+						"col-xs-4"
+					],
 					"rows": [
 						[
 							"Vegetable matter",
@@ -9522,6 +9526,18 @@
 						"name": "Druid",
 						"source": "PHB"
 					}
+				],
+				"fromSubclass": [
+					{
+						"class": {
+							"name": "Fighter",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Arcane Archer",
+							"source": "XGE"
+						}
+					}
 				]
 			},
 			"source": "PHB",
@@ -11390,8 +11406,7 @@
 					"type": "timed",
 					"duration": {
 						"type": "day",
-						"amount": 1,
-						"upTo": true
+						"amount": 1
 					},
 					"concentration": true
 				}
@@ -21376,6 +21391,18 @@
 						"name": "Wizard",
 						"source": "PHB"
 					}
+				],
+				"fromSubclass": [
+					{
+						"class": {
+							"name": "Fighter",
+							"source": "PHB"
+						},
+						"subclass": {
+							"name": "Arcane Archer",
+							"source": "XGE"
+						}
+					}
 				]
 			},
 			"source": "PHB",
@@ -21775,8 +21802,7 @@
 					"type": "timed",
 					"duration": {
 						"type": "day",
-						"amount": 1,
-						"upTo": true
+						"amount": 1
 					},
 					"concentration": true
 				}
@@ -28032,8 +28058,7 @@
 					"type": "timed",
 					"duration": {
 						"type": "round",
-						"amount": 1,
-						"upTo": true
+						"amount": 1
 					},
 					"concentration": true
 				}
@@ -28097,8 +28122,7 @@
 					"type": "timed",
 					"duration": {
 						"type": "round",
-						"amount": 6,
-						"upTo": true
+						"amount": 6
 					},
 					"concentration": true
 				}
