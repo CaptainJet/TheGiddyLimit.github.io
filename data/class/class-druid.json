@@ -335,7 +335,7 @@
 					"spears"
 				],
 				"tools": [
-					"herbalism kit"
+					"Herbalism kit"
 				],
 				"skills": {
 					"choose": 2,
@@ -359,6 +359,18 @@
 					"{@item Leather armor|phb}, an {@item explorer's pack|phb}, and a {@item druidic focus|phb}"
 				],
 				"goldAlternative": "{@dice 2d4×10|2d4 × 10|Starting Gold}"
+			},
+			"multiclassing": {
+				"requirements": {
+					"wis": 13
+				},
+				"proficienciesGained": {
+					"armor": [
+						"light",
+						"medium",
+						"shields (druids will not wear armor or use shields made of metal)"
+					]
+				}
 			},
 			"classFeatures": [
 				[

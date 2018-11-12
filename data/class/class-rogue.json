@@ -238,237 +238,6 @@
 							}
 						]
 					]
-				},
-				{
-					"subclasses": [
-						{
-							"name": "Arcane Trickster",
-							"source": "PHB"
-						}
-					],
-					"colLabels": [
-						"{@filter Cantrips Known|spells|level=0|subclass=Arcane Trickster}",
-						"{@filter Spells Known|spells|subclass=Arcane Trickster}"
-					],
-					"rows": [
-						[
-							0,
-							0
-						],
-						[
-							0,
-							0
-						],
-						[
-							3,
-							3
-						],
-						[
-							3,
-							4
-						],
-						[
-							3,
-							4
-						],
-						[
-							3,
-							4
-						],
-						[
-							3,
-							5
-						],
-						[
-							3,
-							6
-						],
-						[
-							3,
-							6
-						],
-						[
-							4,
-							7
-						],
-						[
-							4,
-							8
-						],
-						[
-							4,
-							8
-						],
-						[
-							4,
-							9
-						],
-						[
-							4,
-							10
-						],
-						[
-							4,
-							10
-						],
-						[
-							4,
-							11
-						],
-						[
-							4,
-							11
-						],
-						[
-							4,
-							11
-						],
-						[
-							4,
-							12
-						],
-						[
-							4,
-							13
-						]
-					]
-				},
-				{
-					"title": "Spell Slots per Spell Level",
-					"subclasses": [
-						{
-							"name": "Arcane Trickster",
-							"source": "PHB"
-						}
-					],
-					"colLabels": [
-						"{@filter 1st|spells|level=1|subclass=Arcane Trickster}",
-						"{@filter 2nd|spells|level=2|subclass=Arcane Trickster}",
-						"{@filter 3rd|spells|level=3|subclass=Arcane Trickster}",
-						"{@filter 4th|spells|level=4|subclass=Arcane Trickster}"
-					],
-					"rows": [
-						[
-							0,
-							0,
-							0,
-							0
-						],
-						[
-							0,
-							0,
-							0,
-							0
-						],
-						[
-							2,
-							0,
-							0,
-							0
-						],
-						[
-							3,
-							0,
-							0,
-							0
-						],
-						[
-							3,
-							0,
-							0,
-							0
-						],
-						[
-							3,
-							0,
-							0,
-							0
-						],
-						[
-							4,
-							2,
-							0,
-							0
-						],
-						[
-							4,
-							2,
-							0,
-							0
-						],
-						[
-							4,
-							2,
-							0,
-							0
-						],
-						[
-							4,
-							3,
-							0,
-							0
-						],
-						[
-							4,
-							3,
-							0,
-							0
-						],
-						[
-							4,
-							3,
-							0,
-							0
-						],
-						[
-							4,
-							3,
-							2,
-							0
-						],
-						[
-							4,
-							3,
-							2,
-							0
-						],
-						[
-							4,
-							3,
-							2,
-							0
-						],
-						[
-							4,
-							3,
-							3,
-							0
-						],
-						[
-							4,
-							3,
-							3,
-							0
-						],
-						[
-							4,
-							3,
-							3,
-							0
-						],
-						[
-							4,
-							3,
-							3,
-							1
-						],
-						[
-							4,
-							3,
-							3,
-							1
-						]
-					]
 				}
 			],
 			"startingProficiencies": {
@@ -512,13 +281,42 @@
 				],
 				"goldAlternative": "{@dice 4d4×10|4d4 × 10|Starting Gold}"
 			},
+			"multiclassing": {
+				"requirements": {
+					"dex": 13
+				},
+				"proficienciesGained": {
+					"armor": [
+						"light"
+					],
+					"skills": {
+						"choose": 1,
+						"from": [
+							"Acrobatics",
+							"Athletics",
+							"Deception",
+							"Insight",
+							"Intimidation",
+							"Investigation",
+							"Perception",
+							"Performance",
+							"Persuasion",
+							"Sleight of Hand",
+							"Stealth"
+						]
+					},
+					"tools": [
+						"thieves' tools"
+					]
+				}
+			},
 			"classFeatures": [
 				[
 					{
 						"name": "Expertise",
 						"entries": [
-							"At 1st level, choose two of your skill proficiencies, or one of your skill proficiencies and your proficiency with thieves' tools. Your proficiency bonus is doubled for any ability check you make that uses either of the chosen proficiencies.",
-							"At 6th level, you can choose two more of your proficiencies (in skills or with thieves' tools) to gain this benefit."
+							"At 1st level, choose two of your skill proficiencies, or one of your skill proficiencies and your proficiency with {@item thieves' tools|phb}. Your proficiency bonus is doubled for any ability check you make that uses either of the chosen proficiencies.",
+							"At 6th level, you can choose two more of your proficiencies (in skills or with {@item thieves' tools|phb}) to gain this benefit."
 						]
 					},
 					{
@@ -575,7 +373,7 @@
 					{
 						"name": "Expertise",
 						"entries": [
-							"At 6th level, you can choose two more of your proficiencies (in skills or with thieves' tools) to gain the benefit of Expertise."
+							"At 6th level, you can choose two more of your proficiencies (in skills or with {@item thieves' tools|phb}) to gain the benefit of Expertise."
 						]
 					}
 				],
@@ -705,6 +503,239 @@
 			"subclasses": [
 				{
 					"name": "Arcane Trickster",
+					"subclassTableGroups": [
+						{
+							"subclasses": [
+								{
+									"name": "Arcane Trickster",
+									"source": "PHB"
+								}
+							],
+							"colLabels": [
+								"{@filter Cantrips Known|spells|level=0|subclass=Arcane Trickster}",
+								"{@filter Spells Known|spells|subclass=Arcane Trickster}"
+							],
+							"rows": [
+								[
+									0,
+									0
+								],
+								[
+									0,
+									0
+								],
+								[
+									3,
+									3
+								],
+								[
+									3,
+									4
+								],
+								[
+									3,
+									4
+								],
+								[
+									3,
+									4
+								],
+								[
+									3,
+									5
+								],
+								[
+									3,
+									6
+								],
+								[
+									3,
+									6
+								],
+								[
+									4,
+									7
+								],
+								[
+									4,
+									8
+								],
+								[
+									4,
+									8
+								],
+								[
+									4,
+									9
+								],
+								[
+									4,
+									10
+								],
+								[
+									4,
+									10
+								],
+								[
+									4,
+									11
+								],
+								[
+									4,
+									11
+								],
+								[
+									4,
+									11
+								],
+								[
+									4,
+									12
+								],
+								[
+									4,
+									13
+								]
+							]
+						},
+						{
+							"title": "Spell Slots per Spell Level",
+							"subclasses": [
+								{
+									"name": "Arcane Trickster",
+									"source": "PHB"
+								}
+							],
+							"colLabels": [
+								"{@filter 1st|spells|level=1|subclass=Arcane Trickster}",
+								"{@filter 2nd|spells|level=2|subclass=Arcane Trickster}",
+								"{@filter 3rd|spells|level=3|subclass=Arcane Trickster}",
+								"{@filter 4th|spells|level=4|subclass=Arcane Trickster}"
+							],
+							"rows": [
+								[
+									0,
+									0,
+									0,
+									0
+								],
+								[
+									0,
+									0,
+									0,
+									0
+								],
+								[
+									2,
+									0,
+									0,
+									0
+								],
+								[
+									3,
+									0,
+									0,
+									0
+								],
+								[
+									3,
+									0,
+									0,
+									0
+								],
+								[
+									3,
+									0,
+									0,
+									0
+								],
+								[
+									4,
+									2,
+									0,
+									0
+								],
+								[
+									4,
+									2,
+									0,
+									0
+								],
+								[
+									4,
+									2,
+									0,
+									0
+								],
+								[
+									4,
+									3,
+									0,
+									0
+								],
+								[
+									4,
+									3,
+									0,
+									0
+								],
+								[
+									4,
+									3,
+									0,
+									0
+								],
+								[
+									4,
+									3,
+									2,
+									0
+								],
+								[
+									4,
+									3,
+									2,
+									0
+								],
+								[
+									4,
+									3,
+									2,
+									0
+								],
+								[
+									4,
+									3,
+									3,
+									0
+								],
+								[
+									4,
+									3,
+									3,
+									0
+								],
+								[
+									4,
+									3,
+									3,
+									0
+								],
+								[
+									4,
+									3,
+									3,
+									1
+								],
+								[
+									4,
+									3,
+									3,
+									1
+								]
+							]
+						}
+					],
 					"subclassFeatures": [
 						[
 							{
@@ -721,7 +752,7 @@
 												"items": [
 													"You can stow one object the hand is holding in a container worn or carried by another creature.",
 													"You can retrieve an object in a container worn or carried by another creature.",
-													"You can use thieves' tools to pick lock and disarm traps at range."
+													"You can use {@item thieves' tools|phb} to pick lock and disarm traps at range."
 												]
 											},
 											"You can perform one of these tasks without being noticed by a creature if you succeed on a Dexterity (Sleight of Hand) check contested by the creature's Wisdom (Perception) check.",
@@ -869,7 +900,7 @@
 										"type": "entries",
 										"name": "Bonus Proficiencies",
 										"entries": [
-											"When you choose this archetype at 3rd level, you gain proficiency with the disguise kit and the poisoner's kit."
+											"When you choose this archetype at 3rd level, you gain proficiency with the {@item disguise Kit|phb} and the {@item poisoner's kit|phb}."
 										]
 									}
 								]
@@ -932,7 +963,7 @@
 										"type": "entries",
 										"name": "Master of Intrigue",
 										"entries": [
-											"When you choose this archetype at 3rd level, you gain proficiency with the disguise kit, the forgery kit, and one gaming set of your choice. You also learn two languages of your choice.",
+											"When you choose this archetype at 3rd level, you gain proficiency with the {@item disguise Kit|phb}, the {@item forgery kit|phb}, and one gaming set of your choice. You also learn two languages of your choice.",
 											"Additionally, you can unerringly mimic the speech patterns and accent of a creature that you hear speak for at least 1 minute, allowing you to pass yourself off as a native speaker of a particular land, provided that you know the language."
 										]
 									},
@@ -1160,7 +1191,7 @@
 										"type": "entries",
 										"name": "Fast Hands",
 										"entries": [
-											"Starting at 3rd level, you can use the bonus action granted by your Cunning Action to make a Dexterity ({@skill Sleight of Hand}) check, use your thieves' tools to disarm a trap or open a lock, or take the {@action Use an Object} action."
+											"Starting at 3rd level, you can use the bonus action granted by your Cunning Action to make a Dexterity ({@skill Sleight of Hand}) check, use your {@item thieves' tools|phb} to disarm a trap or open a lock, or take the {@action Use an Object} action."
 										]
 									},
 									{
@@ -1375,7 +1406,7 @@
 										"type": "entries",
 										"name": "Master of Intrigue",
 										"entries": [
-											"When you choose this archetype at 3rd level, you gain proficiency with the disguise kit, the forgery kit, and one gaming set of your choice. You also learn two languages of your choice.",
+											"When you choose this archetype at 3rd level, you gain proficiency with the {@item disguise Kit|phb}, the {@item forgery kit|phb}, and one gaming set of your choice. You also learn two languages of your choice.",
 											"Additionally, you can unerringly mimic the speech patterns and accent of a creature that you hear speak for at least 1 minute, enabling you to pass yourself off as a native speaker of a particular land, provided that you know the language."
 										]
 									},

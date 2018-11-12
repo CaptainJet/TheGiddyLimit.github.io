@@ -303,7 +303,7 @@ function loadparser (data) {
 			const out = {
 				monster: JSON.parse(`[${output}]`)
 			};
-			DataUtil.userDownload(`converter-output.json`, out);
+			DataUtil.userDownload(`converter-output`, out);
 		} else {
 			alert("Nothing to download!");
 		}
@@ -767,7 +767,7 @@ function loadparser (data) {
 					// connecting words can start with: o ("of", "or"); t ("the"); a ("and", "at"). Accept numbers, e.g. (Costs 2 Actions)
 					// allow numbers
 					// allow "a" and "I" as single-character words
-					while (curLine && curLine.match(/^(([A-Z0-9ota][a-z0-9'’`]+|[aI])( \(.*\)| )?)+([.!])+/g) === null && !moveon(curLine)) {
+					while (curLine && curLine.match(StrUtil.NAME_REGEX) === null && !moveon(curLine)) {
 						curtrait.entries.push(curLine.trim());
 						i++;
 						curLine = toConvert[i];
@@ -816,15 +816,17 @@ function loadparser (data) {
 	}
 
 	function doPostProcessing (stats) {
-		ConverterUtils.tryPostProcessAc(
+		function showWarning (text) {
+			$(`#lastWarnings`).append(`<div>Warning: ${text}</div>`);
+		}
+
+		AcConvert.tryPostProcessAc(
 			stats,
-			(ac) => {
-				$(`#lastWarnings`).append(`<div>Warning: AC requires manual conversion '${ac}'</div>`)
-			},
-			(ac) => {
-				$(`#lastWarnings`).append(`<div>Warning: failed to auto-parse AC '${ac}'</div>`)
-			}
+			(ac) => showWarning(`AC "${ac}" requires manual conversion`),
+			(ac) => showWarning(`Failed to parse AC "${ac}"`)
 		);
+		TagAttack.tryTagAttacks(stats, (atk) => showWarning(`Manual attack tagging required for "${atk}"`));
+		TagHit.tryTagHits(stats);
 	}
 
 	function cleanOutput (out) {

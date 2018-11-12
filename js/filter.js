@@ -91,10 +91,10 @@ class FilterBox {
 				<span>Filters</span>
 				<div>
 					<div class="btn-group">
-						<div id="fltr-show-all" class="btn btn-xs btn-default">Show All</div>
-						<div id="fltr-hide-all" class="btn btn-xs btn-default">Hide All</div>
+						<button id="fltr-show-all" class="btn btn-xs btn-default">Show All</button>
+						<button id="fltr-hide-all" class="btn btn-xs btn-default">Hide All</button>
 					</div>
-					<div id="fltr-reset" class="btn btn-xs btn-default">Reset</div>
+					<button id="fltr-reset" class="btn btn-xs btn-default">Reset</button>
 				</div>
 			</h4>
 			<hr>
@@ -864,7 +864,7 @@ class FilterBox {
 				function checkUpdateMiniPills () {
 					const [min, max] = $sld.slider("values");
 
-					if (min === max) {
+					if (min === max && filter.min !== filter.max) {
 						$miniPillMin.attr("state", FilterBox._PILL_STATES[1]).text(`${filter.header} = ${filter.labels ? filter.items[min] : min}`);
 						$miniPillMax.attr("state", FilterBox._PILL_STATES[0]);
 					} else {
@@ -1149,7 +1149,11 @@ class FilterBox {
 				});
 
 			History.setSuppressHistory(true);
-			window.location.hash = `#${link}${outSub.length ? `${HASH_PART_SEP}${outSub.join(HASH_PART_SEP)}` : ""}`;
+			window.history.replaceState(
+				{},
+				document.title,
+				`${location.origin}${location.pathname}${`#${link}${outSub.length ? `${HASH_PART_SEP}${outSub.join(HASH_PART_SEP)}` : ""}`}`
+			);
 
 			this._fireValChangeEvent();
 		}

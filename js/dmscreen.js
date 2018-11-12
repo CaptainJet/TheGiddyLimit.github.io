@@ -198,7 +198,7 @@ class Board {
 				return DataUtil.loadJSON("search/index.json");
 			}).then((data) => {
 				function hasBadCat (d) {
-					return d.c === Parser.CAT_ID_ADVENTURE || d.c === Parser.CAT_ID_CLASS || d.c === Parser.CAT_ID_QUICKREF;
+					return d.c === Parser.CAT_ID_ADVENTURE || d.c === Parser.CAT_ID_CLASS || d.c === Parser.CAT_ID_QUICKREF || d.c === Parser.CAT_ID_CLASS_FEATURE;
 				}
 
 				function fromDeepIndex (d) {
@@ -458,7 +458,7 @@ class SideMenu {
 		const $wrpResizeH = $(`<div class="dm-sidemenu-row"><div class="dm-sidemenu-row-label">Height</div></div>`).appendTo(this.$mnu);
 		const $iptHeight = $(`<input class="form-control" type="number" value="${this.board.height}">`).appendTo($wrpResizeH);
 		this.$iptHeight = $iptHeight;
-		const $btnSetDim = $(`<div class="btn btn-primary">Set Dimensions</div>`).appendTo(this.$mnu);
+		const $btnSetDim = $(`<button="btn btn-primary">Set Dimensions</div>`).appendTo(this.$mnu);
 		$btnSetDim.on("click", () => {
 			const w = Number($iptWidth.val());
 			const h = Number($iptHeight.val());
@@ -468,31 +468,41 @@ class SideMenu {
 		renderDivider();
 
 		const $wrpFullscreen = $(`<div class="dm-sidemenu-row-alt"></div>`).appendTo(this.$mnu);
-		const $btnFullscreen = $(`<div class="btn btn-primary">Toggle Fullscreen</div>`).appendTo($wrpFullscreen);
+		const $btnFullscreen = $(`<button class="btn btn-primary">Toggle Fullscreen</button>`).appendTo($wrpFullscreen);
 		$btnFullscreen.on("click", () => {
 			this.board.isFullscreen = !this.board.isFullscreen;
 			if (this.board.isFullscreen) $(`body`).addClass(`dm-screen-fullscreen`);
 			else $(`body`).removeClass(`dm-screen-fullscreen`);
 			this.board.doAdjust$creenCss();
 		});
+		const $btnLock = $(`<button class="btn btn-danger" title="Lock Panels"><span class="glyphicon glyphicon-lock"/></button>`).appendTo($wrpFullscreen);
+		$btnLock.on("click", () => {
+			this.board.isLocked = !this.board.isLocked;
+			if (this.board.isLocked) {
+				$(`body`).addClass(`dm-screen-locked`);
+				$btnLock.removeClass(`btn-danger`).addClass(`btn-success`);
+			} else {
+				$(`body`).removeClass(`dm-screen-locked`);
+				$btnLock.addClass(`btn-danger`).removeClass(`btn-success`);
+			}
+		});
 		renderDivider();
 
-		const $wrpSaveLoadFile = $(`<div class="dm-sidemenu-row-alt"/>`).appendTo(this.$mnu);
-		const $btnSaveFile = $(`<div class="btn btn-primary">Save to File</div>`).appendTo($wrpSaveLoadFile);
+		const $wrpSaveLoad = $(`<div class="dm-sidemenu-row-vert"/>`).appendTo(this.$mnu);
+		const $wrpSaveLoadFile = $(`<div class="dm-sidemenu-row-alt"/>`).appendTo($wrpSaveLoad);
+		const $btnSaveFile = $(`<button class="btn btn-primary">Save to File</button>`).appendTo($wrpSaveLoadFile);
 		$btnSaveFile.on("click", () => {
 			DataUtil.userDownload(`dm-screen`, this.board.getSaveableState());
 		});
-		const $btnLoadFile = $(`<div class="btn btn-primary">Load from File</div>`).appendTo($wrpSaveLoadFile);
+		const $btnLoadFile = $(`<button class="btn btn-primary">Load from File</button>`).appendTo($wrpSaveLoadFile);
 		$btnLoadFile.on("click", () => {
 			DataUtil.userUpload((json) => {
 				this.board.doReset();
 				this.board.doLoadStateFrom(json);
 			});
 		});
-		renderDivider();
-
-		const $wrpSaveLoadLink = $(`<div class="dm-sidemenu-row-alt"/>`).appendTo(this.$mnu);
-		const $btnSaveLink = $(`<div class="btn btn-primary">Save to URL</div>`).appendTo($wrpSaveLoadLink);
+		const $wrpSaveLoadUrl = $(`<div class="dm-sidemenu-row-alt"/>`).appendTo($wrpSaveLoad);
+		const $btnSaveLink = $(`<button class="btn btn-primary">Save to URL</button>`).appendTo($wrpSaveLoadUrl);
 		$btnSaveLink.on("click", () => {
 			const encoded = `${window.location.href.split("#")[0]}#${encodeURIComponent(JSON.stringify(this.board.getSaveableState()))}`;
 			copyText(encoded);
@@ -504,7 +514,7 @@ class SideMenu {
 		this.board.$cbConfirmTabClose = $(`<input type="checkbox" class="dm-sidemenu-row-label-cb">`).appendTo($wrpCbConfirm.find(`label`));
 		renderDivider();
 
-		const $btnReset = $(`<div class="btn btn-danger">Reset Screen</div>`).appendTo(this.$mnu);
+		const $btnReset = $(`<button class="btn btn-danger">Reset Screen</button>`).appendTo(this.$mnu);
 		$btnReset.on("click", () => {
 			if (window.confirm("Are you sure?")) {
 				this.board.doReset();
@@ -526,7 +536,7 @@ class SideMenu {
 		this.$wrpHistory.children().remove();
 		if (this.board.exiledPanels.length) {
 			const $wrpHistHeader = $(`<div class="dm-sidemenu-row"><span style="font-variant: small-caps;">Recently Removed</span></div>`).appendTo(this.$wrpHistory);
-			const $btnHistClear = $(`<div class="btn btn-danger">Clear</div>`).appendTo($wrpHistHeader);
+			const $btnHistClear = $(`<button class="btn btn-danger">Clear</button>`).appendTo($wrpHistHeader);
 			$btnHistClear.on("click", () => {
 				this.board.exiledPanels = [];
 				this.doUpdateHistory();
@@ -1007,7 +1017,7 @@ class Panel {
 		const $wrpPanel = $(`<div class="panel-content-wrapper-inner"/>`);
 		const $wrpImage = $(`<div class="panel-content-wrapper-img"/>`).appendTo($wrpPanel);
 		const $img = $(`<img src="${url}">`).appendTo($wrpImage);
-		const $iptReset = $(`<div class="panel-zoom-reset btn btn-xs btn-default"><span class="glyphicon glyphicon-refresh"/></div>`).appendTo($wrpPanel);
+		const $iptReset = $(`<button class="panel-zoom-reset btn btn-xs btn-default"><span class="glyphicon glyphicon-refresh"/></button>`).appendTo($wrpPanel);
 		const $iptRange = $(`<input type="range" class="panel-zoom-slider">`).appendTo($wrpPanel);
 		this.set$ContentTab(
 			PANEL_TYP_IMAGE,
@@ -1310,7 +1320,7 @@ class Panel {
 			const $pnl = $(`<div data-panelId="${this.id}" class="dm-screen-panel" empty="true"/>`);
 			this.$pnl = $pnl;
 			const $ctrlBar = $(`<div class="panel-control-bar"/>`).appendTo($pnl);
-			this.$pnlTitle = $(`<div class="panel-control-bar panel-control-title"/>`).appendTo($pnl);
+			this.$pnlTitle = $(`<div class="panel-control-bar panel-control-title"/>`).appendTo($pnl).click(() => this.$pnlTitle.toggleClass("panel-control-title--bumped"));
 			this.$pnlAddTab = $(`<div class="panel-control-bar panel-control-addtab"><div class="panel-control-icon glyphicon glyphicon-plus" title="Add Tab"/></div>`).click(() => {
 				this.setHasTabs(true);
 				this.setDirty(true);
@@ -1348,7 +1358,7 @@ class Panel {
 				const curr = $wrpTabsInner.scrollLeft();
 				$wrpTabsInner.scrollLeft(Math.max(0, curr + delta));
 			}).appendTo($wrpTabs);
-			const $btnTabAdd = $(`<div class="btn btn-default content-tab"><span class="glyphicon glyphicon-plus"/></div>`)
+			const $btnTabAdd = $(`<button class="btn btn-default content-tab"><span class="glyphicon glyphicon-plus"/></button>`)
 				.click(() => openAddMenu()).appendTo($wrpTabsInner);
 			this.$pnlWrpTabs = $wrpTabs;
 			this.$pnlTabs = $wrpTabsInner;
@@ -1464,7 +1474,7 @@ class Panel {
 
 	_get$BtnSelTab (ix, title, tabCanRename) {
 		title = title || "[Untitled]";
-		const $btnSelTab = $(`<div class="btn btn-default content-tab ${tabCanRename ? "content-tab-can-rename" : ""}"><span class="content-tab-title">${title}</span></div>`)
+		const $btnSelTab = $(`<button class="btn btn-default content-tab ${tabCanRename ? "content-tab-can-rename" : ""}"><span class="content-tab-title">${title}</span></button>`)
 			.on("mousedown", (evt) => {
 				if (evt.which === 1) {
 					this.setActiveTab(ix);
@@ -2042,7 +2052,7 @@ class AddMenu {
 
 			this.tabs.forEach(t => {
 				t.render();
-				const $head = $(`<div class="btn btn-default panel-addmenu-tab-head">${t.label}</div>`).appendTo($tabBar);
+				const $head = $(`<button class="btn btn-default panel-addmenu-tab-head">${t.label}</button>`).appendTo($tabBar);
 				if (t.getSpotlight()) $head.addClass("btn-spotlight");
 				const $body = $(`<div class="panel-addmenu-tab-body"/>`).appendTo($tabBar);
 				$body.append(t.get$Tab);
@@ -2115,7 +2125,7 @@ class AddMenuVideoTab extends AddMenuTab {
 
 			const $wrpYT = $(`<div class="tab-body-row"/>`).appendTo($tab);
 			const $iptUrlYT = $(`<input class="form-control" placeholder="Paste YouTube URL">`).appendTo($wrpYT);
-			const $btnAddYT = $(`<div class="btn btn-primary">Embed</div>`).appendTo($wrpYT);
+			const $btnAddYT = $(`<button class="btn btn-primary">Embed</button>`).appendTo($wrpYT);
 			$btnAddYT.on("click", () => {
 				let url = $iptUrlYT.val().trim();
 				const m = /https?:\/\/(www\.)?youtube\.com\/watch\?v=(.*?)(&.*$|$)/.exec(url);
@@ -2131,8 +2141,8 @@ class AddMenuVideoTab extends AddMenuTab {
 
 			const $wrpTwitch = $(`<div class="tab-body-row"/>`).appendTo($tab);
 			const $iptUrlTwitch = $(`<input class="form-control" placeholder="Paste Twitch URL">`).appendTo($wrpTwitch);
-			const $btnAddTwitch = $(`<div class="btn btn-primary">Embed</div>`).appendTo($wrpTwitch);
-			const $btnAddTwitchChat = $(`<div class="btn btn-primary">Embed Chat</div>`).appendTo($wrpTwitch);
+			const $btnAddTwitch = $(`<button class="btn btn-primary">Embed</button>`).appendTo($wrpTwitch);
+			const $btnAddTwitchChat = $(`<button class="btn btn-primary">Embed Chat</button>`).appendTo($wrpTwitch);
 			const getTwitchM = (url) => {
 				return /https?:\/\/(www\.)?twitch\.tv\/(.*?)(\?.*$|$)/.exec(url);
 			};
@@ -2164,7 +2174,7 @@ class AddMenuVideoTab extends AddMenuTab {
 
 			const $wrpGeneric = $(`<div class="tab-body-row"/>`).appendTo($tab);
 			const $iptUrlGeneric = $(`<input class="form-control" placeholder="Paste any URL">`).appendTo($wrpGeneric);
-			const $btnAddGeneric = $(`<div class="btn btn-primary">Embed</div>`).appendTo($wrpGeneric);
+			const $btnAddGeneric = $(`<button class="btn btn-primary">Embed</button>`).appendTo($wrpGeneric);
 			$btnAddGeneric.on("click", () => {
 				let url = $iptUrlGeneric.val().trim();
 				if (url) {
@@ -2232,7 +2242,7 @@ class AddMenuImageTab extends AddMenuTab {
 				const ix = this.menu.pnl.doPopulate_Loading("Uploading"); // will be null if not in tabbed mode
 				this.menu.doClose();
 			}).appendTo($tab);
-			const $btnAdd = $(`<div class="btn btn-primary">Upload</div>`).appendTo($wrpImgur);
+			const $btnAdd = $(`<button class="btn btn-primary">Upload</button>`).appendTo($wrpImgur);
 			$btnAdd.on("click", () => {
 				$iptFile.click();
 			});
@@ -2240,7 +2250,7 @@ class AddMenuImageTab extends AddMenuTab {
 
 			const $wrpUtl = $(`<div class="tab-body-row"/>`).appendTo($tab);
 			const $iptUrl = $(`<input class="form-control" placeholder="Paste image URL">`).appendTo($wrpUtl);
-			const $btnAddUrl = $(`<div class="btn btn-primary">Add</div>`).appendTo($wrpUtl);
+			const $btnAddUrl = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpUtl);
 			$btnAddUrl.on("click", () => {
 				let url = $iptUrl.val().trim();
 				if (url) {
@@ -2267,7 +2277,7 @@ class AddMenuSpecialTab extends AddMenuTab {
 			const $tab = $(`<div class="panel-tab-list-wrapper underline-tabs" id="${this.tabId}"/>`);
 
 			const $wrpRoller = $(`<div class="tab-body-row"><span>Dice Roller <i class="text-muted">(pins the existing dice roller to a panel)</i></span></div>`).appendTo($tab);
-			const $btnRoller = $(`<div class="btn btn-primary">Pin</div>`).appendTo($wrpRoller);
+			const $btnRoller = $(`<button class="btn btn-primary">Pin</button>`).appendTo($wrpRoller);
 			$btnRoller.on("click", () => {
 				EntryRenderer.dice.bindDmScreenPanel(this.menu.pnl);
 				this.menu.doClose();
@@ -2275,7 +2285,7 @@ class AddMenuSpecialTab extends AddMenuTab {
 			$(`<hr class="tab-body-row-sep"/>`).appendTo($tab);
 
 			const $wrpTracker = $(`<div class="tab-body-row"><span>Initiative Tracker</span></div>`).appendTo($tab);
-			const $btnTracker = $(`<div class="btn btn-primary">Add</div>`).appendTo($wrpTracker);
+			const $btnTracker = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpTracker);
 			$btnTracker.on("click", () => {
 				this.menu.pnl.doPopulate_InitiativeTracker();
 				this.menu.doClose();
@@ -2283,7 +2293,7 @@ class AddMenuSpecialTab extends AddMenuTab {
 			$(`<hr class="tab-body-row-sep"/>`).appendTo($tab);
 
 			const $wrpText = $(`<div class="tab-body-row"><span>Basic Text Box <i class="text-muted">(for a feature-rich editor, embed a Google Doc or similar)</i></span></div>`).appendTo($tab);
-			const $btnText = $(`<div class="btn btn-primary">Add</div>`).appendTo($wrpText);
+			const $btnText = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpText);
 			$btnText.on("click", () => {
 				this.menu.pnl.doPopulate_TextBox();
 				this.menu.doClose();
@@ -2291,7 +2301,7 @@ class AddMenuSpecialTab extends AddMenuTab {
 			$(`<hr class="tab-body-row-sep"/>`).appendTo($tab);
 
 			const $wrpConverter = $(`<div class="tab-body-row"><span>Imperial-Metric Unit Converter</span></div>`).appendTo($tab);
-			const $btnConverter = $(`<div class="btn btn-primary">Add</div>`).appendTo($wrpConverter);
+			const $btnConverter = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpConverter);
 			$btnConverter.on("click", () => {
 				this.menu.pnl.doPopulate_UnitConverter();
 				this.menu.doClose();
@@ -2613,6 +2623,51 @@ class InitiativeTracker {
 		let dir = state.d || DESC;
 		let isLocked = false;
 
+		const makeImportSettingsModal = () => {
+			const $modal = $(`<div class="panel-addmenu">`);
+			const $modalInner = $(`<div class="panel-addmenu-inner dropdown-menu"><h4>Import Settings</h4></div>`)
+				.appendTo($modal).click(e => e.stopPropagation());
+			const doClose = () => $modal.remove();
+			$modal.click(doClose);
+			$(`body`).append($modal);
+
+			const $addGetRow = (tag = "div") => $(`<${tag} class="tab-body-row"/>`).appendTo($modalInner);
+
+			const addCheckboxRow = (labelText, propName) => {
+				const $row = $addGetRow("label");
+				$row.append(`<span>${labelText}</span>`);
+				const $cb = $(`<input type="checkbox">`).appendTo($row)
+					.prop("checked", InitiativeTracker[propName])
+					.on("change", () => InitiativeTracker[propName] = $cb.prop("checked"));
+			};
+
+			addCheckboxRow("Roll hit points", "_uiRollHp");
+			addCheckboxRow("Roll groups of creatures together", "_uiImportRollGroups");
+			addCheckboxRow("Add players", "_uiImportAddPlayers");
+			addCheckboxRow("Add to existing tracker state", "_uiImportAppendOnly");
+		};
+
+		// initialise "upload" context menu
+		const contextId = `trackerLoader${RollerUtil.randomise(100000)}`;
+		ContextUtil.doInitContextMenu(contextId, (evt, ele, $invokedOn, $selectedMenu) => {
+			switch (Number($selectedMenu.data("ctx-id"))) {
+				case 0:
+					EncounterUtil.pGetSavedState().then(savedState => {
+						if (savedState) convertAndLoadBestiaryList(savedState);
+						else alert(`No saved encounter! Please first go to the Bestiary and create one.`);
+					});
+					break;
+				case 1:
+					DataUtil.userUpload((json) => {
+						if (json) convertAndLoadBestiaryList(json);
+					});
+					break;
+				case 2:
+					makeImportSettingsModal();
+					break;
+			}
+		}, ["From Current Bestiary Encounter", "From Bestiary Encounter File", null, "Import Settings"]);
+
 		const $wrpTracker = $(`<div class="dm-init"/>`);
 
 		const $wrpTop = $(`<div style="display: flex; flex-direction: column;"/>`).appendTo($wrpTracker);
@@ -2632,7 +2687,7 @@ class InitiativeTracker {
 		const $wrpControls = $(`<div class="dm-init-wrp-controls"/>`).appendTo($wrpTracker);
 
 		const $wrpLock = $(`<div/>`).appendTo($wrpControls);
-		const $btnLock = $(`<div class="btn btn-danger" title="Lock Tracker"><span class="glyphicon glyphicon-lock"></span></div>`).appendTo($wrpLock);
+		const $btnLock = $(`<button class="btn btn-danger btn-sm" title="Lock Tracker"><span class="glyphicon glyphicon-lock"></span></button>`).appendTo($wrpLock);
 		$btnLock.on("click", () => {
 			if (isLocked) {
 				$btnLock.removeClass("btn-success").addClass("btn-danger");
@@ -2647,31 +2702,37 @@ class InitiativeTracker {
 		});
 
 		const $wrpAddNext = $(`<div/>`).appendTo($wrpControls);
-		const $btnAdd = $(`<div class="btn btn-primary dm-init-lockable" title="Add Player" style="margin-right: 7px;"><span class="glyphicon glyphicon-plus"></span></div>`).appendTo($wrpAddNext);
-		const $btnAddMonster = $(`<div class="btn btn-success dm-init-lockable" title="Add Monster" style="margin-right: 7px;"><span class="glyphicon glyphicon-print"></span></div>`).appendTo($wrpAddNext);
-		const $btnNext = $(`<div class="btn btn-default" title="Next Turn"><span class="glyphicon glyphicon-step-forward"></span></div>`).appendTo($wrpAddNext);
-		$btnNext.on("click", () => setNextActive());
+		const $wrpAdd = $(`<div class="btn-group"/>`).appendTo($wrpAddNext);
+		const $btnAdd = $(`<button class="btn btn-primary btn-sm dm-init-lockable" title="Add Player"><span class="glyphicon glyphicon-plus"/></button>`).appendTo($wrpAdd);
+		const $btnAddMonster = $(`<button class="btn btn-success btn-sm dm-init-lockable" title="Add Monster" style="margin-right: 7px;"><span class="glyphicon glyphicon-print"/></button>`).appendTo($wrpAdd);
+		const $btnNext = $(`<button class="btn btn-default btn-sm" title="Next Turn"><span class="glyphicon glyphicon-step-forward"/></button>`).appendTo($wrpAddNext)
+			.click(() => setNextActive())
 
-		const $wrpSort = $(`<div/>`).appendTo($wrpControls);
-		const $btnSortAlpha = $(`<div title="Sort Alphabetically" class="btn btn-default" style="margin-right: 7px;"><span class="glyphicon glyphicon-sort-by-alphabet"></span></div>`).appendTo($wrpSort);
-		$btnSortAlpha.on("click", () => {
-			if (sort === ALPHA) flipDir();
-			else sort = ALPHA;
-			doSort(ALPHA);
-		});
-		const $btnSortNum = $(`<div title="Sort Numerically" class="btn btn-default"><span class="glyphicon glyphicon-sort-by-order"></span></div>`).appendTo($wrpSort);
-		$btnSortNum.on("click", () => {
-			if (sort === NUM) flipDir();
-			else sort = NUM;
-			doSort(NUM);
-		});
-		const $btnReset = $(`<div title="Reset" class="btn btn-danger dm-init-lockable"><span class="glyphicon glyphicon-trash"></span></div>`).appendTo($wrpControls);
-		$btnReset.on("click", () => {
-			if (isLocked) return;
-			$wrpEntries.empty();
-			sort = NUM;
-			dir = DESC;
-		});
+		const $wrpSort = $(`<div class="btn-group"/>`).appendTo($wrpControls);
+		const $btnSortAlpha = $(`<button title="Sort Alphabetically" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-sort-by-alphabet"/></button>`).appendTo($wrpSort)
+			.click(() => {
+				if (sort === ALPHA) flipDir();
+				else sort = ALPHA;
+				doSort(ALPHA);
+			});
+		const $btnSortNum = $(`<button title="Sort Numerically" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-sort-by-order"/></button>`).appendTo($wrpSort)
+			.click(() => {
+				if (sort === NUM) flipDir();
+				else sort = NUM;
+				doSort(NUM);
+			});
+
+		const $wrpLoadReset = $(`<div class="btn-group"/>`).appendTo($wrpControls);
+		const $btnLoad = $(`<button title="Import an encounter from the Bestiary" class="btn btn-success btn-sm dm-init-lockable"><span class="glyphicon glyphicon-upload"/></button>`).appendTo($wrpLoadReset)
+			.click((evt) => {
+				if (isLocked) return;
+				ContextUtil.handleOpenContextMenu(evt, $btnLoad, contextId);
+			});
+		const $btnReset = $(`<button title="Reset" class="btn btn-danger btn-sm dm-init-lockable"><span class="glyphicon glyphicon-trash"/></button>`).appendTo($wrpLoadReset)
+			.click(() => {
+				if (isLocked) return;
+				confirm("Are you sure?") && doReset();
+			});
 
 		$btnAdd.on("click", () => {
 			if (isLocked) return;
@@ -2687,17 +2748,17 @@ class InitiativeTracker {
 				isWait: false
 			};
 
-			const $menu = $(`<div class="panel-addmenu">`);
-			const $menuInner = $(`<div class="panel-addmenu-inner dropdown-menu">`).appendTo($menu);
-			const doClose = () => $menu.remove();
-			$menu.on("click", doClose);
-			$menuInner.on("click", (e) => e.stopPropagation());
-			$(`body`).append($menu);
+			const $modal = $(`<div class="panel-addmenu">`);
+			const $modalInner = $(`<div class="panel-addmenu-inner dropdown-menu">`).appendTo($modal);
+			const doClose = () => $modal.remove();
+			$modal.on("click", doClose);
+			$modalInner.on("click", (e) => e.stopPropagation());
+			$(`body`).append($modal);
 
-			const $controls = $(`<div class="split" style="flex-shrink: 0"/>`).appendTo($menuInner);
+			const $controls = $(`<div class="split" style="flex-shrink: 0"/>`).appendTo($modalInner);
 			const $srch = $(`<input class="panel-tab-search search form-control" autocomplete="off" placeholder="Search...">`).appendTo($controls);
 			const $wrpCount = $(`
-				<div class="panel-tab-search-sub-wrp" style="padding-right: 0;"> 
+				<div class="panel-tab-search-sub-wrp" style="padding-right: 0;">
 					<div style="margin-right: 7px;">Add</div>
 					<label class="panel-tab-search-sub-lbl"><input type="radio" name="mon-count" class="panel-tab-search-sub-ipt" value="1" checked> 1</label>
 					<label class="panel-tab-search-sub-lbl"><input type="radio" name="mon-count" class="panel-tab-search-sub-ipt" value="2"> 2</label>
@@ -2719,7 +2780,7 @@ class InitiativeTracker {
 
 			const $wrpCbRoll = $(`<label class="panel-tab-search-sub-wrp"> Roll HP</label>`).appendTo($controls);
 			const $cbRoll = $(`<input type="checkbox">`).prop("checked", InitiativeTracker._uiRollHp).on("change", () => InitiativeTracker._uiRollHp = $cbRoll.prop("checked")).prependTo($wrpCbRoll);
-			const $results = $(`<div class="panel-tab-results"/>`).appendTo($menuInner);
+			const $results = $(`<div class="panel-tab-results"/>`).appendTo($modalInner);
 
 			this.showMsgIpt = () => {
 				flags.isWait = true;
@@ -2805,11 +2866,17 @@ class InitiativeTracker {
 			doSearch();
 		});
 
-		$wrpTracker.data("getState", () => {
+		function getSaveableState () {
 			const rows = $wrpEntries.find(`.dm-init-row`).map((i, e) => {
 				const $conds = $(e).find(`.dm-init-cond`);
-				return {
+				const $iptDisplayName = $(e).find(`input.displayName`);
+				const n = $iptDisplayName.length ? {
 					n: $(e).find(`input.name`).val(),
+					d: $iptDisplayName.val(),
+					s: $(e).find(`input.scaledCr`).val() || ""
+				} : $(e).find(`input.name`).val();
+				return {
+					n,
 					h: $(e).find(`input.hp`).val(),
 					i: $(e).find(`input.score`).val(),
 					a: 0 + $(e).hasClass(`dm-init-row-active`),
@@ -2821,15 +2888,23 @@ class InitiativeTracker {
 				r: rows,
 				s: sort,
 				d: dir,
-				m: InitiativeTracker._uiRollHp
+				m: InitiativeTracker._uiRollHp,
+				g: InitiativeTracker._uiImportRollGroups,
+				p: InitiativeTracker._uiImportAddPlayers,
+				a: InitiativeTracker._uiImportAppendOnly
 			};
-		});
+		}
 
-		InitiativeTracker._uiRollHp = !!state.m;
-		(state.r || []).forEach(r => {
-			makeRow(r.n, r.h, r.i, r.a, r.s, r.c);
-		});
-		checkSetFirstActive();
+		$wrpTracker.data("getState", getSaveableState);
+		window.TEST = $wrpTracker.data("getState");
+
+		const _propDefaultFalse = (savedVal) => !!savedVal;
+		const _propDefaultTrue = (savedVal) => savedVal == null ? true : !!savedVal;
+
+		InitiativeTracker._uiRollHp = _propDefaultFalse(state.m);
+		InitiativeTracker._uiImportRollGroups = _propDefaultTrue(state.g);
+		InitiativeTracker._uiImportAddPlayers = _propDefaultTrue(state.p);
+		InitiativeTracker._uiImportAppendOnly = _propDefaultFalse(state.a);
 
 		function setNextActive () {
 			const $rows = $wrpEntries.find(`.dm-init-row`);
@@ -2863,8 +2938,16 @@ class InitiativeTracker {
 			} else checkSetFirstActive();
 		}
 
-		function makeRow (name = "", hp = "", init = "", isActive, source, conditions = [], rollHp = false) {
+		function makeRow (nameOrMeta = "", hp = "", init = "", isActive, source, conditions = [], rollHp = false) {
 			const isMon = !!source;
+			if (nameOrMeta instanceof Object) {
+				// unpack saved
+				nameOrMeta.name = nameOrMeta.name || nameOrMeta.n;
+				nameOrMeta.displayName = nameOrMeta.displayName || nameOrMeta.d;
+				nameOrMeta.scaledTo = nameOrMeta.scaledTo || (nameOrMeta.s ? Number(nameOrMeta.s) : null);
+			}
+			const displayName = nameOrMeta instanceof Object ? nameOrMeta.displayName : null;
+			const name = nameOrMeta instanceof Object ? nameOrMeta.name : nameOrMeta;
 
 			const $wrpRow = $(`<div class="dm-init-row ${isActive ? "dm-init-row-active" : ""}"/>`);
 
@@ -2885,20 +2968,33 @@ class InitiativeTracker {
 					}
 				}
 
+				const getLink = () => {
+					if (typeof nameOrMeta === "string" || nameOrMeta.scaledTo == null) return EntryRenderer.getDefaultRenderer().renderEntry(`{@creature ${name}|${source}}`);
+					else {
+						const parts = [name, source, displayName, Parser.numberToCr(nameOrMeta.scaledTo)]
+						return EntryRenderer.getDefaultRenderer().renderEntry(`{@creature ${parts.join("|")}}`);
+					}
+				};
+
 				const $monName = $(`
 					<div class="init-wrp-creature split">
 						<span class="init-wrp-creature-link">
-							${EntryRenderer.getDefaultRenderer().renderEntry(`{@creature ${name}|${source}}`)}
+							${getLink()}
 							${monNum ? ` <span data-number="${monNum}">(${monNum})</span>` : ""}
 						</span>
 					</div>
 				`).appendTo($wrpLhs);
-				const $btnAnother = $(`<div class="btn btn-success btn-xs dm-init-lockable" title="Add Another (SHIFT for Roll New)"><span class="glyphicon glyphicon-plus"></span></div>`)
+				const $btnAnother = $(`<button class="btn btn-success btn-xs dm-init-lockable" title="Add Another (SHIFT for Roll New)"><span class="glyphicon glyphicon-plus"></span></button>`)
 					.click((evt) => {
 						if (isLocked) return;
-						makeRow(name, "", evt.shiftKey ? "" : $iptScore.val(), $wrpRow.hasClass("dm-init-row-active"), source, [], InitiativeTracker._uiRollHp);
+						makeRow(nameOrMeta, "", evt.shiftKey ? "" : $iptScore.val(), $wrpRow.hasClass("dm-init-row-active"), source, [], InitiativeTracker._uiRollHp);
 					}).appendTo($monName);
 				$(`<input class="source hidden" value="${source}">`).appendTo($wrpLhs);
+
+				if (nameOrMeta instanceof Object && nameOrMeta.scaledTo) {
+					$(`<input class="displayName hidden" value="${displayName}">`).appendTo($wrpLhs);
+					$(`<input class="scaledCr hidden" value="${nameOrMeta.scaledTo}">`).appendTo($wrpLhs);
+				}
 			}
 
 			function addCondition (name, color, turns) {
@@ -2978,7 +3074,7 @@ class InitiativeTracker {
 
 			const $wrpConds = $(`<div class="split"/>`).appendTo($wrpLhs);
 			const $conds = $(`<div class="dm-init-wrp-conds"/>`).appendTo($wrpConds);
-			const $btnCond = $(`<div class="btn btn-warning btn-xs dm-init-row-btn dm-init-row-btn-flag" title="Add Condition"><span class="glyphicon glyphicon-flag"/></div>`)
+			const $btnCond = $(`<button class="btn btn-warning btn-xs dm-init-row-btn dm-init-row-btn-flag" title="Add Condition"><span class="glyphicon glyphicon-flag"/></button>`)
 				.appendTo($wrpConds)
 				.on("click", () => {
 					const $modal = $(`<div class="panel-addmenu-inner dropdown-menu" style="height: initial"/>`);
@@ -3039,7 +3135,6 @@ class InitiativeTracker {
 			if (isMon && (curHp === "" || init === "")) {
 				const doUpdate = () => {
 					const m = EntryRenderer.hover._getFromCache(UrlUtil.PG_BESTIARY, source, hash);
-					const rollName = `Initiative Tracker \u2014 ${m.name}`;
 
 					// set or roll HP
 					if (!rollHp && m.hp.average) {
@@ -3048,7 +3143,7 @@ class InitiativeTracker {
 					} else if (rollHp && m.hp.formula) {
 						curHp = EntryRenderer.dice.roll2(m.hp.formula, {
 							user: false,
-							name: rollName,
+							name: getRollName(m),
 							label: "HP"
 						});
 						$iptHp.val(curHp);
@@ -3056,13 +3151,7 @@ class InitiativeTracker {
 
 					// roll initiative
 					if (!init) {
-						const init = EntryRenderer.dice.roll2(`1d20${Parser.getAbilityModifier(m.dex)}`, {
-							user: false,
-							name: rollName,
-							label: "Initiative"
-						});
-
-						$iptScore.val(init);
+						$iptScore.val(rollInitiative(m));
 					}
 				};
 
@@ -3093,7 +3182,7 @@ class InitiativeTracker {
 				}
 			});
 
-			const $btnDel = $(`<div class="btn btn-danger btn-xs dm-init-row-btn dm-init-lockable" title="Delete"><span class="glyphicon glyphicon-trash"/></div>`)
+			const $btnDel = $(`<button class="btn btn-danger btn-xs dm-init-row-btn dm-init-lockable" title="Delete"><span class="glyphicon glyphicon-trash"/></button>`)
 				.appendTo($wrpRhs)
 				.on("click", () => {
 					if (isLocked) return;
@@ -3156,12 +3245,137 @@ class InitiativeTracker {
 			dir = dir === ASC ? DESC : ASC;
 		}
 
+		function doReset () {
+			$wrpEntries.empty();
+			sort = NUM;
+			dir = DESC;
+		}
+
+		let firstLoad = true;
+		function loadState (state, noReset) {
+			if (!firstLoad && !noReset) doReset();
+			firstLoad = false;
+
+			(state.r || []).forEach(r => {
+				makeRow(r.n, r.h, r.i, r.a, r.s, r.c);
+			});
+			doSort(sort);
+			checkSetFirstActive();
+		}
+
+		function getRollName (monster) {
+			return `Initiative Tracker \u2014 ${monster.name}`;
+		}
+
+		function rollInitiative (monster) {
+			return EntryRenderer.dice.roll2(`1d20${Parser.getAbilityModifier(monster.dex)}`, {
+				user: false,
+				name: getRollName(monster),
+				label: "Initiative"
+			});
+		}
+
+		function getOrRollHp (monster) {
+			if (!InitiativeTracker._uiRollHp && monster.hp.average) {
+				return `${monster.hp.average}`;
+			} else if (InitiativeTracker._uiRollHp && monster.hp.formula) {
+				return `${EntryRenderer.dice.roll2(monster.hp.formula, {
+					user: false,
+					name: getRollName(monster),
+					label: "HP"
+				})}`;
+			}
+			return "";
+		}
+
+		function convertAndLoadBestiaryList (bestiaryList) {
+			const toLoad = {
+				s: "NUM",
+				d: "DESC",
+				m: false,
+				g: true,
+				r: []
+			};
+
+			if (bestiaryList.p && InitiativeTracker._uiImportAddPlayers) {
+				bestiaryList.p.forEach(playerGroup => {
+					[...new Array(playerGroup.count || 1)].forEach(() => {
+						toLoad.r.push({
+							n: ``,
+							h: "",
+							i: "",
+							a: 0,
+							c: []
+						});
+					});
+				});
+			}
+
+			if (bestiaryList.l && bestiaryList.l.items) {
+				Promise.all(bestiaryList.l.items.map(it => {
+					const count = Number(it.c);
+					const hash = it.h;
+					const scaling = (() => {
+						if (it.uid) {
+							const m = /_([\d.,]+)$/.exec(it.uid);
+							if (m) {
+								return Number(m[1]);
+							} else return null;
+						} else return null;
+					})();
+					const [name, source] = hash.split(HASH_LIST_SEP);
+					return new Promise(resolve => {
+						EntryRenderer.hover.pCacheAndGet(UrlUtil.PG_BESTIARY, source, hash)
+							.then(mon => {
+								if (scaling != null) {
+									ScaleCreature.scale(mon, scaling).then(scaled => {
+										resolve({
+											count,
+											monster: scaled
+										});
+									});
+								} else {
+									resolve({
+										count,
+										monster: mon
+									});
+								}
+							});
+					})
+				})).then((data) => {
+					data.forEach(it => {
+						const groupInit = InitiativeTracker._uiImportRollGroups ? rollInitiative(it.monster) : null;
+						const groupHp = InitiativeTracker._uiImportRollGroups ? getOrRollHp(it.monster) : null;
+						[...new Array(it.count || 1)].forEach(() => {
+							toLoad.r.push({
+								n: {
+									name: it.monster.name,
+									displayName: it.monster._displayName,
+									scaledTo: it.monster._isScaledCr
+								},
+								i: `${InitiativeTracker._uiImportRollGroups ? groupInit : rollInitiative(it.monster)}`,
+								a: 0,
+								s: it.monster.source,
+								c: [],
+								h: `${InitiativeTracker._uiImportRollGroups ? groupHp : getOrRollHp(it.monster)}`
+							});
+						});
+					});
+					loadState(toLoad, InitiativeTracker._uiImportAppendOnly);
+				});
+			} else loadState(toLoad, InitiativeTracker._uiImportAppendOnly);
+		}
+
+		loadState(state);
 		doSort(sort);
 
 		return $wrpTracker;
 	}
 }
 InitiativeTracker._uiRollHp = false;
+InitiativeTracker._uiImportRollGroups = true;
+InitiativeTracker._uiImportAddPlayers = true;
+InitiativeTracker._uiImportAppendOnly = false;
 
 class NoteBox {
 	static make$Notebox (content) {
@@ -3294,7 +3508,7 @@ class UnitConverter {
 		const $lblLeft = $(`<span class="bold"/>`).appendTo($wrpLeft);
 		const $iptLeft = $(`<textarea class="ipt form-control">${state.i || ""}</textarea>`).appendTo($wrpLeft);
 
-		const $btnSwitch = $(`<div class="btn btn-primary btn-switch">⇆</div>`).click(() => {
+		const $btnSwitch = $(`<button class="btn btn-primary btn-switch">⇆</button>`).click(() => {
 			dirConv = Number(!dirConv);
 			updateDisplay();
 		}).appendTo($wrpIpt);
