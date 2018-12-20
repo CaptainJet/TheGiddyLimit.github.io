@@ -2,8 +2,17 @@
 const JSON_URL = "data/races.json";
 const JSON_FLUFF_URL = "data/fluff-races.json";
 
-window.onload = function load () {
-	ExcludeUtil.initialise();
+const ASI_SORT_POS = {
+	Strength: 0,
+	Dexterity: 1,
+	Constitution: 2,
+	Intelligence: 3,
+	Wisdom: 4,
+	Charisma: 5
+};
+
+window.onload = async function load () {
+	await ExcludeUtil.pInitialise();
 	SortUtil.initHandleFilterButtonClicks();
 	DataUtil.loadJSON(JSON_URL).then(onJsonLoad);
 };
@@ -25,6 +34,13 @@ function getAbilityObjs (abils) {
 			if (ch.predefined) {
 				ch.predefined.forEach(pre => {
 					Object.keys(pre).forEach(abil => out.add(makeAbilObj(abil, pre[abil])));
+				});
+			} else if (ch.weighted) {
+				// add every ability + weight combo
+				ch.weighted.from.forEach(f => {
+					ch.weighted.weights.forEach(w => {
+						out.add(makeAbilObj(f, w));
+					});
 				});
 			} else {
 				const by = ch.amount || 1;
@@ -51,32 +67,31 @@ function basename (str, sep) {
 let list;
 const sourceFilter = getSourceFilter();
 const sizeFilter = new Filter({header: "Size", displayFn: Parser.sizeAbvToFull});
+const asiFilter = new Filter({
+	header: "Ability Bonus (Including Subrace)",
+	items: [
+		"Strength +2",
+		"Strength +1",
+		"Dexterity +2",
+		"Dexterity +1",
+		"Constitution +2",
+		"Constitution +1",
+		"Intelligence +2",
+		"Intelligence +1",
+		"Wisdom +2",
+		"Wisdom +1",
+		"Charisma +2",
+		"Charisma +1"
+	]
+});
 let filterBox;
-function onJsonLoad (data) {
+async function onJsonLoad (data) {
 	list = ListUtil.search({
-		valueNames: ['name', 'ability', 'size', 'source', 'clean-name'],
+		valueNames: ['name', 'ability', 'size', 'source', 'clean-name', "uniqueid"],
 		listClass: "races"
 	});
 
 	const jsonRaces = EntryRenderer.race.mergeSubraces(data.race);
-
-	const asiFilter = new Filter({
-		header: "Ability Bonus (Including Subrace)",
-		items: [
-			"Strength +2",
-			"Strength +1",
-			"Dexterity +2",
-			"Dexterity +1",
-			"Constitution +2",
-			"Constitution +1",
-			"Intelligence +2",
-			"Intelligence +1",
-			"Wisdom +2",
-			"Wisdom +1",
-			"Charisma +2",
-			"Charisma +1"
-		]
-	});
 	const speedFilter = new Filter({header: "Speed", items: ["Climb", "Fly", "Swim", "Walk (Fast)", "Walk", "Walk (Slow)"]});
 	const traitFilter = new Filter({
 		header: "Traits",
@@ -128,7 +143,7 @@ function onJsonLoad (data) {
 		umbrellaItem: "Choose"
 	});
 
-	filterBox = initFilterBox(
+	filterBox = await pInitFilterBox(
 		sourceFilter,
 		asiFilter,
 		sizeFilter,
@@ -158,11 +173,11 @@ function onJsonLoad (data) {
 	BrewUtil.pAddBrewData()
 		.then(handleBrew)
 		.then(BrewUtil.pAddLocalBrewData)
-		.catch(BrewUtil.purgeBrew)
-		.then(() => {
+		.catch(BrewUtil.pPurgeBrew)
+		.then(async () => {
 			BrewUtil.makeBrewButton("manage-brew");
 			BrewUtil.bind({list, filterBox, sourceFilter});
-			ListUtil.loadState();
+			await ListUtil.pLoadState();
 			RollerUtil.addListRollButton();
 
 			History.init(true);
@@ -205,17 +220,20 @@ function addRaces (data) {
 		tempString +=
 			`<li class="row" ${FLTR_ID}='${rcI}' onclick="ListUtil.toggleSelected(event, this)" oncontextmenu="ListUtil.openContextMenu(event, this)">
 				<a id='${rcI}' href="#${UrlUtil.autoEncodeHash(race)}" title="${race.name}">
-					<span class='name col-xs-4'>${race.name}</span>
-					<span class='ability col-xs-4'>${ability.asTextShort}</span>
-					<span class='size col-xs-2'>${Parser.sizeAbvToFull(race.size)}</span>
-					<span class='source col-xs-2 ${Parser.sourceJsonToColor(race.source)}' title="${Parser.sourceJsonToFull(race.source)}">${Parser.sourceJsonToAbv(race.source)}</span>
+					<span class='name col-4'>${race.name}</span>
+					<span class='ability col-4'>${ability.asTextShort}</span>
+					<span class='size col-2'>${Parser.sizeAbvToFull(race.size)}</span>
+					<span class='source col-2 ${Parser.sourceJsonToColor(race.source)}' title="${Parser.sourceJsonToFull(race.source)}">${Parser.sourceJsonToAbv(race.source)}</span>
 					${bracketMatch ? `<span class="clean-name hidden">${bracketMatch[2]} ${bracketMatch[1]}</span>` : ""}
+					
+					<span class="uniqueid hidden">${race.uniqueId ? race.uniqueId : rcI}</span>
 				</a>
 			</li>`;
 
 		// populate filters
 		sourceFilter.addIfAbsent(race._fSources);
 		sizeFilter.addIfAbsent(race.size);
+		asiFilter.addIfAbsent(race._fAbility);
 	}
 	const lastSearch = ListUtil.getSearchTermAndReset(list);
 	racesTable.append(tempString);
@@ -223,6 +241,7 @@ function addRaces (data) {
 	// sort filters
 	sourceFilter.items.sort(SortUtil.ascSort);
 	sizeFilter.items.sort(ascSortSize);
+	asiFilter.items.sort(ascSortAsi);
 
 	function ascSortSize (a, b) {
 		return SortUtil.ascSort(toNum(a), toNum(b));
@@ -237,6 +256,12 @@ function addRaces (data) {
 					return 1;
 			}
 		}
+	}
+
+	function ascSortAsi (a, b) {
+		const [aAbil, aScore] = a.split(" ");
+		const [bAbil, bScore] = b.split(" ");
+		return (ASI_SORT_POS[aAbil] - ASI_SORT_POS[bAbil]) || (Number(bScore) - Number(aScore));
 	}
 
 	list.reIndex();
@@ -284,9 +309,9 @@ function getSublistItem (race, pinId) {
 	return `
 		<li class="row" ${FLTR_ID}="${pinId}" oncontextmenu="ListUtil.openSubContextMenu(event, this)">
 			<a href="#${UrlUtil.autoEncodeHash(race)}" title="${race.name}">
-				<span class="name col-xs-5">${race.name}</span>
-				<span class="ability col-xs-5">${race._slAbility}</span>
-				<span class="size col-xs-2">${Parser.sizeAbvToFull(race.size)}</span>
+				<span class="name col-5">${race.name}</span>
+				<span class="ability col-5">${race._slAbility}</span>
+				<span class="size col-2">${Parser.sizeAbvToFull(race.size)}</span>
 				<span class="id hidden">${pinId}</span>
 			</a>
 		</li>

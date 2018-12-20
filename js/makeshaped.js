@@ -179,7 +179,8 @@ class ShapedConverter {
 				'headerWill',
 				'name',
 				'footerEntries',
-				'ability'
+				'ability',
+				'hidden'
 			].includes(k))
 			.map(useInfo => {
 				const spellDetails = spellcasting[useInfo];
@@ -399,6 +400,8 @@ class ShapedConverter {
 			return this.innateSpellProc.bind(this);
 		} else if (spellcasting.spells) {
 			return this.normalSpellProc.bind(this);
+		} else if (spellcasting.hidden) {
+			return null;
 		}
 
 		throw new Error(`Unrecognised type of spellcasting object: ${spellcasting.name}`);
@@ -451,6 +454,8 @@ class ShapedConverter {
 		if (monster.spellcasting) {
 			monster.spellcasting.forEach(spellcasting => {
 				const spellProc = this.getSpellcastingProcessor(spellcasting);
+				if (spellProc == null) return;
+
 				const spellLines = spellProc(spellcasting);
 				spellLines.unshift(this.fixLinks(spellcasting.headerEntries[0]));
 				if (spellcasting.footerEntries) {
@@ -1105,6 +1110,8 @@ function rebuildShapedSources () {
 }
 
 window.onload = function load () {
+	ExcludeUtil.pInitialise(); // don't await, as this is only used for search
+
 	window.handleBrew = data => {
 		shapedConverter.getInputs()
 			.then(inputs => {
@@ -1153,7 +1160,7 @@ window.onload = function load () {
 		const shapedJS = $('#shapedJS');
 		shapedJS.select();
 		document.execCommand('Copy');
-		showCopiedEffect($('#copyJS'));
+		JqueryUtil.showCopiedEffect($('#copyJS'));
 	});
 	$(`#selectAll`).change(function () {
 		$(`.shaped-source:not([disabled])`).prop("checked", $(this).prop("checked"));

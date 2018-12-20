@@ -11,8 +11,14 @@
  * See the docs for each function for full explanations.
  */
 class FilterBox {
-	static getSelectedSources () {
-		const parsed = StorageUtil.getForPage(FilterBox._STORAGE_NAME);
+	static async pGetSelectedSources () {
+		let parsed;
+		try {
+			parsed = await StorageUtil.pGetForPage(FilterBox._STORAGE_NAME);
+		} catch (e) {
+			setTimeout(() => { throw e });
+			parsed = null;
+		}
 		if (parsed) {
 			const sources = parsed[FilterBox.SOURCE_HEADER];
 			if (sources) {
@@ -56,14 +62,37 @@ class FilterBox {
 		this.multiHeaders = {};
 		this.$disabledOverlay = $(`<div class="homebrew-overlay"/>`);
 
-		this.storedValues = StorageUtil.getForPage(FilterBox._STORAGE_NAME);
-		this.storedVisible = StorageUtil.getForPage(FilterBox._STORAGE_NAME_VISIBLE);
-		this.storedGroupState = StorageUtil.getForPage(FilterBox._STORAGE_NAME_GROUP_STATE);
-		this.storedNestState = StorageUtil.getForPage(FilterBox._STORAGE_NAME_NEST_STATE);
 		this.$rendered = [];
 		this.dropdownVisible = false;
 		this.modeAndOr = "AND";
 		this.$txtCount = $(`<span style="margin-left: auto"/>`);
+		this.$filterButton = null;
+
+		this._doSaveStateDebounced = MiscUtil.debounce(() => this.__pDoSaveState(), 50);
+	}
+
+	async pDoLoadState () {
+		try {
+			this.storedValues = await StorageUtil.pGetForPage(FilterBox._STORAGE_NAME);
+			this.storedVisible = await StorageUtil.pGetForPage(FilterBox._STORAGE_NAME_VISIBLE);
+			this.storedGroupState = await StorageUtil.pGetForPage(FilterBox._STORAGE_NAME_GROUP_STATE);
+			this.storedNestState = await StorageUtil.pGetForPage(FilterBox._STORAGE_NAME_NEST_STATE);
+		} catch (e) {
+			setTimeout(() => { throw e });
+			this.storedValues = null;
+			this.storedVisible = null;
+			this.storedGroupState = null;
+			this.storedNestState = null;
+		}
+	}
+
+	__pDoSaveState () {
+		return Promise.all([
+			StorageUtil.pSetForPage(FilterBox._STORAGE_NAME, this.getValues()),
+			StorageUtil.pSetForPage(FilterBox._STORAGE_NAME_VISIBLE, this._getVisible()),
+			StorageUtil.pSetForPage(FilterBox._STORAGE_NAME_GROUP_STATE, this._getGroupState()),
+			StorageUtil.pSetForPage(FilterBox._STORAGE_NAME_NEST_STATE, this._getNestState())
+		]);
 	}
 
 	/**
@@ -82,7 +111,7 @@ class FilterBox {
 		const $body = $(`body`);
 		this.$list = $(`#listcontainer`).find(`.list`);
 
-		const $filterButton = getFilterButton();
+		const $filterButton = this.$filterButton = getFilterButton();
 		this.$miniView = $(`<div class="mini-view btn-group"/>`);
 		const $inputGroup = $(this.inputGroup);
 
@@ -97,7 +126,7 @@ class FilterBox {
 					<button id="fltr-reset" class="btn btn-xs btn-default">Reset</button>
 				</div>
 			</h4>
-			<hr>
+			<hr style="margin-top: 0; margin-bottom: 7px;">
 		</div>`).hide();
 
 		this._showAll = () => {
@@ -153,31 +182,16 @@ class FilterBox {
 			}
 		};
 
-		const addSaveHandler = () => {
-			window.addEventListener("beforeunload", () => {
-				const state = this.getValues();
-				StorageUtil.setForPage(FilterBox._STORAGE_NAME, state);
-				const display = this._getVisible();
-				StorageUtil.setForPage(FilterBox._STORAGE_NAME_VISIBLE, display);
-				const groupState = this._getGroupState();
-				StorageUtil.setForPage(FilterBox._STORAGE_NAME_GROUP_STATE, groupState);
-				const nestState = this._getNestState();
-				StorageUtil.setForPage(FilterBox._STORAGE_NAME_NEST_STATE, nestState);
-			});
-		};
-
-		if (firstRender) {
-			addResetHandler();
-			addSaveHandler();
-		}
+		if (firstRender) addResetHandler();
 
 		if (this.dropdownVisible) $filterButton.find("button").click();
+		this._doSaveStateDebounced();
 
 		function getFilterButton () {
 			const $buttonWrapper = $(`<div id="filter-toggle-btn"/>`);
 			$buttonWrapper.addClass(FilterBox.CLS_INPUT_GROUP_BUTTON);
 
-			const $filterButton = $(`<button class="btn btn-default btn-filter">Filter</span></button>`);
+			const $filterButton = $(`<button class="btn btn-default btn-filter">Filter<span/></button>`);
 			$buttonWrapper.append($filterButton);
 			return $buttonWrapper;
 		}
@@ -381,7 +395,9 @@ class FilterBox {
 					$showHide.text("Show");
 					$grid.hide();
 					$quickBtns.hide();
-					$logicBtns.css("margin-left", "auto");
+					updateSummary();
+				};
+				const updateSummary = () => {
 					const counts = $grid.data("getCounts")();
 					if (counts.yes > 0 || counts.no > 0) {
 						if (counts.yes > 0) {
@@ -407,10 +423,12 @@ class FilterBox {
 						$summary.show();
 					} else {
 						$logicBtns.css("margin-left", "auto");
+						$summary.hide();
 					}
 				};
 				$grid.data("showFilter", doShow);
 				$grid.data("hideFilter", doHide);
+				$grid.data("updateSummary", updateSummary);
 
 				if (curVisible && curVisible[filter.header] === false) doHide();
 				else if (self.storedVisible && self.storedVisible[filter.header] === false) doHide();
@@ -585,6 +603,7 @@ class FilterBox {
 						$pill.attr("state", FilterBox._PILL_STATES[0]);
 						$miniPill.attr("state", FilterBox._PILL_STATES[0]);
 						handlePillChange(iText, iChangeFn, FilterBox._PILL_STATES[0]);
+						$grid.data("updateSummary")();
 						self._fireValChangeEvent();
 					});
 
@@ -808,10 +827,7 @@ class FilterBox {
 					$showHide.text("Show");
 					$wrpSlide.hide();
 					$quickBtns.hide();
-					const vals = $wrpSlide.data("getValues")();
-					const dispMax = () => filter.labels ? filter.items[vals.max] : vals.max;
-					const dispMin = () => filter.labels ? filter.items[vals.min] : vals.min;
-					$summaryRange.text(vals.min === filter.min && vals.max === filter.max ? "" : vals.min === filter.min ? `≤ ${dispMax()}` : vals.max === filter.max ? `≥ ${dispMin()}` : `${dispMin()}-${dispMax()}`);
+					updateSummary();
 					$summary.show();
 				};
 				const doShow = () => {
@@ -820,8 +836,15 @@ class FilterBox {
 					$quickBtns.show();
 					$summary.hide();
 				};
+				const updateSummary = () => {
+					const vals = $wrpSlide.data("getValues")();
+					const dispMax = () => filter.labels ? filter.items[vals.max] : vals.max;
+					const dispMin = () => filter.labels ? filter.items[vals.min] : vals.min;
+					$summaryRange.text(vals.min === filter.min && vals.max === filter.max ? "" : vals.min === filter.min ? `≤ ${dispMax()}` : vals.max === filter.max ? `≥ ${dispMin()}` : `${dispMin()}-${dispMax()}`);
+				};
 				$wrpSlide.data("showFilter", doShow);
 				$wrpSlide.data("hideFilter", doHide);
+				$wrpSlide.data("updateSummary", updateSummary);
 
 				if (curVisible && curVisible[filter.header] === false) doHide();
 				else if (self.storedVisible && self.storedVisible[filter.header] === false) doHide();
@@ -882,6 +905,7 @@ class FilterBox {
 					$miniPillMin.attr("state", FilterBox._PILL_STATES[0]);
 					const [min, max] = $sld.slider("values");
 					$sld.slider("values", [filter.min, max]);
+					$wrp.data("updateSummary")();
 					self._fireValChangeEvent();
 				}).appendTo($miniView);
 				$miniPillMax.on(EVNT_CLICK, function () {
@@ -906,6 +930,8 @@ class FilterBox {
 						const [min, max] = $sld.slider("values");
 						out.min = min;
 						out.max = max;
+						out.isMinVal = min === filter.min;
+						out.isMaxVal = max === filter.max;
 						return out;
 					}
 				);
@@ -969,8 +995,9 @@ class FilterBox {
 					$sld.slider("values", [min, max]);
 					checkUpdateMiniPills();
 				} else if (self.storedValues && self.storedValues[filter.header]) {
-					const min = self.storedValues[filter.header].min || filter.min;
-					const max = self.storedValues[filter.header].max || filter.max;
+					const stored = self.storedValues[filter.header];
+					const min = stored.isMinVal ? filter.min : stored.min || filter.min;
+					const max = stored.isMaxVal ? filter.max : stored.max || filter.max;
 					$sld.slider("values", [min, max]);
 					checkUpdateMiniPills();
 				} else {
@@ -1245,6 +1272,7 @@ class FilterBox {
 	 * @private
 	 */
 	_fireValChangeEvent () {
+		this._doSaveStateDebounced();
 		const eventOut = new Event(FilterBox.EVNT_VALCHANGE);
 		this.inputGroup.dispatchEvent(eventOut);
 	}

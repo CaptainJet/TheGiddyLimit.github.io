@@ -4,6 +4,8 @@ const JSON_URL = "data/tables.json";
 const renderer = EntryRenderer.getDefaultRenderer();
 
 window.onload = function load () {
+	ExcludeUtil.pInitialise(); // don't await, as this is only used for search
+
 	SortUtil.initHandleFilterButtonClicks();
 	Promise.all([GEN_JSON_URL, JSON_URL].map(url => DataUtil.loadJSON(url))).then((datas) => {
 		const combined = {};
@@ -21,13 +23,13 @@ window.onload = function load () {
 const sourceFilter = getSourceFilter();
 let filterBox;
 let list;
-function onJsonLoad (data) {
+async function onJsonLoad (data) {
 	list = ListUtil.search({
 		valueNames: ["name", "source", "sort-name"],
 		listClass: "tablesdata"
 	});
 
-	filterBox = initFilterBox(
+	filterBox = await pInitFilterBox(
 		sourceFilter
 	);
 
@@ -52,11 +54,11 @@ function onJsonLoad (data) {
 	BrewUtil.pAddBrewData()
 		.then(handleBrew)
 		.then(BrewUtil.pAddLocalBrewData)
-		.catch(BrewUtil.purgeBrew)
-		.then(() => {
+		.catch(BrewUtil.pPurgeBrew)
+		.then(async () => {
 			BrewUtil.makeBrewButton("manage-brew");
 			BrewUtil.bind({list, filterBox, sourceFilter});
-			ListUtil.loadState();
+			await ListUtil.pLoadState();
 
 			History.init(true);
 			RollerUtil.addListRollButton();
@@ -89,8 +91,8 @@ function addTables (data) {
 		tempString += `
 			<li class="row" ${FLTR_ID}="${cdI}" onclick="ListUtil.toggleSelected(event, this)" oncontextmenu="ListUtil.openContextMenu(event, this)">
 				<a id="${cdI}" href="#${UrlUtil.autoEncodeHash(it)}" title="${it.name}">
-					<span class='name col-xs-10'>${it.name}</span>
-					<span class='source col-xs-2 text-align-center ${Parser.sourceJsonToColor(it.source)}' title="${Parser.sourceJsonToFull(it.source)}">${Parser.sourceJsonToAbv(it.source)}</span>
+					<span class='name col-10'>${it.name}</span>
+					<span class='source col-2 text-align-center ${Parser.sourceJsonToColor(it.source)}' title="${Parser.sourceJsonToFull(it.source)}">${Parser.sourceJsonToAbv(it.source)}</span>
 					<span class="hidden sort-name">${sortName}</span>
 				</a>
 			</li>`;
@@ -126,7 +128,7 @@ function getSublistItem (table, pinId) {
 	return `
 		<li class="row" ${FLTR_ID}="${pinId}" oncontextmenu="ListUtil.openSubContextMenu(event, this)">
 			<a href="#${UrlUtil.autoEncodeHash(table)}">
-				<span class="name col-xs-12">${table.name}</span>		
+				<span class="name col-12">${table.name}</span>		
 				<span class="id hidden">${pinId}</span>				
 			</a>
 		</li>

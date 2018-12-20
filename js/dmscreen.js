@@ -11,12 +11,14 @@ const TITLE_LOADING = "Loading...";
 
 const PANEL_TYP_EMPTY = 0;
 const PANEL_TYP_STATS = 1;
-const PANEL_TYP_CREATURE_SCALED_CR = 7;
 const PANEL_TYP_ROLLBOX = 2;
 const PANEL_TYP_TEXTBOX = 3;
 const PANEL_TYP_RULES = 4;
 const PANEL_TYP_INITIATIVE_TRACKER = 5;
 const PANEL_TYP_UNIT_CONVERTER = 6;
+const PANEL_TYP_CREATURE_SCALED_CR = 7;
+const PANEL_TYP_SUNDIAL = 8;
+const PANEL_TYP_MONEY_CONVERTER = 9;
 const PANEL_TYP_TUBE = 10;
 const PANEL_TYP_TWITCH = 11;
 const PANEL_TYP_TWITCH_CHAT = 12;
@@ -32,14 +34,19 @@ class Board {
 		this.height = this.getInitialHeight();
 		this.sideMenu = new SideMenu(this);
 		this.menu = new AddMenu();
-		this.storage = StorageUtil.getStorage();
 		this.isFullscreen = false;
+		this.isLocked = false;
 
 		this.nextId = 1;
 		this.hoveringPanel = null;
 		this.availContent = {};
 		this.availRules = {};
+
 		this.$cbConfirmTabClose = null;
+		this.$btnFullscreen = null;
+		this.$btnLockPanels = null;
+
+		this._pDoSaveStateDebounced = MiscUtil.debounce(() => StorageUtil.pSet(DMSCREEN_STORAGE, this.getSaveableState()), 50);
 	}
 
 	getInitialWidth () {
@@ -150,32 +157,27 @@ class Board {
 		this.$creen.find(`.dm-screen-loading`).remove();
 	}
 
-	initialise () {
+	async pInitialise () {
 		this.doAdjust$creenCss();
 		this.doShowLoading();
 
-		this.pLoadIndex()
-			.then(() => {
-				if (this.hasSavedStateUrl()) {
-					this.doLoadUrlState();
-					this.initUnloadHandler();
-				} else if (this.hasSavedState()) {
-					this.doLoadState();
-					this.initUnloadHandler();
-				} else {
-					this.doCheckFillSpaces();
-					this.initUnloadHandler();
-				}
-			});
+		await this.pLoadIndex();
+		if (this.hasSavedStateUrl()) {
+			this.doLoadUrlState();
+		} else if (await this.pHasSavedState()) {
+			await this.pDoLoadState();
+		} else {
+			this.doCheckFillSpaces();
+		}
+		this.initGlobalHandlers();
 	}
 
-	initUnloadHandler () {
+	initGlobalHandlers () {
 		window.onhashchange = () => this.doLoadUrlState();
-		$(window).on("beforeunload", () => this.doSaveState());
 	}
 
 	pLoadIndex () {
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			elasticlunr.clearStopWords();
 			EntryRenderer.item.populatePropertyAndTypeReference().then(() => DataUtil.loadJSON("data/generated/bookref-dmscreen-index.json")).then((data) => {
 				this.availRules.ALL = elasticlunr(function () {
@@ -303,6 +305,7 @@ class Board {
 				toDestroy.forEach(p => p.destroy());
 				this.sideMenu.doUpdateHistory()
 			} else this.destroyPanel(id);
+			this.doSaveStateDebounced();
 		}
 	}
 
@@ -310,11 +313,13 @@ class Board {
 		const ix = this.exiledPanels.findIndex(p => p.id === panel.id);
 		if (~ix) this.exiledPanels.splice(ix, 1);
 		this.panels[panel.id] = panel;
+		this.doSaveStateDebounced();
 	}
 
 	destroyPanel (id) {
 		const panelK = Object.keys(this.panels).find(k => this.panels[k].id === id);
 		if (panelK) delete this.panels[panelK];
+		this.doSaveStateDebounced();
 	}
 
 	doCheckFillSpaces () {
@@ -328,6 +333,7 @@ class Board {
 			}
 		}
 		Object.values(this.panels).forEach(p => p.render());
+		this.doSaveStateDebounced();
 	}
 
 	hasSavedStateUrl () {
@@ -343,8 +349,8 @@ class Board {
 		window.location.hash = "";
 	}
 
-	hasSavedState () {
-		return !!((this.storage.getItem(DMSCREEN_STORAGE) || "").trim());
+	async pHasSavedState () {
+		return !!await StorageUtil.pGet(DMSCREEN_STORAGE);
 	}
 
 	getSaveableState () {
@@ -352,17 +358,21 @@ class Board {
 			w: this.width,
 			h: this.height,
 			ctc: this.getConfirmTabClose(),
+			fs: this.isFullscreen,
+			lk: this.isLocked,
 			ps: Object.values(this.panels).map(p => p.getSaveableState()),
 			ex: this.exiledPanels.map(p => p.getSaveableState())
 		};
 	}
 
-	doSaveState () {
-		this.storage.setItem(DMSCREEN_STORAGE, JSON.stringify(this.getSaveableState()));
+	doSaveStateDebounced () {
+		this._pDoSaveStateDebounced();
 	}
 
 	doLoadStateFrom (toLoad) {
-		if (this.$cbConfirmTabClose) this.$cbConfirmTabClose.prop("checked", toLoad.ctc);
+		if (this.$cbConfirmTabClose) this.$cbConfirmTabClose.prop("checked", !!toLoad.ctc);
+		if (this.$btnFullscreen && (toLoad.fs !== !!this.isFullscreen)) this.$btnFullscreen.click();
+		if (this.$btnLockPanels && (toLoad.lk !== !!this.isLocked)) this.$btnLockPanels.click();
 
 		// re-exile
 		toLoad.ex.filter(Boolean).reverse().forEach(saved => {
@@ -383,24 +393,17 @@ class Board {
 		this.setDimensions(toLoad.w, toLoad.h);
 	}
 
-	doLoadState () {
-		const purgeSaved = () => {
+	async pDoLoadState () {
+		try {
+			const toLoad = await StorageUtil.pGet(DMSCREEN_STORAGE);
+			this.doLoadStateFrom(toLoad);
+		} catch (e) {
+			// on error, purge saved data and reset
 			window.alert("Error when loading DM screen! Purging saved data...");
-			this.storage.removeItem(DMSCREEN_STORAGE);
-		};
-
-		const raw = this.storage.getItem(DMSCREEN_STORAGE);
-		if (raw) {
-			try {
-				const toLoad = JSON.parse(raw);
-				this.doLoadStateFrom(toLoad);
-			} catch (e) {
-				// on error, purge saved data and reset
-				purgeSaved();
-				setTimeout(() => {
-					throw e
-				});
-			}
+			await StorageUtil.pRemove(DMSCREEN_STORAGE);
+			setTimeout(() => {
+				throw e
+			});
 		}
 	}
 
@@ -428,13 +431,18 @@ class Board {
 	addPanel (panel) {
 		this.panels[panel.id] = panel;
 		panel.render();
+		this.doSaveStateDebounced();
+	}
+
+	doStopMovingPanels () {
+		Object.values(this.panels).forEach(p => p.toggleMoving(false));
 	}
 }
 
 class SideMenu {
 	constructor (board) {
 		this.board = board;
-		this.$mnu = $(`.dm-sidemenu`);
+		this.$mnu = $(`.sidemenu`);
 
 		this.$mnu.on("mouseover", () => {
 			this.board.setHoveringPanel(null);
@@ -448,17 +456,16 @@ class SideMenu {
 	}
 
 	render () {
-		const renderDivider = () => {
-			this.$mnu.append(`<hr class="dm-sidemenu-row-divider">`);
-		};
+		const renderDivider = () => this.$mnu.append(`<hr class="sidemenu__row__divider">`);
 
-		const $wrpResizeW = $(`<div class="dm-sidemenu-row"><div class="dm-sidemenu-row-label">Width</div></div>`).appendTo(this.$mnu);
+		const $wrpResizeW = $(`<div class="sidemenu__row"><div class="sidemenu__row__label">Width</div></div>`).appendTo(this.$mnu);
 		const $iptWidth = $(`<input class="form-control" type="number" value="${this.board.width}">`).appendTo($wrpResizeW);
 		this.$iptWidth = $iptWidth;
-		const $wrpResizeH = $(`<div class="dm-sidemenu-row"><div class="dm-sidemenu-row-label">Height</div></div>`).appendTo(this.$mnu);
+		const $wrpResizeH = $(`<div class="sidemenu__row"><div class="sidemenu__row__label">Height</div></div>`).appendTo(this.$mnu);
 		const $iptHeight = $(`<input class="form-control" type="number" value="${this.board.height}">`).appendTo($wrpResizeH);
 		this.$iptHeight = $iptHeight;
-		const $btnSetDim = $(`<button="btn btn-primary">Set Dimensions</div>`).appendTo(this.$mnu);
+		const $wrpSetDim = $(`<div class="sidemenu__row"/>`).appendTo(this.$mnu);
+		const $btnSetDim = $(`<button class="btn btn-primary" style="width: 100%;">Set Dimensions</div>`).appendTo($wrpSetDim);
 		$btnSetDim.on("click", () => {
 			const w = Number($iptWidth.val());
 			const h = Number($iptHeight.val());
@@ -467,29 +474,34 @@ class SideMenu {
 		});
 		renderDivider();
 
-		const $wrpFullscreen = $(`<div class="dm-sidemenu-row-alt"></div>`).appendTo(this.$mnu);
+		const $wrpFullscreen = $(`<div class="sidemenu__row--alt"></div>`).appendTo(this.$mnu);
 		const $btnFullscreen = $(`<button class="btn btn-primary">Toggle Fullscreen</button>`).appendTo($wrpFullscreen);
+		this.board.$btnFullscreen = $btnFullscreen;
 		$btnFullscreen.on("click", () => {
 			this.board.isFullscreen = !this.board.isFullscreen;
 			if (this.board.isFullscreen) $(`body`).addClass(`dm-screen-fullscreen`);
 			else $(`body`).removeClass(`dm-screen-fullscreen`);
 			this.board.doAdjust$creenCss();
+			this.board.doSaveStateDebounced();
 		});
-		const $btnLock = $(`<button class="btn btn-danger" title="Lock Panels"><span class="glyphicon glyphicon-lock"/></button>`).appendTo($wrpFullscreen);
-		$btnLock.on("click", () => {
+		const $btnLockPanels = $(`<button class="btn btn-danger" title="Lock Panels"><span class="glyphicon glyphicon-lock"/></button>`).appendTo($wrpFullscreen);
+		this.board.$btnLockPanels = $btnLockPanels;
+		$btnLockPanels.on("click", () => {
 			this.board.isLocked = !this.board.isLocked;
 			if (this.board.isLocked) {
 				$(`body`).addClass(`dm-screen-locked`);
-				$btnLock.removeClass(`btn-danger`).addClass(`btn-success`);
+				$btnLockPanels.removeClass(`btn-danger`).addClass(`btn-success`);
+				this.board.doStopMovingPanels();
 			} else {
 				$(`body`).removeClass(`dm-screen-locked`);
-				$btnLock.addClass(`btn-danger`).removeClass(`btn-success`);
+				$btnLockPanels.addClass(`btn-danger`).removeClass(`btn-success`);
 			}
+			this.board.doSaveStateDebounced();
 		});
 		renderDivider();
 
-		const $wrpSaveLoad = $(`<div class="dm-sidemenu-row-vert"/>`).appendTo(this.$mnu);
-		const $wrpSaveLoadFile = $(`<div class="dm-sidemenu-row-alt"/>`).appendTo($wrpSaveLoad);
+		const $wrpSaveLoad = $(`<div class="sidemenu__row--vert"/>`).appendTo(this.$mnu);
+		const $wrpSaveLoadFile = $(`<div class="sidemenu__row--alt"/>`).appendTo($wrpSaveLoad);
 		const $btnSaveFile = $(`<button class="btn btn-primary">Save to File</button>`).appendTo($wrpSaveLoadFile);
 		$btnSaveFile.on("click", () => {
 			DataUtil.userDownload(`dm-screen`, this.board.getSaveableState());
@@ -501,20 +513,21 @@ class SideMenu {
 				this.board.doLoadStateFrom(json);
 			});
 		});
-		const $wrpSaveLoadUrl = $(`<div class="dm-sidemenu-row-alt"/>`).appendTo($wrpSaveLoad);
+		const $wrpSaveLoadUrl = $(`<div class="sidemenu__row--alt"/>`).appendTo($wrpSaveLoad);
 		const $btnSaveLink = $(`<button class="btn btn-primary">Save to URL</button>`).appendTo($wrpSaveLoadUrl);
 		$btnSaveLink.on("click", () => {
 			const encoded = `${window.location.href.split("#")[0]}#${encodeURIComponent(JSON.stringify(this.board.getSaveableState()))}`;
 			copyText(encoded);
-			showCopiedEffect($btnSaveLink);
+			JqueryUtil.showCopiedEffect($btnSaveLink);
 		});
 		renderDivider();
 
-		const $wrpCbConfirm = $(`<div class="dm-sidemenu-row"><label class="dm-sidemenu-row-label dm-sidemenu-row-label--cb-label">Confirm on Tab Close </label></div>`).appendTo(this.$mnu);
-		this.board.$cbConfirmTabClose = $(`<input type="checkbox" class="dm-sidemenu-row-label-cb">`).appendTo($wrpCbConfirm.find(`label`));
+		const $wrpCbConfirm = $(`<div class="sidemenu__row"><label class="sidemenu__row__label sidemenu__row__label--cb-label"><span>Confirm on Tab Close</span></label></div>`).appendTo(this.$mnu);
+		this.board.$cbConfirmTabClose = $(`<input type="checkbox" class="sidemenu__row__label__cb">`).appendTo($wrpCbConfirm.find(`label`));
 		renderDivider();
 
-		const $btnReset = $(`<button class="btn btn-danger">Reset Screen</button>`).appendTo(this.$mnu);
+		const $wrpReset = $(`<div class="sidemenu__row"/>`).appendTo(this.$mnu);
+		const $btnReset = $(`<button class="btn btn-danger" style="width: 100%;">Reset Screen</button>`).appendTo($wrpReset);
 		$btnReset.on("click", () => {
 			if (window.confirm("Are you sure?")) {
 				this.board.doReset();
@@ -522,8 +535,7 @@ class SideMenu {
 		});
 		renderDivider();
 
-		const $wrpHistory = $(`<div class="dm-sidemenu-history"/>`).appendTo(this.$mnu);
-		this.$wrpHistory = $wrpHistory;
+		this.$wrpHistory = $(`<div class="sidemenu__history"/>`).appendTo(this.$mnu);
 	}
 
 	doUpdateDimensions () {
@@ -535,7 +547,7 @@ class SideMenu {
 		this.board.exiledPanels.forEach(p => p.get$ContentWrapper().detach());
 		this.$wrpHistory.children().remove();
 		if (this.board.exiledPanels.length) {
-			const $wrpHistHeader = $(`<div class="dm-sidemenu-row"><span style="font-variant: small-caps;">Recently Removed</span></div>`).appendTo(this.$wrpHistory);
+			const $wrpHistHeader = $(`<div class="sidemenu__row"><span style="font-variant: small-caps;">Recently Removed</span></div>`).appendTo(this.$wrpHistory);
 			const $btnHistClear = $(`<button class="btn btn-danger">Clear</button>`).appendTo($wrpHistHeader);
 			$btnHistClear.on("click", () => {
 				this.board.exiledPanels = [];
@@ -543,8 +555,8 @@ class SideMenu {
 			});
 		}
 		this.board.exiledPanels.forEach((p, i) => {
-			const $wrpHistItem = $(`<div class="dm-sidemenu-history-item"/>`).appendTo(this.$wrpHistory);
-			const $cvrHistItem = $(`<div class="dm-sidemenu-history-item-cover"/>`).appendTo($wrpHistItem);
+			const $wrpHistItem = $(`<div class="sidemenu__history-item"/>`).appendTo(this.$wrpHistory);
+			const $cvrHistItem = $(`<div class="sidemenu__history-item-cover"/>`).appendTo($wrpHistItem);
 			const $btnRemove = $(`<div class="panel-history-control-remove-wrapper"><span class="panel-history-control-remove glyphicon glyphicon-remove" title="Remove"/></div>`).appendTo($cvrHistItem);
 			const $ctrlMove = $(`<div class="panel-history-control-middle" title="Move"/>`).appendTo($cvrHistItem);
 
@@ -613,6 +625,7 @@ class SideMenu {
 						this.doUpdateHistory();
 					}
 					MiscUtil.clearSelection();
+					this.board.doSaveStateDebounced();
 				});
 			});
 		});
@@ -701,6 +714,12 @@ class Panel {
 					return p;
 				case PANEL_TYP_UNIT_CONVERTER:
 					p.doPopulate_UnitConverter(saved.s);
+					return p;
+				case PANEL_TYP_MONEY_CONVERTER:
+					p.doPopulate_MoneyConverter(saved.s);
+					return p;
+				case PANEL_TYP_SUNDIAL:
+					p.doPopulate_Sundial(saved.s);
 					return p;
 				case PANEL_TYP_TUBE:
 					p.doPopulate_YouTube(saved.c.u, saved.r);
@@ -855,7 +874,7 @@ class Panel {
 						$contentInner,
 						toRender._displayName || toRender.name
 					);
-				}
+				};
 
 				if (originalCr) {
 					doRender(mon)
@@ -958,11 +977,29 @@ class Panel {
 		);
 	}
 
+	doPopulate_MoneyConverter (state = {}) {
+		this.set$ContentTab(
+			PANEL_TYP_MONEY_CONVERTER,
+			state,
+			$(`<div class="panel-content-wrapper-inner"/>`).append(MoneyConverter.make$Converter(this.board, state)),
+			"Money Converter"
+		);
+	}
+
+	doPopulate_Sundial (state = {}) {
+		this.set$ContentTab(
+			PANEL_TYP_SUNDIAL,
+			state,
+			$(`<div class="panel-content-wrapper-inner"/>`).append(Sundial.make$Sundail(this.board, state)),
+			"Sundial"
+		);
+	}
+
 	doPopulate_TextBox (content, title = "Notes") {
 		this.set$ContentTab(
 			PANEL_TYP_TEXTBOX,
 			null,
-			$(`<div class="panel-content-wrapper-inner"/>`).append(NoteBox.make$Notebox(content)),
+			$(`<div class="panel-content-wrapper-inner"/>`).append(NoteBox.make$Notebox(this.board, content)),
 			title,
 			true
 		);
@@ -1016,7 +1053,7 @@ class Panel {
 		const meta = {u: url};
 		const $wrpPanel = $(`<div class="panel-content-wrapper-inner"/>`);
 		const $wrpImage = $(`<div class="panel-content-wrapper-img"/>`).appendTo($wrpPanel);
-		const $img = $(`<img src="${url}">`).appendTo($wrpImage);
+		const $img = $(`<img src="${url}" alt="${title}">`).appendTo($wrpImage);
 		const $iptReset = $(`<button class="panel-zoom-reset btn btn-xs btn-default"><span class="glyphicon glyphicon-refresh"/></button>`).appendTo($wrpPanel);
 		const $iptRange = $(`<input type="range" class="panel-zoom-slider">`).appendTo($wrpPanel);
 		this.set$ContentTab(
@@ -1297,6 +1334,12 @@ class Panel {
 		return replacement;
 	}
 
+	toggleMoving (val) {
+		this.$pnl.find(`.panel-control`).toggle(val);
+		this.$pnl.find(`.btn-panel-add`).toggle(val);
+		this.$pnl.toggleClass(`panel-mode-move`, val);
+	}
+
 	render () {
 		const doApplyPosCss = ($ele) => {
 			// indexed from 1 instead of zero...
@@ -1330,16 +1373,14 @@ class Panel {
 
 			const $ctrlMove = $(`<div class="panel-control-icon glyphicon glyphicon-move" title="Move"/>`).appendTo($ctrlBar);
 			$ctrlMove.on("click", () => {
-				$pnl.find(`.panel-control`).toggle();
-				$pnl.find(`.btn-panel-add`).toggle();
-				$pnl.toggleClass(`panel-mode-move`);
+				this.toggleMoving();
 			});
 			const $ctrlEmpty = $(`<div class="panel-control-icon glyphicon glyphicon-remove" title="Empty"/>`).appendTo($ctrlBar);
 			$ctrlEmpty.on("click", () => {
 				this.getReplacementPanel();
 			});
 
-			const joyMenu = new JoystickMenu(this);
+			const joyMenu = new JoystickMenu(this.board, this);
 			this.joyMenu = joyMenu;
 			joyMenu.initialise();
 
@@ -1501,8 +1542,10 @@ class Panel {
 			});
 		const $btnCloseTab = $(`<span class="glyphicon glyphicon-remove content-tab-remove"/>`)
 			.on("mousedown", (evt) => {
-				evt.stopPropagation();
-				if (!this.board.getConfirmTabClose() || (this.board.getConfirmTabClose() && confirm(`Are you sure you want to close tab "${this.title}"?`))) this.doCloseTab(ix);
+				if (evt.button === 0) {
+					evt.stopPropagation();
+					if (!this.board.getConfirmTabClose() || (this.board.getConfirmTabClose() && confirm(`Are you sure you want to close tab "${this.tabDatas[ix].title}"?`))) this.doCloseTab(ix);
+				}
 			}).appendTo($btnSelTab);
 		return $btnSelTab;
 	}
@@ -1565,6 +1608,7 @@ class Panel {
 			const tabData = this.tabDatas[ix];
 			this.set$Content(tabData.type, tabData.contentMeta, tabData.$content, tabData.title, tabData.tabCanRename, tabData.tabRenamed);
 		}
+		this.board.doSaveStateDebounced();
 	}
 
 	get$ContentWrapper () {
@@ -1670,6 +1714,20 @@ class Panel {
 						s: $content.find(`.dm-unitconv`).data("getState")()
 					};
 				}
+				case PANEL_TYP_MONEY_CONVERTER: {
+					return {
+						t: type,
+						r: toSaveTitle,
+						s: $content.find(`.dm_money`).data("getState")()
+					};
+				}
+				case PANEL_TYP_SUNDIAL: {
+					return {
+						t: type,
+						r: toSaveTitle,
+						s: $content.find(`.dm_sundial`).data("getState")()
+					};
+				}
 				case PANEL_TYP_TUBE:
 				case PANEL_TYP_TWITCH:
 				case PANEL_TYP_TWITCH_CHAT:
@@ -1705,7 +1763,8 @@ class Panel {
 }
 
 class JoystickMenu {
-	constructor (panel) {
+	constructor (board, panel) {
+		this.board = board;
 		this.panel = panel;
 
 		this.$ctrls = null;
@@ -1775,6 +1834,7 @@ class JoystickMenu {
 					her.doShowJoystick();
 				}
 				MiscUtil.clearSelection();
+				this.board.doSaveStateDebounced();
 			});
 		});
 
@@ -2124,7 +2184,11 @@ class AddMenuVideoTab extends AddMenuTab {
 			const $tab = $(`<div class="panel-tab-list-wrapper underline-tabs" id="${this.tabId}"/>`);
 
 			const $wrpYT = $(`<div class="tab-body-row"/>`).appendTo($tab);
-			const $iptUrlYT = $(`<input class="form-control" placeholder="Paste YouTube URL">`).appendTo($wrpYT);
+			const $iptUrlYT = $(`<input class="form-control" placeholder="Paste YouTube URL">`)
+				.on("keydown", (e) => {
+					if (e.which === 13) $btnAddYT.click();
+				})
+				.appendTo($wrpYT);
 			const $btnAddYT = $(`<button class="btn btn-primary">Embed</button>`).appendTo($wrpYT);
 			$btnAddYT.on("click", () => {
 				let url = $iptUrlYT.val().trim();
@@ -2140,7 +2204,11 @@ class AddMenuVideoTab extends AddMenuTab {
 			});
 
 			const $wrpTwitch = $(`<div class="tab-body-row"/>`).appendTo($tab);
-			const $iptUrlTwitch = $(`<input class="form-control" placeholder="Paste Twitch URL">`).appendTo($wrpTwitch);
+			const $iptUrlTwitch = $(`<input class="form-control" placeholder="Paste Twitch URL">`)
+				.on("keydown", (e) => {
+					if (e.which === 13) $btnAddTwitch.click();
+				})
+				.appendTo($wrpTwitch);
 			const $btnAddTwitch = $(`<button class="btn btn-primary">Embed</button>`).appendTo($wrpTwitch);
 			const $btnAddTwitchChat = $(`<button class="btn btn-primary">Embed Chat</button>`).appendTo($wrpTwitch);
 			const getTwitchM = (url) => {
@@ -2173,7 +2241,11 @@ class AddMenuVideoTab extends AddMenuTab {
 			});
 
 			const $wrpGeneric = $(`<div class="tab-body-row"/>`).appendTo($tab);
-			const $iptUrlGeneric = $(`<input class="form-control" placeholder="Paste any URL">`).appendTo($wrpGeneric);
+			const $iptUrlGeneric = $(`<input class="form-control" placeholder="Paste any URL">`)
+				.on("keydown", (e) => {
+					if (e.which === 13) $iptUrlGeneric.click();
+				})
+				.appendTo($wrpGeneric);
 			const $btnAddGeneric = $(`<button class="btn btn-primary">Embed</button>`).appendTo($wrpGeneric);
 			$btnAddGeneric.on("click", () => {
 				let url = $iptUrlGeneric.val().trim();
@@ -2249,7 +2321,11 @@ class AddMenuImageTab extends AddMenuTab {
 			$(`<hr class="tab-body-row-sep"/>`).appendTo($tab);
 
 			const $wrpUtl = $(`<div class="tab-body-row"/>`).appendTo($tab);
-			const $iptUrl = $(`<input class="form-control" placeholder="Paste image URL">`).appendTo($wrpUtl);
+			const $iptUrl = $(`<input class="form-control" placeholder="Paste image URL">`)
+				.on("keydown", (e) => {
+					if (e.which === 13) $btnAddUrl.click();
+				})
+				.appendTo($wrpUtl);
 			const $btnAddUrl = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpUtl);
 			$btnAddUrl.on("click", () => {
 				let url = $iptUrl.val().trim();
@@ -2300,12 +2376,31 @@ class AddMenuSpecialTab extends AddMenuTab {
 			});
 			$(`<hr class="tab-body-row-sep"/>`).appendTo($tab);
 
-			const $wrpConverter = $(`<div class="tab-body-row"><span>Imperial-Metric Unit Converter</span></div>`).appendTo($tab);
-			const $btnConverter = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpConverter);
-			$btnConverter.on("click", () => {
+			const $wrpUnitConverter = $(`<div class="tab-body-row"><span>Imperial-Metric Unit Converter</span></div>`).appendTo($tab);
+			const $btnUnitConverter = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpUnitConverter);
+			$btnUnitConverter.on("click", () => {
 				this.menu.pnl.doPopulate_UnitConverter();
 				this.menu.doClose();
 			});
+
+			const $wrpMoneyConverter = $(`<div class="tab-body-row"><span>Coin Converter</span></div>`).appendTo($tab);
+			const $btnMoneyConverter = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpMoneyConverter);
+			$btnMoneyConverter.on("click", () => {
+				this.menu.pnl.doPopulate_MoneyConverter();
+				this.menu.doClose();
+			});
+
+			// TODO enable this
+			/*
+			$(`<hr class="tab-body-row-sep"/>`).appendTo($tab);
+
+			const $wrpSundial = $(`<div class="tab-body-row"><span>In-Game Clock</span></div>`).appendTo($tab);
+			const $btnSundial = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpSundial);
+			$btnSundial.on("click", () => {
+				this.menu.pnl.doPopulate_Sundial();
+				this.menu.doClose();
+			});
+			*/
 
 			this.$tab = $tab;
 		}
@@ -2936,6 +3031,7 @@ class InitiativeTracker {
 					} else break;
 				} while ($curr);
 			} else checkSetFirstActive();
+			board.doSaveStateDebounced();
 		}
 
 		function makeRow (nameOrMeta = "", hp = "", init = "", isActive, source, conditions = [], rollHp = false) {
@@ -3088,7 +3184,7 @@ class InitiativeTracker {
 					for (let i = 0; i < conds.length; i += 3) {
 						const $row = $(`<div class="row mb-2"/>`).appendTo($wrpRows);
 						const populateCol = (cond) => {
-							const $col = $(`<div class="col-xs-4 text-align-center"/>`).appendTo($row);
+							const $col = $(`<div class="col-4 text-align-center"/>`).appendTo($row);
 							if (cond) {
 								const $btnCond = $(`<button class="btn btn-default btn-xs btn-dm-init-cond" style="background-color: ${cond.color} !important;">${cond.name}</button>`).appendTo($col).click(() => {
 									$iptName.val(cond.name);
@@ -3102,17 +3198,25 @@ class InitiativeTracker {
 					$wrpRows.append(`<hr>`);
 
 					$(`<div class="row mb-2">
-						<div class="col-xs-5">Name (optional)</div>
-						<div class="col-xs-2 text-align-center">Color</div>
-						<div class="col-xs-5">Duration (optional)</div>
+						<div class="col-5">Name (optional)</div>
+						<div class="col-2 text-align-center">Color</div>
+						<div class="col-5">Duration (optional)</div>
 					</div>`).appendTo($wrpRows);
 					const $controls = $(`<div class="row mb-2"/>`).appendTo($wrpRows);
-					const [$wrpName, $wrpColor, $wrpTurns] = [...new Array(3)].map((it, i) => $(`<div class="col-xs-${i === 1 ? 2 : 5} text-align-center"/>`).appendTo($controls));
-					const $iptName = $(`<input class="form-control">`).appendTo($wrpName);
+					const [$wrpName, $wrpColor, $wrpTurns] = [...new Array(3)].map((it, i) => $(`<div class="col-${i === 1 ? 2 : 5} text-align-center"/>`).appendTo($controls));
+					const $iptName = $(`<input class="form-control">`)
+						.on("keydown", (e) => {
+							if (e.which === 13) $btnAdd.click();
+						})
+						.appendTo($wrpName);
 					const $iptColor = $(`<input class="form-control" type="color" value="${MiscUtil.randomColor()}">`).appendTo($wrpColor);
-					const $iptTurns = $(`<input class="form-control" type="number" step="1" min="1" placeholder="Unlimited">`).appendTo($wrpTurns);
+					const $iptTurns = $(`<input class="form-control" type="number" step="1" min="1" placeholder="Unlimited">`)
+						.on("keydown", (e) => {
+							if (e.which === 13) $btnAdd.click();
+						})
+						.appendTo($wrpTurns);
 					const $wrpAdd = $(`<div class="row">`).appendTo($wrpRows);
-					const $wrpAddInner = $(`<div class="col-xs-12 text-align-center">`).appendTo($wrpAdd);
+					const $wrpAddInner = $(`<div class="col-12 text-align-center">`).appendTo($wrpAdd);
 					const $btnAdd = $(`<button class="btn btn-primary">Set Condition</button>`)
 						.click(() => {
 							addCondition($iptName.val().trim(), $iptColor.val(), $iptTurns.val());
@@ -3193,6 +3297,8 @@ class InitiativeTracker {
 			conditions.forEach(c => addCondition(c.name, c.color, c.turns));
 			$wrpRow.appendTo($wrpEntries);
 
+			board.doSaveStateDebounced();
+
 			return $wrpRow;
 		}
 
@@ -3239,6 +3345,7 @@ class InitiativeTracker {
 				return first || second;
 			});
 			$wrpEntries.append(sorted);
+			board.doSaveStateDebounced();
 		}
 
 		function flipDir () {
@@ -3261,6 +3368,7 @@ class InitiativeTracker {
 			});
 			doSort(sort);
 			checkSetFirstActive();
+			board.doSaveStateDebounced();
 		}
 
 		function getRollName (monster) {
@@ -3378,8 +3486,11 @@ InitiativeTracker._uiImportAddPlayers = true;
 InitiativeTracker._uiImportAppendOnly = false;
 
 class NoteBox {
-	static make$Notebox (content) {
+	static make$Notebox (board, content) {
 		const $iptText = $(`<textarea class="panel-content-textarea" placeholder="Supports embedding (CTRL-click the text to activate the embed):\n • Clickable rollers,  [[1d20+2]]\n • Tags (as per the Demo page), {@creature goblin}">${content || ""}</textarea>`)
+			.on("keydown", () => {
+				board.doSaveStateDebounced();
+			})
 			.on("mousedown", (evt) => {
 				if (evt.ctrlKey) {
 					setTimeout(() => {
@@ -3496,10 +3607,10 @@ class UnitConverter {
 				dirConv = 1;
 				updateDisplay();
 			};
-			$(`<td class="col-xs-3">${u.n1}</td>`).click(clickL).appendTo($tr);
-			$(`<td class="col-xs-3 code">×${u.x1.padStart(5)}</td>`).click(clickL).appendTo($tr);
-			$(`<td class="col-xs-3">${u.n2}</td>`).click(clickR).appendTo($tr);
-			$(`<td class="col-xs-3 code">×${u.x2.padStart(5)}</td>`).click(clickR).appendTo($tr);
+			$(`<td class="col-3">${u.n1}</td>`).click(clickL).appendTo($tr);
+			$(`<td class="col-3 code">×${u.x1.padStart(5)}</td>`).click(clickL).appendTo($tr);
+			$(`<td class="col-3">${u.n2}</td>`).click(clickR).appendTo($tr);
+			$(`<td class="col-3 code">×${u.x2.padStart(5)}</td>`).click(clickR).appendTo($tr);
 		});
 
 		const $wrpIpt = $(`<div class="split wrp-ipt"/>`).appendTo($wrpConverter);
@@ -3515,7 +3626,7 @@ class UnitConverter {
 
 		const $wrpRight = $(`<div class="split-column wrp-ipt-inner"/>`).appendTo($wrpIpt);
 		const $lblRight = $(`<span class="bold"/>`).appendTo($wrpRight);
-		const $iptRight = $(`<textarea class="ipt form-control" disabled/>`).appendTo($wrpRight);
+		const $iptRight = $(`<textarea class="ipt form-control" disabled style="background: #0000"/>`).appendTo($wrpRight);
 
 		const updateDisplay = () => {
 			const it = units[ixConv];
@@ -3535,8 +3646,8 @@ class UnitConverter {
 				$iptLeft.removeClass(`ipt-invalid`);
 			};
 
-			const val = $iptLeft.val();
-			if (!val && !val.trim()) {
+			const val = ($iptLeft.val() || "").trim();
+			if (!val) {
 				showValid();
 				$iptRight.val("");
 			} else if (mMaths.exec(val)) {
@@ -3553,6 +3664,7 @@ class UnitConverter {
 					$iptRight.val("")
 				}
 			} else showInvalid();
+			board.doSaveStateDebounced();
 		};
 
 		DmScreenUtil.bindTypingEnd($iptLeft, handleInput);
@@ -3577,6 +3689,194 @@ class UnitConverterUnit {
 		this.x1 = x1;
 		this.n2 = n2;
 		this.x2 = x2;
+	}
+}
+
+// TODO
+// a simple money converter, i.e.: input x electrum, y silver, z copper and get the total in gold, or in any other type of coin chosen.
+class MoneyConverter {
+	static make$Converter (board, state) {
+		const COIN_WEIGHT = 0.02;
+		const CURRENCY = [
+			new MoneyConverterUnit("Copper", 1, "cp"),
+			new MoneyConverterUnit("Silver", 10, "sp"),
+			new MoneyConverterUnit("Electrum", 50, "ep"),
+			new MoneyConverterUnit("Gold", 100, "gp"),
+			new MoneyConverterUnit("Platinum", 1000, "pp"),
+			new MoneyConverterUnit("Nib (WDH)", 1, "nib"),
+			new MoneyConverterUnit("Shard (WDH)", 10, "shard"),
+			new MoneyConverterUnit("Taol (WDH)", 200, "taol"),
+			new MoneyConverterUnit("Dragon (WDH)", 100, "dgn"),
+			new MoneyConverterUnit("Sun (WDH)", 1000, "sun"),
+			new MoneyConverterUnit("Harbor Moon (WDH)", 5000, "moon")
+		];
+		const CURRENCY_INDEXED = [...CURRENCY].map((it, i) => {
+			it.ix = i;
+			return it;
+		}).reverse();
+		const DEFAULT_CURRENCY = 3;
+
+		const $wrpConverter = $(`<div class="dm_money split-column"/>`);
+
+		const doUpdate = () => {
+			if (!$wrpRows.find(`.dm_money__row`).length) {
+				addRow();
+			}
+			const $rows = $wrpRows.find(`.dm_money__row`)
+				.removeClass("error-background");
+			$iptSplit.removeClass("error-background");
+
+			const outCurrency = Number($selOut.val()) || 0;
+
+			const outParts = [];
+			let totalWeight = 0;
+
+			if (outCurrency === -1) {
+				const totals = [];
+
+				$rows.each((i, e) => {
+					const $e = $(e);
+					const strVal = ($e.find(`input`).val() || "").trim();
+					if (strVal) {
+						const asNum = Number(strVal);
+						if (isNaN(asNum)) $e.addClass("error-background");
+						else {
+							const ix = Number($e.find(`select`).val());
+							totals[ix] = (totals[ix] || 0) + asNum;
+						}
+					}
+				});
+
+				CURRENCY_INDEXED.forEach(c => {
+					const it = totals[c.ix];
+					if (it) {
+						totalWeight += it * COIN_WEIGHT;
+						outParts.push(`${it.toLocaleString()} ${c.abbv}`);
+					}
+				});
+			} else {
+				let total = 0;
+				$rows.each((i, e) => {
+					const $e = $(e);
+					const strVal = ($e.find(`input`).val() || "").trim();
+					if (strVal) {
+						const asNum = Number(strVal);
+						if (isNaN(asNum)) $e.addClass("error-background");
+						else {
+							total += asNum * (CURRENCY[$e.find(`select`).val()] || CURRENCY[0]).mult;
+						}
+					}
+				});
+
+				const splitBetweenStr = ($iptSplit.val() || "").trim();
+				let split = 1;
+				if (splitBetweenStr) {
+					const splitBetweenNum = Number(splitBetweenStr);
+					if (isNaN(splitBetweenNum)) $iptSplit.addClass("error-background");
+					else split = splitBetweenNum;
+				}
+
+				const totalSplit = Math.floor(total / split);
+
+				const toCurrencies = CURRENCY_INDEXED.filter(it => it.ix <= outCurrency);
+				let copper = totalSplit;
+				toCurrencies.forEach(c => {
+					if (copper >= c.mult) {
+						const remainder = copper % c.mult;
+						const theseCoins = Math.floor(copper / c.mult);
+						totalWeight += COIN_WEIGHT * theseCoins;
+						copper = remainder;
+						outParts.push(`${theseCoins.toLocaleString()} ${c.abbv}`);
+					}
+				});
+			}
+
+			$iptOut.val(`${outParts.join("; ")}${totalWeight ? ` (${totalWeight.toLocaleString()} lbs.)` : ""}`);
+
+			board.doSaveStateDebounced();
+		};
+
+		const buildCurrency$Select = (isOutput) => $(`<select class="form-control input-sm" style="padding: 5px">${isOutput ? `<option value="-1">(No conversion)</option>` : ""}${CURRENCY.map((c, i) => `<option value="${i}">${c.n}</option>`).join("")}</select>`);
+
+		const addRow = (currency, count) => {
+			const $row = $(`<div class="dm_money__row"/>`).appendTo($wrpRows);
+			const $iptCount = $(`<input type="number" step="1" placeholder="Coins" class="form-control input-sm">`).appendTo($row).change(doUpdate);
+			if (count != null) $iptCount.val(count);
+			const $selCurrency = buildCurrency$Select().appendTo($row).change(doUpdate);
+			$selCurrency.val(currency == null ? DEFAULT_CURRENCY : currency);
+			const $btnRemove = $(`<button class="btn btn-sm btn-danger" title="Remove Row"><span class="glyphicon glyphicon-remove"></span></button>`).appendTo($row).click(() => {
+				$row.remove();
+				doUpdate();
+			});
+		};
+
+		const $wrpRows = $(`<div class="dm_money__rows"/>`).appendTo($wrpConverter);
+
+		const $wrpCtrl = $(`<div class="split dm_money__ctrl"/>`).appendTo($wrpConverter);
+		const $wrpCtrlLhs = $(`<div class="dm_money__ctrl__lhs split-child" style="width: 66%;"/>`).appendTo($wrpCtrl);
+		const $wrpBtnAdd = $(`<div/>`).appendTo($wrpCtrlLhs);
+		const $btnAddRow = $(`<button class="btn btn-primary btn-sm" title="Add Row"><span class="glyphicon glyphicon-plus"/></button>`)
+			.appendTo($wrpBtnAdd)
+			.click(() => {
+				addRow();
+				doUpdate();
+			});
+		const $iptOut = $(`<input class="form-control input-sm dm_money__out" disabled/>`)
+			.appendTo($wrpCtrlLhs)
+			.mousedown(() => {
+				copyText($iptOut.val());
+				JqueryUtil.showCopiedEffect($iptOut);
+			});
+
+		const $wrpCtrlRhs = $(`<div class="dm_money__ctrl__rhs split-child" style="width: 33%;"/>`).appendTo($wrpCtrl);
+		const $iptSplit = $(`<input type="number" min="1" step="1" placeholder="Split Between..." class="form-control input-sm">`).appendTo($wrpCtrlRhs).change(doUpdate);
+		const $selOut = buildCurrency$Select(true).appendTo($wrpCtrlRhs).change(doUpdate);
+
+		$wrpConverter.data("getState", () => {
+			return {
+				c: $selOut.val(),
+				s: $iptSplit.val(),
+				r: $wrpRows.find(`.dm_money__row`).map((i, e) => {
+					const $e = $(e);
+					return {
+						c: $e.find(`select`).val(),
+						n: $e.find(`input`).val()
+					};
+				}).get()
+			};
+		});
+
+		if (state) {
+			$selOut.val(state.c == null ? DEFAULT_CURRENCY : state.c);
+			$iptSplit.val(state.s);
+			(state.r || []).forEach(r => addRow(r.c, r.n));
+		}
+
+		doUpdate();
+
+		return $wrpConverter;
+	}
+}
+
+class MoneyConverterUnit {
+	constructor (n, mult, abbv) {
+		this.n = n;
+		this.mult = mult;
+		this.abbv = abbv;
+	}
+}
+
+// TODO
+// a simple time keeping tool
+class Sundial {
+	static make$Sundail (board, state) {
+		const $wrpConverter = $(`<div class="dm_sundial"/>`);
+
+		$wrpConverter.data("getState", () => {
+			return {};
+		});
+
+		return $wrpConverter;
 	}
 }
 
@@ -3649,8 +3949,9 @@ class DmScreenUtil {
 DmScreenUtil.TYPE_TIMEOUT_MS = 100; // auto-search after 100ms
 
 window.addEventListener("load", () => {
+	ExcludeUtil.pInitialise(); // don't await, as this is only used for search
 	// expose it for dbg purposes
 	window.DM_SCREEN = new Board();
 	EntryRenderer.hover.bindDmScreen(window.DM_SCREEN);
-	window.DM_SCREEN.initialise();
+	window.DM_SCREEN.pInitialise();
 });

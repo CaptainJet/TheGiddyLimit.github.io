@@ -243,11 +243,11 @@ function pPostLoad () {
 		BrewUtil.pAddBrewData()
 			.then(handleBrew)
 			.then(BrewUtil.pAddLocalBrewData)
-			.catch(BrewUtil.purgeBrew)
-			.then(() => {
+			.catch(BrewUtil.pPurgeBrew)
+			.then(async () => {
 				BrewUtil.makeBrewButton("manage-brew");
 				BrewUtil.bind({list, filterBox, sourceFilter});
-				ListUtil.loadState();
+				await ListUtil.pLoadState();
 
 				ListUtil.bindShowTableButton(
 					"btn-show-table",
@@ -274,8 +274,24 @@ function pPostLoad () {
 	})
 }
 
-window.onload = function load () {
-	ExcludeUtil.initialise();
+window.onload = async function load () {
+	filterBox = await pInitFilterBox(
+		sourceFilter,
+		levelFilter,
+		classAndSubclassFilter,
+		raceFilter,
+		metaFilter,
+		schoolFilter,
+		damageFilter,
+		conditionFilter,
+		spellAttackFilter,
+		saveFilter,
+		checkFilter,
+		timeFilter,
+		durationFilter,
+		rangeFilter
+	);
+	await ExcludeUtil.pInitialise();
 	SortUtil.initHandleFilterButtonClicks();
 	multisourceLoad(JSON_DIR, JSON_LIST_NAME, pPageInit, addSpells, pPostLoad)
 		.then(() => {
@@ -380,22 +396,7 @@ const rangeFilter = new Filter({
 		F_RNG_SPECIAL
 	]
 });
-const filterBox = initFilterBox(
-	sourceFilter,
-	levelFilter,
-	classAndSubclassFilter,
-	raceFilter,
-	metaFilter,
-	schoolFilter,
-	damageFilter,
-	conditionFilter,
-	spellAttackFilter,
-	saveFilter,
-	checkFilter,
-	timeFilter,
-	durationFilter,
-	rangeFilter
-);
+let filterBox;
 
 function pPageInit (loadedSources) {
 	tableDefault = $("#pagecontent").html();
@@ -513,19 +514,19 @@ function pPageInit (loadedSources) {
 			}
 			if (homebrew.subclass) homebrew.subclass.forEach(sc => handleSubclass(sc.class, sc.classSource, sc));
 		})
-		.catch(BrewUtil.purgeBrew);
+		.catch(BrewUtil.pPurgeBrew);
 }
 
 function getSublistItem (spell, pinId) {
 	return `
 		<li class="row" ${FLTR_ID}="${pinId}" oncontextmenu="ListUtil.openSubContextMenu(event, this)">
 			<a href="#${UrlUtil.autoEncodeHash(spell)}" title="${spell.name}">
-				<span class="name col-xs-3 col-xs-3-2">${spell.name}</span>
-				<span class="level col-xs-1 col-xs-1-5">${Parser.spLevelToFull(spell.level)}</span>
-				<span class="time col-xs-1 col-xs-1-8">${getTblTimeStr(spell.time[0])}</span>
-				<span class="school col-xs-1 col-xs-1-6 school_${spell.school}" title="${Parser.spSchoolAbvToFull(spell.school)}">${Parser.spSchoolAbvToShort(spell.school)}</span>
-				<span class="concentration concentration--sublist col-xs-1 col-xs-0-7" title="Concentration">${spell._isConc ? "×" : ""}</span>
-				<span class="range col-xs-3 col-xs-3-2">${Parser.spRangeToFull(spell.range)}</span>
+				<span class="name col-3-2">${spell.name}</span>
+				<span class="level col-1-5">${Parser.spLevelToFull(spell.level)}</span>
+				<span class="time col-1-8">${getTblTimeStr(spell.time[0])}</span>
+				<span class="school col-1-6 school_${spell.school}" title="${Parser.spSchoolAbvToFull(spell.school)}">${Parser.spSchoolAbvToShort(spell.school)}</span>
+				<span class="concentration concentration--sublist col-0-7" title="Concentration">${spell._isConc ? "×" : ""}</span>
+				<span class="range col-3-2">${Parser.spRangeToFull(spell.range)}</span>
 				<span class="id hidden">${pinId}</span>
 			</a>
 		</li>
@@ -656,13 +657,13 @@ function addSpells (data) {
 		tempString += `
 			<li class="row" ${FLTR_ID}="${spI}" onclick="ListUtil.toggleSelected(event, this)" oncontextmenu="ListUtil.openContextMenu(event, this)">
 				<a id="${spI}" href="#${UrlUtil.autoEncodeHash(spell)}" title="${spell.name}">
-					<span class="name col-xs-2 col-xs-2-9">${spell.name}</span>
-					<span class="source col-xs-1 col-xs-1-7 ${Parser.sourceJsonToColor(spell.source)}" title="${Parser.sourceJsonToFull(spell.source)}">${Parser.sourceJsonToAbv(spell.source)}</span>
-					<span class="level col-xs-1 col-xs-1-5">${levelText}</span>
-					<span class="time col-xs-1 col-xs-1-7">${getTblTimeStr(spell.time[0])}</span>
-					<span class="school col-xs-1 col-xs-1-2 school_${spell.school}" title="${Parser.spSchoolAbvToFull(spell.school)}">${Parser.spSchoolAbvToShort(spell.school)}</span>
-					<span class="concentration col-xs-1 col-xs-0-6" title="Concentration">${spell._isConc ? "×" : ""}</span>
-					<span class="range col-xs-2 col-xs-2-4">${Parser.spRangeToFull(spell.range)}</span>
+					<span class="name col-2-9">${spell.name}</span>
+					<span class="source col-1-7 ${Parser.sourceJsonToColor(spell.source)}" title="${Parser.sourceJsonToFull(spell.source)}">${Parser.sourceJsonToAbv(spell.source)}</span>
+					<span class="level col-1-5">${levelText}</span>
+					<span class="time col-1-7">${getTblTimeStr(spell.time[0])}</span>
+					<span class="school col-1-2 school_${spell.school}" title="${Parser.spSchoolAbvToFull(spell.school)}">${Parser.spSchoolAbvToShort(spell.school)}</span>
+					<span class="concentration col-0-6" title="Concentration">${spell._isConc ? "×" : ""}</span>
+					<span class="range col-2-4">${Parser.spRangeToFull(spell.range)}</span>
 
 					<span class="classes" style="display: none">${Parser.spClassesToFull(spell.classes, true)}</span>
 					<span class="uniqueid hidden">${spell.uniqueId ? spell.uniqueId : spI}</span>

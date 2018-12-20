@@ -13,6 +13,7 @@ class BooksList {
 	}
 
 	onPageLoad () {
+		ExcludeUtil.pInitialise(); // don't await, as this is only used for search
 		SortUtil.initHandleFilterButtonClicks();
 		DataUtil.loadJSON(this.contentsUrl).then(this.onJsonLoad.bind(this));
 	}
@@ -20,6 +21,7 @@ class BooksList {
 	onJsonLoad (data) {
 		const sortFunction = (a, b, o) => self.sortFn(self.dataList, a, b, o);
 		this.list = new List("listcontainer", {
+			valueNames: ["name"],
 			listClass: "books",
 			sortFunction
 		});
@@ -57,7 +59,7 @@ class BooksList {
 		BrewUtil.pAddBrewData()
 			.then(handleBrew)
 			.then(BrewUtil.pAddLocalBrewData)
-			.catch(BrewUtil.purgeBrew)
+			.catch(BrewUtil.pPurgeBrew)
 			.then(() => BrewUtil.makeBrewButton("manage-brew"));
 	}
 

@@ -59,8 +59,8 @@ class LootGen {
 					<caption>${itemsTable.name}</caption>
 					<thead>
 					<tr>
-						<th class="col-xs-2 text-align-center"><span class="roller" onclick="lootGen.rollAgainstTable(${arrayEntry});">d100</span></th>
-						<th class="col-xs-10">Magic Item</th>
+						<th class="col-2 text-align-center"><span class="roller" onclick="lootGen.rollAgainstTable(${arrayEntry});">d100</span></th>
+						<th class="col-10">Magic Item</th>
 					</tr>
 					</thead>
 				</table>
@@ -320,7 +320,7 @@ class LootGen {
 							this._loadingSpells = false;
 							then();
 						})
-						.catch(BrewUtil.purgeBrew);
+						.catch(BrewUtil.pPurgeBrew);
 				});
 		}
 	}
@@ -460,7 +460,7 @@ const randomLootTables = {
 				}
 				return items;
 			})
-			.catch(BrewUtil.purgeBrew)
+			.catch(BrewUtil.pPurgeBrew)
 			.then(items => {
 				for (let item of items) {
 					let rarity = item.rarity;
@@ -684,8 +684,8 @@ const randomLootTables = {
 				<caption>Table for ${tier} Magic items that are ${rarity}</caption>
 				<thead>
 				<tr>
-					<th class="col-xs-2 text-align-center"><span class="roller" onclick="randomLootTables.getRandomItem('${tier}', '${rarity}');">d${itemsArray.length}</span></th>
-					<th class="col-xs-10">${tier} ${rarity} Magic Items</th>
+					<th class="col-2 text-align-center"><span class="roller" onclick="randomLootTables.getRandomItem('${tier}', '${rarity}');">d${itemsArray.length}</span></th>
+					<th class="col-10">${tier} ${rarity} Magic Items</th>
 				</tr>
 				</thead>
 			</table>`);
@@ -821,6 +821,7 @@ const ViewManipulation = class ViewManipulation {
 const lootGen = new LootGen();
 
 window.addEventListener("load", function load () {
+	ExcludeUtil.pInitialise(); // don't await, as this is only used for search
 	DataUtil.loadJSON(LOOT_JSON_URL).then(lootGen.loadLoot.bind(lootGen));
 	$(`body`).on("mousedown", ".roller", (e) => e.preventDefault());
 
