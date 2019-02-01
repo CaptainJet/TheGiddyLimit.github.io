@@ -59,13 +59,15 @@ async function onJsonLoad (data) {
 	addTrapsHazards(data);
 	BrewUtil.pAddBrewData()
 		.then(handleBrew)
+		.then(() => BrewUtil.bind({list}))
 		.then(BrewUtil.pAddLocalBrewData)
 		.catch(BrewUtil.pPurgeBrew)
 		.then(async () => {
 			BrewUtil.makeBrewButton("manage-brew");
-			BrewUtil.bind({list, filterBox, sourceFilter});
+			BrewUtil.bind({filterBox, sourceFilter});
 			await ListUtil.pLoadState();
 			RollerUtil.addListRollButton();
+			ListUtil.addListShowHide();
 
 			History.init(true);
 			ExcludeUtil.checkShowAllExcluded(trapsAndHazardsList, $(`#pagecontent`));
@@ -101,7 +103,7 @@ function addTrapsHazards (data) {
 				<a id="${thI}" href="#${UrlUtil.autoEncodeHash(it)}" title="${it.name}">
 					<span class="name col-6">${it.name}</span>
 					<span class="trapType col-4">${Parser.trapHazTypeToFull(it.trapHazType)}</span>
-					<span class="source col-2 ${Parser.sourceJsonToColor(abvSource)}" title="${Parser.sourceJsonToFull(it.source)}">${abvSource}</span>
+					<span class="source col-2 text-align-center ${Parser.sourceJsonToColor(abvSource)}" title="${Parser.sourceJsonToFull(it.source)}">${abvSource}</span>
 					
 					<span class="uniqueid hidden">${it.uniqueId ? it.uniqueId : thI}</span>
 				</a>

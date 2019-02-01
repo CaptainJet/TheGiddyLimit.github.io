@@ -101,14 +101,15 @@ async function onJsonLoad (data) {
 	addDeities(data);
 	BrewUtil.pAddBrewData()
 		.then(handleBrew)
+		.then(() => BrewUtil.bind({list}))
 		.then(BrewUtil.pAddLocalBrewData)
 		.catch(BrewUtil.pPurgeBrew)
 		.then(async () => {
 			BrewUtil.makeBrewButton("manage-brew");
-			BrewUtil.bind({list, filterBox, sourceFilter});
+			BrewUtil.bind({filterBox, sourceFilter});
 			await ListUtil.pLoadState();
 			RollerUtil.addListRollButton();
-			addListShowHide();
+			ListUtil.addListShowHide();
 
 			History.init(true);
 			ExcludeUtil.checkShowAllExcluded(deitiesList, $(`#pagecontent`));
@@ -147,7 +148,7 @@ function addDeities (data) {
 					<span class="pantheon col-2 text-align-center">${g.pantheon}</span>
 					<span class="alignment col-2 text-align-center">${g.alignment.join("")}</span>
 					<span class="domains col-3 ${g.domains[0] === STR_NONE ? `list-entry-none` : ""}">${g.domains.join(", ")}</span>
-					<span class="source col-2 ${Parser.sourceJsonToColor(abvSource)}" title="${Parser.sourceJsonToFull(g.source)}">${abvSource}</span>
+					<span class="source col-2 text-align-center ${Parser.sourceJsonToColor(abvSource)}" title="${Parser.sourceJsonToFull(g.source)}">${abvSource}</span>
 					
 					<span class="uniqueid hidden">${g.uniqueId ? g.uniqueId : dtI}</span>
 				</a>

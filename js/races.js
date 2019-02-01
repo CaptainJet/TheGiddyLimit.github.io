@@ -1,6 +1,6 @@
 "use strict";
+
 const JSON_URL = "data/races.json";
-const JSON_FLUFF_URL = "data/fluff-races.json";
 
 const ASI_SORT_POS = {
 	Strength: 0,
@@ -70,6 +70,12 @@ const sizeFilter = new Filter({header: "Size", displayFn: Parser.sizeAbvToFull})
 const asiFilter = new Filter({
 	header: "Ability Bonus (Including Subrace)",
 	items: [
+		"Any Strength Increase",
+		"Any Dexterity Increase",
+		"Any Constitution Increase",
+		"Any Intelligence Increase",
+		"Any Wisdom Increase",
+		"Any Charisma Increase",
 		"Strength +2",
 		"Strength +1",
 		"Dexterity +2",
@@ -140,7 +146,7 @@ async function onJsonLoad (data) {
 			"Terran",
 			"Undercommon"
 		],
-		umbrellaItem: "Choose"
+		umbrellaItems: ["Choose"]
 	});
 
 	filterBox = await pInitFilterBox(
@@ -172,13 +178,15 @@ async function onJsonLoad (data) {
 	addRaces({race: jsonRaces});
 	BrewUtil.pAddBrewData()
 		.then(handleBrew)
+		.then(() => BrewUtil.bind({list}))
 		.then(BrewUtil.pAddLocalBrewData)
 		.catch(BrewUtil.pPurgeBrew)
 		.then(async () => {
 			BrewUtil.makeBrewButton("manage-brew");
-			BrewUtil.bind({list, filterBox, sourceFilter});
+			BrewUtil.bind({filterBox, sourceFilter});
 			await ListUtil.pLoadState();
 			RollerUtil.addListRollButton();
+			ListUtil.addListShowHide();
 
 			History.init(true);
 			ExcludeUtil.checkShowAllExcluded(raceList, $(`#pagecontent`));
@@ -204,7 +212,13 @@ function addRaces (data) {
 		if (ExcludeUtil.isExcluded(race.name, "race", race.source)) continue;
 
 		const ability = race.ability ? utils_getAbilityData(race.ability) : {asTextShort: "None"};
-		race._fAbility = race.ability ? getAbilityObjs(race.ability).map(a => mapAbilityObjToFull(a)) : []; // used for filtering
+		if (race.ability) {
+			const abils = getAbilityObjs(race.ability);
+			race._fAbility = abils.map(a => mapAbilityObjToFull(a));
+			const increases = {};
+			abils.filter(it => it.amount > 0).forEach(it => increases[it.asi] = true);
+			Object.keys(increases).forEach(it => race._fAbility.push(`Any ${Parser.attAbvToFull(it)} Increase`));
+		} else race._fAbility = [];
 		race._fSpeed = race.speed.walk ? [race.speed.climb ? "Climb" : null, race.speed.fly ? "Fly" : null, race.speed.swim ? "Swim" : null, getSpeedRating(race.speed.walk)].filter(it => it) : getSpeedRating(race.speed);
 		race._fMisc = [
 			race.darkvision === 120 ? "Superior Darkvision" : race.darkvision ? "Darkvision" : null,
@@ -223,7 +237,7 @@ function addRaces (data) {
 					<span class='name col-4'>${race.name}</span>
 					<span class='ability col-4'>${ability.asTextShort}</span>
 					<span class='size col-2'>${Parser.sizeAbvToFull(race.size)}</span>
-					<span class='source col-2 ${Parser.sourceJsonToColor(race.source)}' title="${Parser.sourceJsonToFull(race.source)}">${Parser.sourceJsonToAbv(race.source)}</span>
+					<span class='source col-2 text-align-center ${Parser.sourceJsonToColor(race.source)}' title="${Parser.sourceJsonToFull(race.source)}">${Parser.sourceJsonToAbv(race.source)}</span>
 					${bracketMatch ? `<span class="clean-name hidden">${bracketMatch[2]} ${bracketMatch[1]}</span>` : ""}
 					
 					<span class="uniqueid hidden">${race.uniqueId ? race.uniqueId : rcI}</span>
@@ -259,9 +273,19 @@ function addRaces (data) {
 	}
 
 	function ascSortAsi (a, b) {
-		const [aAbil, aScore] = a.split(" ");
-		const [bAbil, bScore] = b.split(" ");
-		return (ASI_SORT_POS[aAbil] - ASI_SORT_POS[bAbil]) || (Number(bScore) - Number(aScore));
+		if (a.startsWith("Any") && b.startsWith("Any")) {
+			const aAbil = a.replace("Any", "").replace("Increase", "").trim();
+			const bAbil = b.replace("Any", "").replace("Increase", "").trim();
+			return ASI_SORT_POS[aAbil] - ASI_SORT_POS[bAbil];
+		} else if (a.startsWith("Any")) {
+			return -1;
+		} else if (b.startsWith("Any")) {
+			return 1;
+		} else {
+			const [aAbil, aScore] = a.split(" ");
+			const [bAbil, bScore] = b.split(" ");
+			return (ASI_SORT_POS[aAbil] - ASI_SORT_POS[bAbil]) || (Number(bScore) - Number(aScore));
+		}
 	}
 
 	list.reIndex();
@@ -339,7 +363,7 @@ function loadhash (id) {
 		<tbody>
 		${EntryRenderer.utils.getBorderTr()}
 		<tr><th class="name" colspan="6">
-		<span class="stats-name copyable" onclick="EntryRenderer.utils._handleNameClick(this, '${race.source.escapeQuotes()}')">${race.name}</span>
+		<span class="stats-name copyable" onclick="EntryRenderer.utils._pHandleNameClick(this, '${race.source.escapeQuotes()}')">${race.name}</span>
 		${race.soundClip ? getPronunciationButton() : ""}
 		<span class="stats-source ${Parser.sourceJsonToColor(race.source)}" title="${Parser.sourceJsonToFull(race.source)}">${Parser.sourceJsonToAbv(race.source)}</span>
 		</th></tr>
@@ -367,6 +391,78 @@ function loadhash (id) {
 		$pgContent.find('tbody tr:last').before(renderStack.join(""));
 	}
 
+	function buildFluffTab (isImageTab) {
+		return EntryRenderer.utils.buildFluffTab(
+			isImageTab,
+			$pgContent,
+			race,
+			getFluff,
+			`data/fluff-races.json`,
+			() => true
+		);
+	}
+
+	function getFluff (fluffJson) {
+		const predefined = EntryRenderer.utils.getPredefinedFluff(race, "raceFluff");
+		if (predefined) return predefined;
+
+		const subFluff = race._baseName && race.name.toLowerCase() === race._baseName.toLowerCase() ? "" : fluffJson.race.find(it => it.name.toLowerCase() === race.name.toLowerCase() && it.source.toLowerCase() === race.source.toLowerCase());
+
+		const baseFluff = fluffJson.race.find(it => race._baseName && it.name.toLowerCase() === race._baseName.toLowerCase() && race._baseSource && it.source.toLowerCase() === race._baseSource.toLowerCase());
+
+		if (!subFluff && !baseFluff) return null;
+
+		const findFluff = (toFind) => fluffJson.race.find(it => toFind.name.toLowerCase() === it.name.toLowerCase() && toFind.source.toLowerCase() === it.source.toLowerCase());
+
+		const fluff = {type: "section"};
+
+		const addFluff = (fluffToAdd, isBase) => {
+			if (fluffToAdd.entries) {
+				fluff.entries = fluff.entries || [];
+				const toAdd = {type: "section", entries: MiscUtil.copy(fluffToAdd.entries)};
+				if (isBase && !fluffToAdd.entries.length) toAdd.name = race._baseName;
+				fluff.entries.push(toAdd);
+			}
+			if (fluffToAdd.images && !(isBase && subFluff && subFluff._excludeBaseImages)) {
+				fluff.images = fluff.images || [];
+				fluff.images.push(...MiscUtil.copy(fluffToAdd.images));
+			}
+			if (fluffToAdd._appendCopy) {
+				const toAppend = findFluff(fluffToAdd._appendCopy);
+				if (toAppend.entries) {
+					fluff.entries = fluff.entries || [];
+					const toAdd = {type: "section", entries: MiscUtil.copy(toAppend.entries)};
+					if (isBase && !fluffToAdd.entries.length) toAdd.name = race._baseName;
+					fluff.entries.push(toAdd);
+				}
+				if (toAppend.images) {
+					fluff.images = fluff.images || [];
+					fluff.images.push(...MiscUtil.copy(toAppend.images));
+				}
+			}
+		};
+
+		if (subFluff) addFluff(subFluff);
+		if (baseFluff) addFluff(baseFluff, true);
+
+		if ((subFluff && subFluff.uncommon) || (baseFluff && baseFluff.uncommon)) {
+			fluff.entries = fluff.entries || [];
+			fluff.entries.push({type: "section", entries: [MiscUtil.copy(fluffJson.meta.uncommon)]});
+		}
+
+		if ((subFluff && subFluff.monstrous) || (baseFluff && baseFluff.monstrous)) {
+			fluff.entries = fluff.entries || [];
+			fluff.entries.push({type: "section", entries: [MiscUtil.copy(fluffJson.meta.monstrous)]});
+		}
+
+		if (fluff.entries.length && fluff.entries[0].type === "section") {
+			const firstSection = fluff.entries.splice(0, 1)[0];
+			fluff.entries.unshift(...firstSection.entries);
+		}
+
+		return fluff;
+	}
+
 	const traitTab = EntryRenderer.utils.tabButton(
 		"Traits",
 		() => {},
@@ -375,87 +471,15 @@ function loadhash (id) {
 	const infoTab = EntryRenderer.utils.tabButton(
 		"Info",
 		() => {},
-		() => {
-			function get$Tr () {
-				return $(`<tr class="text">`);
-			}
-			function get$Td () {
-				return $(`<td colspan="6" class="text">`);
-			}
-
-			$pgContent.append(EntryRenderer.utils.getBorderTr());
-			$pgContent.append(EntryRenderer.utils.getNameTr(race));
-			let $tr = get$Tr();
-			let $td = get$Td().appendTo($tr);
-			$pgContent.append($tr);
-			$pgContent.append(EntryRenderer.utils.getBorderTr());
-
-			DataUtil.loadJSON(JSON_FLUFF_URL).then((data) => {
-				function renderMeta (prop) {
-					let $tr2 = get$Tr();
-					let $td2 = get$Td().appendTo($tr2);
-					$tr.after($tr2);
-					$tr.after(EntryRenderer.utils.getDividerTr());
-					renderer.setFirstSection(true);
-					$td2.append(renderer.renderEntry(data.meta[prop]));
-					$tr = $tr2;
-					$td = $td2;
-				}
-
-				const findFluff = (appendCopy) => {
-					return data.race.find(it => it.name.toLowerCase() === appendCopy.name.toLowerCase() && it.source.toLowerCase() === appendCopy.source.toLowerCase());
-				};
-
-				const appendCopy = (fromFluff) => {
-					if (fromFluff && fromFluff._appendCopy) {
-						const appFluff = findFluff(fromFluff._appendCopy);
-						renderer.setFirstSection(true);
-						$td.append(renderer.renderEntry({type: "section", entries: appFluff.entries}));
-					}
-				};
-
-				const subFluff = race._baseName && race.name.toLowerCase() === race._baseName.toLowerCase() ? "" : data.race.find(it => it.name.toLowerCase() === race.name.toLowerCase() && it.source.toLowerCase() === race.source.toLowerCase());
-				const baseFluff = data.race.find(it => race._baseName && it.name.toLowerCase() === race._baseName.toLowerCase() && race._baseSource && it.source.toLowerCase() === race._baseSource.toLowerCase());
-				if (race.fluff && race.fluff.entries) { // override; for homebrew usage only
-					renderer.setFirstSection(true);
-					$td.append(renderer.renderEntry({type: "section", entries: race.fluff.entries}));
-				} else if (subFluff || baseFluff) {
-					if (subFluff && (subFluff.entries || subFluff._appendCopy) && !baseFluff) {
-						renderer.setFirstSection(true);
-						$td.append(renderer.renderEntry({type: "section", entries: subFluff.entries}));
-						appendCopy(subFluff);
-					} else if (subFluff && (subFluff.entries || subFluff._appendCopy) && baseFluff && (baseFluff.entries || baseFluff._appendCopy)) {
-						renderer.setFirstSection(true);
-						if (subFluff.entries) $td.append(renderer.renderEntry({type: "section", entries: subFluff.entries}));
-						appendCopy(subFluff);
-						let $tr2 = get$Tr();
-						let $td2 = get$Td().appendTo($tr2);
-						$tr.after($tr2);
-						$tr.after(EntryRenderer.utils.getDividerTr());
-						renderer.setFirstSection(true);
-						$td2.append(renderer.renderEntry({type: "section", name: race._baseName, entries: baseFluff.entries}));
-						appendCopy(baseFluff);
-						$tr = $tr2;
-						$td = $td2;
-					} else if (baseFluff && (baseFluff.entries || baseFluff._appendCopy)) {
-						renderer.setFirstSection(true);
-						$td.append(renderer.renderEntry({type: "section", entries: baseFluff.entries}));
-						appendCopy(baseFluff);
-					}
-					if ((subFluff && subFluff.uncommon) || (baseFluff && baseFluff.uncommon)) {
-						renderMeta("uncommon");
-					}
-					if ((subFluff && subFluff.monstrous) || (baseFluff && baseFluff.monstrous)) {
-						renderMeta("monstrous");
-					}
-				} else {
-					$td.empty();
-					$td.append(HTML_NO_INFO);
-				}
-			});
-		}
+		buildFluffTab
 	);
-	EntryRenderer.utils.bindTabButtons(traitTab, infoTab);
+	const picTab = EntryRenderer.utils.tabButton(
+		"Images",
+		() => {},
+		buildFluffTab.bind(null, true)
+	);
+
+	EntryRenderer.utils.bindTabButtons(traitTab, infoTab, picTab);
 
 	ListUtil.updateSelected();
 }

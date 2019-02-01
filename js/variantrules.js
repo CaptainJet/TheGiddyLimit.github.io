@@ -1,4 +1,5 @@
 "use strict";
+
 const JSON_URL = "data/variantrules.json";
 
 window.onload = async function load () {
@@ -37,17 +38,17 @@ async function onJsonLoad (data) {
 	});
 	ListUtil.initGenericPinnable();
 
-	addListShowHide();
-
 	addVariantRules(data);
 	BrewUtil.pAddBrewData()
 		.then(handleBrew)
+		.then(() => BrewUtil.bind({list}))
 		.then(BrewUtil.pAddLocalBrewData)
 		.catch(BrewUtil.pPurgeBrew)
 		.then(async () => {
 			BrewUtil.makeBrewButton("manage-brew");
-			BrewUtil.bind({list, filterBox, sourceFilter});
+			BrewUtil.bind({filterBox, sourceFilter});
 			await ListUtil.pLoadState();
+			ListUtil.addListShowHide();
 
 			History.init(true);
 			ExcludeUtil.checkShowAllExcluded(rulesList, $(`#pagecontent`));
@@ -81,7 +82,7 @@ function addVariantRules (data) {
 			<li class="row" ${FLTR_ID}="${rlI}" onclick="ListUtil.toggleSelected(event, this)">
 				<a id="${rlI}" href="#${UrlUtil.autoEncodeHash(curRule)}" title="${curRule.name}">
 					<span class="name col-10">${curRule.name}</span>
-					<span class="source col-2 ${Parser.sourceJsonToColor(curRule.source)}" title="${Parser.sourceJsonToFull(curRule.source)}">${Parser.sourceJsonToAbv(curRule.source)}</span>
+					<span class="source col-2 text-align-center ${Parser.sourceJsonToColor(curRule.source)}" title="${Parser.sourceJsonToFull(curRule.source)}">${Parser.sourceJsonToAbv(curRule.source)}</span>
 					<span class="search hidden">${searchStack.join(",")}</span>
 				</a>
 			</li>`;

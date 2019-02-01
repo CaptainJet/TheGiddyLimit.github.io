@@ -1,3 +1,5 @@
+"use strict";
+
 const Omnisearch = {
 	_PLACEHOLDER_TEXT: "Search everywhere...",
 	_searchIndex: null,
@@ -328,6 +330,16 @@ const Omnisearch = {
 				}
 				break;
 		}
+	},
+
+	addScrollTopFloat () {
+		const $wrpTop = $(`<div class="bk__to-top"/>`).appendTo($("body"));
+		const $btnToTop = $(`<button class="btn btn-sm btn-default" title="To Top"><span class="glyphicon glyphicon-arrow-up"/></button>`).appendTo($wrpTop).click(() => MiscUtil.scrollPageTop());
+
+		$(window).on("scroll", () => {
+			if ($(window).scrollTop() > 50) $wrpTop.addClass("bk__to-top--scrolled");
+			else $wrpTop.removeClass("bk__to-top--scrolled");
+		});
 	}
 };
 

@@ -1286,7 +1286,8 @@
 				"Swallow"
 			],
 			"languageTags": [
-				"C"
+				"C",
+				"CS"
 			],
 			"senseTags": [
 				"SD"
@@ -1982,7 +1983,8 @@
 				"Multiattack"
 			],
 			"languageTags": [
-				"DR"
+				"DR",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -2181,7 +2183,8 @@
 				"Multiattack"
 			],
 			"languageTags": [
-				"DR"
+				"DR",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -4486,7 +4489,10 @@
 					]
 				}
 			],
-			"legendaryGroup": "Elder Brain",
+			"legendaryGroup": {
+				"name": "Elder Brain",
+				"source": "VGM"
+			},
 			"page": 173,
 			"spellcasting": [
 				{
@@ -4522,7 +4528,8 @@
 				"C",
 				"DS",
 				"U",
-				"TP"
+				"TP",
+				"CS"
 			],
 			"senseTags": [
 				"B"
@@ -6165,7 +6172,8 @@
 				"Multiattack"
 			],
 			"languageTags": [
-				"OTH"
+				"OTH",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -6252,7 +6260,8 @@
 				"Multiattack"
 			],
 			"languageTags": [
-				"DR"
+				"DR",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -7061,7 +7070,10 @@
 					]
 				}
 			],
-			"legendaryGroup": "Illithilich",
+			"legendaryGroup": {
+				"name": "Illithilich",
+				"source": "VGM"
+			},
 			"page": 172,
 			"spellcasting": [
 				{
@@ -7420,7 +7432,10 @@
 					]
 				}
 			],
-			"legendaryGroup": "Ki-rin",
+			"legendaryGroup": {
+				"name": "Ki-rin",
+				"source": "VGM"
+			},
 			"page": 163,
 			"spellcasting": [
 				{
@@ -8518,7 +8533,8 @@
 				"Rampage"
 			],
 			"languageTags": [
-				"AB"
+				"AB",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -9036,7 +9052,10 @@
 					"ability": "int"
 				}
 			],
-			"legendaryGroup": "Morkoth",
+			"legendaryGroup": {
+				"name": "Morkoth",
+				"source": "VGM"
+			},
 			"environment": [
 				"underwater",
 				"coastal"
@@ -10151,7 +10170,8 @@
 			],
 			"languageTags": [
 				"C",
-				"O"
+				"O",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -10636,7 +10656,8 @@
 				"Multiattack"
 			],
 			"languageTags": [
-				"DR"
+				"DR",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -10882,7 +10903,8 @@
 			],
 			"languageTags": [
 				"AQ",
-				"C"
+				"C",
+				"CS"
 			],
 			"senseTags": [
 				"SD"
@@ -11249,6 +11271,9 @@
 			],
 			"senseTags": [
 				"B"
+			],
+			"languageTags": [
+				"CS"
 			]
 		},
 		{
@@ -11338,6 +11363,9 @@
 			],
 			"senseTags": [
 				"D"
+			],
+			"languageTags": [
+				"CS"
 			]
 		},
 		{
@@ -11665,7 +11693,10 @@
 					]
 				}
 			],
-			"legendaryGroup": "Storm Giant Quintessent",
+			"legendaryGroup": {
+				"name": "Storm Giant Quintessent",
+				"source": "VGM"
+			},
 			"page": 151,
 			"environment": [
 				"underwater",
@@ -12649,7 +12680,8 @@
 			"soundClip": "https://media-waterdeep.cursecdn.com/file-attachments/0/508/vargouille.mp3",
 			"languageTags": [
 				"AB",
-				"I"
+				"I",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -13672,7 +13704,8 @@
 				"Multiattack"
 			],
 			"languageTags": [
-				"DR"
+				"DR",
+				"CS"
 			],
 			"senseTags": [
 				"D"
@@ -14194,7 +14227,8 @@
 			"languageTags": [
 				"C",
 				"E",
-				"S"
+				"S",
+				"CS"
 			],
 			"senseTags": [
 				"D"

@@ -44,12 +44,14 @@ function onJsonLoad (data) {
 	addObjects(data);
 	BrewUtil.pAddBrewData()
 		.then(handleBrew)
+		.then(() => BrewUtil.bind({list}))
 		.then(BrewUtil.pAddLocalBrewData)
 		.catch(BrewUtil.pPurgeBrew)
 		.then(async () => {
 			BrewUtil.makeBrewButton("manage-brew");
 			BrewUtil.bind({list});
 			await ListUtil.pLoadState();
+			ListUtil.addListShowHide();
 
 			History.init(true);
 			ExcludeUtil.checkShowAllExcluded(objectsList, $(`#pagecontent`));
@@ -79,7 +81,7 @@ function addObjects (data) {
 				<a id="${obI}" href="#${UrlUtil.autoEncodeHash(obj)}" title="${obj.name}">
 					<span class="name col-8">${obj.name}</span>
 					<span class="size col-2">${Parser.sizeAbvToFull(obj.size)}</span>
-					<span class="source col-2 ${Parser.sourceJsonToColor(obj.source)}" title="${Parser.sourceJsonToFull(obj.source)}">${abvSource}</span>
+					<span class="source col-2 text-align-center ${Parser.sourceJsonToColor(obj.source)}" title="${Parser.sourceJsonToFull(obj.source)}">${abvSource}</span>
 					
 					<span class="uniqueid hidden">${obj.uniqueId ? obj.uniqueId : obI}</span>
 				</a>
@@ -145,10 +147,10 @@ function loadhash (jsonIndex) {
 	`);
 
 	const $floatToken = $(`#float-token`).empty();
-	if (obj.tokenURL || !obj.uniqueId) {
-		const imgLink = obj.tokenURL || UrlUtil.link(`img/objects/${obj.name.replace(/"/g, "")}.png`);
+	if (obj.tokenUrl || !obj.uniqueId) {
+		const imgLink = obj.tokenUrl || UrlUtil.link(`img/objects/${obj.name.replace(/"/g, "")}.png`);
 		$floatToken.append(`
-			<a href="${imgLink}" target="_blank">
+			<a href="${imgLink}" target="_blank" rel="noopener">
 				<img src="${imgLink}" id="token_image" class="token" onerror="imgError(this)" alt="${obj.name}">
 			</a>`
 		);

@@ -1,3 +1,5 @@
+"use strict";
+
 class BooksList {
 	constructor (options) {
 		this.contentsUrl = options.contentsUrl;
@@ -27,7 +29,7 @@ class BooksList {
 		});
 
 		const self = this;
-		$("#filtertools").find("button.sort").on(EVNT_CLICK, function () {
+		$("#filtertools").find("button.sort").click(function () {
 			const $this = $(this);
 			$('#filtertools').find('.caret').removeClass('caret--reverse caret');
 

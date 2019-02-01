@@ -1,4 +1,5 @@
 "use strict";
+
 const JSON_URL = "data/conditionsdiseases.json";
 const entryRenderer = EntryRenderer.getDefaultRenderer();
 
@@ -52,15 +53,17 @@ async function onJsonLoad (data) {
 	addConditions(data);
 	BrewUtil.pAddBrewData()
 		.then(handleBrew)
+		.then(() => BrewUtil.bind({list}))
 		.then(BrewUtil.pAddLocalBrewData)
 		.catch(BrewUtil.pPurgeBrew)
 		.then(async () => {
 			BrewUtil.makeBrewButton("manage-brew");
-			BrewUtil.bind({list, filterBox, sourceFilter});
+			BrewUtil.bind({filterBox, sourceFilter});
 			await ListUtil.pLoadState();
+			RollerUtil.addListRollButton();
+			ListUtil.addListShowHide();
 
 			History.init(true);
-			RollerUtil.addListRollButton();
 		});
 }
 
@@ -89,7 +92,7 @@ function addConditions (data) {
 				<a id='${cdI}' href='#${UrlUtil.autoEncodeHash(it)}' title="${it.name}">
 					<span class="type col-3 text-align-center">${conditionDiseaseTypeToFull(it._type)}</span>
 					<span class='name col-7'>${it.name}</span>
-					<span class='source col-2 ${Parser.sourceJsonToColor(it.source)}' title="${Parser.sourceJsonToFull(it.source)}">${Parser.sourceJsonToAbv(it.source)}</span>
+					<span class='source col-2 text-align-center ${Parser.sourceJsonToColor(it.source)}' title="${Parser.sourceJsonToFull(it.source)}">${Parser.sourceJsonToAbv(it.source)}</span>
 					
 					<span class="uniqueid hidden">${it.uniqueId ? it.uniqueId : cdI}</span>
 				</a>

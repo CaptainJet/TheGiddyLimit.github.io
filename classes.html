@@ -27,6 +27,12 @@
 			display: none;
 		}
 
+		.cls__squash_header {
+			overflow: hidden;
+			max-height: 32px;
+			display: block;
+		}
+
 		table#stats > tbody > tr > td {
 			padding: 0 0.8em;
 		}
@@ -254,7 +260,7 @@
 <header class="hidden-xs hidden-sm">
 	<div class="container">
 
-		<h1>Class List</h1>
+		<h1>Classes</h1>
 		<p>Search by name on the left, click class name to display on the right.</p>
 	</div>
 </header>
@@ -262,7 +268,7 @@
 	<ul class="nav nav-pills" id="navbar">
 	</ul>
 </nav>
-<main class="container bodyContent classes">
+<main class="container classes">
 
 	<div class="row">
 		<div class="col-sm-3" id="listcontainer">
@@ -418,7 +424,7 @@
 				<tr><th class="border" colspan="6"></th></tr>
 				<tr><th id="nameSummary" colspan="6">Name</th></tr>
 				<tr><th id="author" colspan="6">Author</th></tr>
-				<tr><td class="divider" colspan="6"><div></div></td></tr>
+				<tr id="statsprof_divider"><td class="divider" colspan="6"><div></div></td></tr>
 				<tr>
 					<td id="hp" colspan="6">
 						<h5>Hit Points</h5>
@@ -509,7 +515,6 @@
 <script type="text/javascript" src="lib/jquery-ui.js"></script>
 <script type="text/javascript" src="lib/jquery-ui-slider-pip.js"></script>
 <script type="text/javascript" src="lib/list.js"></script>
-<script type="text/javascript" src="lib/bootstrap.js"></script>
 <script type="text/javascript" src="lib/elasticlunr.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
 <script type="text/javascript" src="lib/localforage.js"></script>
