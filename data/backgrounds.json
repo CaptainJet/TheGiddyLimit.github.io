@@ -6603,7 +6603,7 @@
 					"name": "Feature: Knightly Regard",
 					"type": "entries",
 					"entries": [
-						"Your receive shelter and succor from members of your knightly order and those who are sympathetic to its aims. If your order is a religious one, you can gain aid from temples and other religious communities of your deity. Knights of civic orders can get help from the community\u2014whether a lone settlement or a great nation\u2014that they serve, and knights of philosophical orders can find help from those they have aided in pursuit of their ideals, and those who share their ideals.",
+						"You receive shelter and succor from members of your knightly order and those who are sympathetic to its aims. If your order is a religious one, you can gain aid from temples and other religious communities of your deity. Knights of civic orders can get help from the community\u2014whether a lone settlement or a great nation\u2014that they serve, and knights of philosophical orders can find help from those they have aided in pursuit of their ideals, and those who share their ideals.",
 						"This help comes in the form of shelter and meals, and healing when appropriate, as well as occasionally risky assistance, such as a band of local citizens rallying to aid a sorely pressed knight, or those who support the order helping to smuggle a knight out of town when he or she is being hunted unjustly."
 					],
 					"data": {
@@ -12888,78 +12888,6 @@
 						"Your spells tend to be loud, flashy, or explosive, even when the effect is unremarkable. For example, when you open the portal of a {@spell rope trick} spell, the portal might be outlined by harmless, showy sparkles.",
 						"If you use an arcane focus, it probably takes the form of an intricate device that could include metal gauntlets, glass canisters, copper tubing, and leather straps attaching it to your body. The {@item mizzium apparatus|GGR} described in {@book chapter 5|GGR|4|Mizzium Apparatus} is a magical version of this gear.",
 						"The {@spell chaos bolt|XGE} spell is a favorite of Izzet spellcasters because of its unpredictable nature."
-					]
-				},
-				{
-					"type": "entries",
-					"name": "Spell: Chaos Bolt",
-					"entries": [
-						"{@i 1st-level evocation}",
-						{
-							"type": "list",
-							"style": "list-hang-notitle",
-							"items": [
-								"{@b Casting Time}: 1 action",
-								"{@b Range}: 120 feet",
-								"{@b Components}: V, S",
-								"{@b Duration}: Instantaneous"
-							]
-						},
-						"You hurl an undulating, warbling mass of chaotic energy at one creature in range. Make a ranged spell attack against the target. On a hit, the target takes {@dice 2d8 + 1d6} damage. Choose one of the {@dice d8}s. The number rolled on that die determines the attack's damage type, as shown below.",
-						{
-							"type": "table",
-							"colLabels": [
-								"d8",
-								"Damage Type"
-							],
-							"colStyles": [
-								"text-align-center col-2",
-								"col-10"
-							],
-							"rows": [
-								[
-									"1",
-									"Acid"
-								],
-								[
-									"2",
-									"Cold"
-								],
-								[
-									"3",
-									"Fire"
-								],
-								[
-									"4",
-									"Force"
-								],
-								[
-									"5",
-									"Lightning"
-								],
-								[
-									"6",
-									"Poison"
-								],
-								[
-									"7",
-									"Psychic"
-								],
-								[
-									"8",
-									"Thunder"
-								]
-							]
-						},
-						"If you roll the same number on both {@dice d8}s, the chaotic energy leaps from the target to a different creature of your choice within 30 feet of it. Make a new attack roll against the new target, and make a new damage roll, which could cause the chaotic energy to leap again.",
-						"A creature can be targeted only once by this casting of the spell.",
-						{
-							"type": "entries",
-							"name": "At Higher Levels",
-							"entries": [
-								"When you cast this spell using a spell slot of 2nd level or higher, each target takes {@dice 1d6} extra damage of the type rolled for each slot level above 1st."
-							]
-						}
 					]
 				},
 				{
