@@ -211,19 +211,21 @@ class ConverterUi {
 		 * Wrap a function in an error handler which will wipe the error output, and append future errors to it.
 		 * @param toRun
 		 */
-		function catchErrors (toRun) {
+		const catchErrors = (toRun) => {
 			try {
 				$(`#lastWarnings`).hide().html("");
 				$(`#lastError`).hide().html("");
-				toRun()
+				this._editorOut.resize();
+				toRun();
 			} catch (x) {
 				const splitStack = x.stack.split("\n");
 				const atPos = splitStack.length > 1 ? splitStack[1].trim() : "(Unknown location)";
 				const message = `[Error] ${x.message} ${atPos}`;
 				$(`#lastError`).show().html(message);
+				this._editorOut.resize();
 				setTimeout(() => { throw x });
 			}
-		}
+		};
 
 		$("#parsestatblock").on("click", () => {
 			catchErrors(() => {
@@ -317,8 +319,8 @@ class ConverterUi {
 			const $wrpSource = $(`<div class="sidemenu__row split-v-center"><div class="sidemenu__row__label">Source</div></div>`).appendTo($wrpCustom);
 			this._menuAccess.getSource = () => this._$selSource.val();
 
-			const $wrpSourceOverlay = $(`<div class="full-height full-width"/>`);
-			let $sourceModal = null;
+			const $wrpSourceOverlay = $(`<div class="h-100 w-100"/>`);
+			let modalMeta = null;
 
 			const rebuildStageSource = (options) => {
 				SourceUiUtil.render({
@@ -332,14 +334,14 @@ class ConverterUi {
 
 						if (isNewSource) this._$selSource.append(`<option value="${source.json.escapeQuotes()}">${source.full.escapeQuotes()}</option>`);
 						this._$selSource.val(source.json);
-						if ($sourceModal) $sourceModal.data("close")();
+						if (modalMeta) modalMeta.doClose();
 					},
 					cbConfirmExisting: (source) => {
 						this._$selSource.val(source.json);
-						if ($sourceModal) $sourceModal.data("close")();
+						if (modalMeta) modalMeta.doClose();
 					},
 					cbCancel: () => {
-						if ($sourceModal) $sourceModal.data("close")();
+						if (modalMeta) modalMeta.doClose();
 					}
 				});
 			};
@@ -371,23 +373,23 @@ class ConverterUi {
 					const curSource = BrewUtil.sourceJsonToSource(curSourceJson);
 					if (!curSource) return;
 					rebuildStageSource({mode: "edit", source: MiscUtil.copy(curSource)});
-					$sourceModal = UiUtil.getShow$Modal({
+					modalMeta = UiUtil.getShowModal({
 						fullHeight: true,
 						fullWidth: true,
 						cbClose: () => $wrpSourceOverlay.detach()
 					});
-					$wrpSourceOverlay.appendTo($sourceModal);
+					$wrpSourceOverlay.appendTo(modalMeta.$modalInner);
 				});
 			$$`<div class="sidemenu__row">${$btnSourceEdit}</div>`.appendTo($wrpCustom);
 
 			const $btnSourceAdd = $(`<button class="btn btn-default btn-sm">Add New Source</button>`).click(() => {
 				rebuildStageSource({mode: "add"});
-				$sourceModal = UiUtil.getShow$Modal({
+				modalMeta = UiUtil.getShowModal({
 					fullHeight: true,
 					fullWidth: true,
 					cbClose: () => $wrpSourceOverlay.detach()
 				});
-				$wrpSourceOverlay.appendTo($sourceModal);
+				$wrpSourceOverlay.appendTo(modalMeta.$modalInner);
 			});
 			$$`<div class="sidemenu__row">${$btnSourceAdd}</div>`.appendTo($wrpCustom);
 
@@ -406,7 +408,7 @@ class ConverterUi {
 				});
 
 			const _getStatblockParseOptions = (isAppend) => ({
-				cbWarning: this.showWarning,
+				cbWarning: this.showWarning.bind(this),
 				cbOutput: (stats, append) => {
 					this.doCleanAndOutput(stats, append);
 				},
@@ -464,7 +466,7 @@ class ConverterUi {
 				});
 
 			const _getTableParseOptions = (isAppend) => ({
-				cbWarning: this.showWarning,
+				cbWarning: this.showWarning.bind(this),
 				cbOutput: (table, append) => {
 					this.doCleanAndOutput(table, append);
 				},
@@ -494,6 +496,7 @@ class ConverterUi {
 
 	showWarning (text) {
 		$(`#lastWarnings`).show().append(`<div>[Warning] ${text}</div>`);
+		this._editorOut.resize();
 	}
 
 	doCleanAndOutput (obj, append) {
@@ -554,7 +557,7 @@ class StatblockConverter {
 			const spl = clean.split(/(Challenge)/i);
 			spl[0] = spl[0]
 				.replace(/(\d\d?\s+\([-—+]\d\)\s*)+/gi, (...m) => `${m[0].replace(/\n/g, " ").replace(/\s+/g, " ")}\n`); // collapse multi-line ability scores
-			return spl.join("").split("\n");
+			return spl.join("").split("\n").filter(it => it && it.trim());
 		})();
 		const stats = {};
 		stats.source = options.source || "";
@@ -599,10 +602,11 @@ class StatblockConverter {
 				continue;
 			}
 
-			if (i === 5) continue;
 			// ability scores
-			if (i === 6) {
-				const abilities = curLine.split(/ ?\(([+\-—])?[0-9]*\) ?/g);
+			if (/STR\s*DEX\s*CON\s*INT\s*WIS\s*CHA/i.test(curLine)) {
+				// skip forward a line and grab the ability scores
+				++i;
+				const abilities = toConvert[i].trim().split(/ ?\(([+\-—])?[0-9]*\) ?/g);
 				stats.str = StatblockConverter._tryConvertNumber(abilities[0]);
 				stats.dex = StatblockConverter._tryConvertNumber(abilities[2]);
 				stats.con = StatblockConverter._tryConvertNumber(abilities[4]);
@@ -612,19 +616,23 @@ class StatblockConverter {
 				continue;
 			}
 
-			// alternate ability scores
-			switch (prevLine.toLowerCase()) {
-				case "str": stats.str = StatblockConverter._tryGetStat(curLine); break;
-				case "dex": stats.dex = StatblockConverter._tryGetStat(curLine); break;
-				case "con": stats.con = StatblockConverter._tryGetStat(curLine); break;
-				case "int": stats.int = StatblockConverter._tryGetStat(curLine); break;
-				case "wis": stats.wis = StatblockConverter._tryGetStat(curLine); break;
-				case "cha": stats.cha = StatblockConverter._tryGetStat(curLine); break;
+			// alternate ability scores (alternating lines of abbreviation and score)
+			if (Parser.ABIL_ABVS.includes(curLine.toLowerCase())) {
+				// skip forward a line and grab the ability score
+				++i;
+				switch (curLine.toLowerCase()) {
+					case "str": stats.str = StatblockConverter._tryGetStat(toConvert[i]); continue;
+					case "dex": stats.dex = StatblockConverter._tryGetStat(toConvert[i]); continue;
+					case "con": stats.con = StatblockConverter._tryGetStat(toConvert[i]); continue;
+					case "int": stats.int = StatblockConverter._tryGetStat(toConvert[i]); continue;
+					case "wis": stats.wis = StatblockConverter._tryGetStat(toConvert[i]); continue;
+					case "cha": stats.cha = StatblockConverter._tryGetStat(toConvert[i]); continue;
+				}
 			}
 
 			// saves (optional)
 			if (!curLine.indexOf_handleColon("Saving Throws ")) {
-				StatblockConverter._setCleanSaves(stats, curLine);
+				StatblockConverter._setCleanSaves(stats, curLine, options);
 				continue;
 			}
 
@@ -674,99 +682,95 @@ class StatblockConverter {
 			// goes into actions
 			if (!curLine.indexOf_handleColon("Challenge ")) {
 				StatblockConverter._setCleanCr(stats, curLine);
+				continue;
+			}
 
-				// traits
-				i++;
-				curLine = toConvert[i];
-				stats.trait = [];
-				stats.action = [];
-				stats.reaction = [];
-				stats.legendary = [];
+			// traits
+			stats.trait = [];
+			stats.action = [];
+			stats.reaction = [];
+			stats.legendary = [];
 
-				let curTrait = {};
+			let curTrait = {};
 
-				let isTraits = true;
-				let isActions = false;
-				let isReactions = false;
-				let isLegendaryActions = false;
-				let isLegendaryDescription = false;
+			let isTraits = true;
+			let isActions = false;
+			let isReactions = false;
+			let isLegendaryActions = false;
+			let isLegendaryDescription = false;
 
-				// keep going through traits til we hit actions
-				while (i < toConvert.length) {
-					if (startNextPhase(curLine)) {
-						isTraits = false;
-						isActions = !curLine.toUpperCase().indexOf_handleColon("ACTIONS");
-						isReactions = !curLine.toUpperCase().indexOf_handleColon("REACTIONS");
-						isLegendaryActions = !curLine.toUpperCase().indexOf_handleColon("LEGENDARY ACTIONS");
-						isLegendaryDescription = isLegendaryActions;
-						i++;
-						curLine = toConvert[i];
-					}
-
-					curTrait.name = "";
-					curTrait.entries = [];
-
-					const parseFirstLine = line => {
-						curTrait.name = line.split(/([.!?])/g)[0];
-						curTrait.entries.push(line.substring(curTrait.name.length + 1, line.length).trim());
-					};
-
-					if (isLegendaryDescription) {
-						// usually the first paragraph is a description of how many legendary actions the creature can make
-						// but in the case that it's missing the substring "legendary" and "action" it's probably an action
-						const compressed = curLine.replace(/\s*/g, "").toLowerCase();
-						if (!compressed.includes("legendary") && !compressed.includes("action")) isLegendaryDescription = false;
-					}
-
-					if (isLegendaryDescription) {
-						curTrait.entries.push(curLine.trim());
-						isLegendaryDescription = false;
-					} else {
-						parseFirstLine(curLine);
-					}
-
+			// keep going through traits til we hit actions
+			while (i < toConvert.length) {
+				if (startNextPhase(curLine)) {
+					isTraits = false;
+					isActions = !curLine.toUpperCase().indexOf_handleColon("ACTIONS");
+					isReactions = !curLine.toUpperCase().indexOf_handleColon("REACTIONS");
+					isLegendaryActions = !curLine.toUpperCase().indexOf_handleColon("LEGENDARY ACTIONS");
+					isLegendaryDescription = isLegendaryActions;
 					i++;
 					curLine = toConvert[i];
-
-					// get paragraphs
-					// connecting words can start with: o ("of", "or"); t ("the"); a ("and", "at"). Accept numbers, e.g. (Costs 2 Actions)
-					// allow numbers
-					// allow "a" and "I" as single-character words
-					while (curLine && !ConvertUtil.isNameLine(curLine) && !startNextPhase(curLine)) {
-						curTrait.entries.push(curLine.trim());
-						i++;
-						curLine = toConvert[i];
-					}
-
-					if (curTrait.name || curTrait.entries) {
-						// convert dice tags
-						DiceConvert.convertTraitActionDice(curTrait);
-
-						// convert spellcasting
-						if (isTraits) {
-							if (curTrait.name.toLowerCase().includes("spellcasting")) {
-								curTrait = this._tryParseSpellcasting(curTrait, false, options);
-								if (curTrait.success) {
-									// merge in e.g. innate spellcasting
-									if (stats.spellcasting) stats.spellcasting = stats.spellcasting.concat(curTrait.out);
-									else stats.spellcasting = curTrait.out;
-								} else stats.trait.push(curTrait.out);
-							} else {
-								if (StatblockConverter._hasEntryContent(curTrait)) stats.trait.push(curTrait);
-							}
-						}
-						if (isActions && StatblockConverter._hasEntryContent(curTrait)) stats.action.push(curTrait);
-						if (isReactions && StatblockConverter._hasEntryContent(curTrait)) stats.reaction.push(curTrait);
-						if (isLegendaryActions && StatblockConverter._hasEntryContent(curTrait)) stats.legendary.push(curTrait);
-					}
-					curTrait = {};
 				}
 
-				// Remove keys if they are empty
-				if (stats.trait.length === 0) delete stats.trait;
-				if (stats.reaction.length === 0) delete stats.reaction;
-				if (stats.legendary.length === 0) delete stats.legendary;
+				curTrait.name = "";
+				curTrait.entries = [];
+
+				const parseFirstLine = line => {
+					curTrait.name = line.split(/([.!?])/g)[0];
+					curTrait.entries.push(line.substring(curTrait.name.length + 1, line.length).trim());
+				};
+
+				if (isLegendaryDescription) {
+					// usually the first paragraph is a description of how many legendary actions the creature can make
+					// but in the case that it's missing the substring "legendary" and "action" it's probably an action
+					const compressed = curLine.replace(/\s*/g, "").toLowerCase();
+					if (!compressed.includes("legendary") && !compressed.includes("action")) isLegendaryDescription = false;
+				}
+
+				if (isLegendaryDescription) {
+					curTrait.entries.push(curLine.trim());
+					isLegendaryDescription = false;
+				} else {
+					parseFirstLine(curLine);
+				}
+
+				i++;
+				curLine = toConvert[i];
+
+				// collect subsequent paragraphs
+				while (curLine && !ConvertUtil.isNameLine(curLine) && !startNextPhase(curLine)) {
+					curTrait.entries.push(curLine.trim());
+					i++;
+					curLine = toConvert[i];
+				}
+
+				if (curTrait.name || curTrait.entries) {
+					// convert dice tags
+					DiceConvert.convertTraitActionDice(curTrait);
+
+					// convert spellcasting
+					if (isTraits) {
+						if (curTrait.name.toLowerCase().includes("spellcasting")) {
+							curTrait = this._tryParseSpellcasting(curTrait, false, options);
+							if (curTrait.success) {
+								// merge in e.g. innate spellcasting
+								if (stats.spellcasting) stats.spellcasting = stats.spellcasting.concat(curTrait.out);
+								else stats.spellcasting = curTrait.out;
+							} else stats.trait.push(curTrait.out);
+						} else {
+							if (StatblockConverter._hasEntryContent(curTrait)) stats.trait.push(curTrait);
+						}
+					}
+					if (isActions && StatblockConverter._hasEntryContent(curTrait)) stats.action.push(curTrait);
+					if (isReactions && StatblockConverter._hasEntryContent(curTrait)) stats.reaction.push(curTrait);
+					if (isLegendaryActions && StatblockConverter._hasEntryContent(curTrait)) stats.legendary.push(curTrait);
+				}
+				curTrait = {};
 			}
+
+			// Remove keys if they are empty
+			if (stats.trait.length === 0) delete stats.trait;
+			if (stats.reaction.length === 0) delete stats.reaction;
+			if (stats.legendary.length === 0) delete stats.legendary;
 		}
 
 		(function doCleanLegendaryActionHeader () {
@@ -783,7 +787,8 @@ class StatblockConverter {
 		})();
 
 		this._doStatblockPostProcess(stats, options);
-		options.cbOutput(stats, options.isAppend);
+		const statsOut = PropOrder.getOrdered(stats, "monster");
+		options.cbOutput(statsOut, options.isAppend);
 	}
 
 	/**
@@ -839,7 +844,8 @@ class StatblockConverter {
 			if (trait != null) doAddFromParsed();
 			if (stats) {
 				this._doStatblockPostProcess(stats, options);
-				options.cbOutput(stats, options.isAppend);
+				const statsOut = PropOrder.getOrdered(stats, "monster");
+				options.cbOutput(statsOut, options.isAppend);
 			}
 			stats = getNewStatblock();
 			if (hasMultipleBlocks) options.isAppend = true; // append any further blocks we find in this parse
@@ -1003,7 +1009,7 @@ class StatblockConverter {
 			if (parsed === 8) {
 				// saves (optional)
 				if (~curLine.indexOf("Saving Throws")) {
-					StatblockConverter._setCleanSaves(stats, stripDashStarStar(curLine));
+					StatblockConverter._setCleanSaves(stats, stripDashStarStar(curLine), options);
 					continue;
 				}
 
@@ -1158,11 +1164,14 @@ class StatblockConverter {
 		);
 		TagAttack.tryTagAttacks(stats, (atk) => options.cbWarning(`Manual attack tagging required for "${atk}"`));
 		TagHit.tryTagHits(stats);
+		TagDc.tryTagDcs(stats);
+		TagCondition.tryTagConditions(stats);
 		TraitActionTag.tryRun(stats);
 		LanguageTag.tryRun(stats);
 		SenseTag.tryRun(stats);
 		SpellcastingTypeTag.tryRun(stats);
 		DamageTypeTag.tryRun(stats);
+		MiscTag.tryRun(stats);
 		doCleanup();
 	}
 
@@ -1243,12 +1252,21 @@ class StatblockConverter {
 	}
 
 	static _setCleanSizeTypeAlignment (stats, line, options) {
-		stats.size = line[0].toUpperCase();
-		stats.type = line.split(StrUtil.COMMAS_NOT_IN_PARENTHESES_REGEX)[0].split(" ").splice(1).join(" ");
-		stats.type = StatblockConverter._tryParseType(stats.type);
+		const mSidekick = /^(\d+)(?:st|nd|rd|th)\s*\W+\s*level\s+(.*)$/i.exec(line.trim());
+		if (mSidekick) {
+			// sidekicks
+			stats.level = Number(mSidekick[1]);
+			stats.size = mSidekick[2].trim()[0].toUpperCase();
+			stats.type = mSidekick[2].split(" ").splice(1).join(" ");
+		} else {
+			// regular creatures
+			stats.size = line[0].toUpperCase();
+			stats.type = line.split(StrUtil.COMMAS_NOT_IN_PARENTHESES_REGEX)[0].split(" ").splice(1).join(" ");
 
-		stats.alignment = line.split(StrUtil.COMMAS_NOT_IN_PARENTHESES_REGEX)[1].toLowerCase();
-		AlignmentConvert.tryConvertAlignment(stats, (ali) => options.cbWarning(`Alignment "${ali}" requires manual conversion`));
+			stats.alignment = line.split(StrUtil.COMMAS_NOT_IN_PARENTHESES_REGEX)[1].toLowerCase();
+			AlignmentConvert.tryConvertAlignment(stats, (ali) => options.cbWarning(`Alignment "${ali}" requires manual conversion`));
+		}
+		stats.type = StatblockConverter._tryParseType(stats.type);
 	}
 
 	static _setCleanHp (stats, line) {
@@ -1266,75 +1284,23 @@ class StatblockConverter {
 	}
 
 	_setCleanSpeed (stats, line, options) {
-		line = line.toLowerCase().trim().replace(/^speed:?\s*/, "");
-		const ALLOWED = ["walk", "fly", "swim", "climb", "burrow"];
-
-		function splitSpeed (str) {
-			let c;
-			let ret = [];
-			let stack = "";
-			let para = 0;
-			for (let i = 0; i < str.length; ++i) {
-				c = str.charAt(i);
-				switch (c) {
-					case ",":
-						if (para === 0) {
-							ret.push(stack);
-							stack = "";
-						}
-						break;
-					case "(": para++; stack += c; break;
-					case ")": para--; stack += c; break;
-					default: stack += c;
-				}
-			}
-			if (stack) ret.push(stack);
-			return ret.map(it => it.trim()).filter(it => it);
-		}
-
-		const out = {};
-		let byHand = false;
-
-		splitSpeed(line.toLowerCase()).map(it => it.trim()).forEach(s => {
-			const m = /^(\w+?\s+)?(\d+)\s*ft\.?( .*)?$/.exec(s);
-			if (!m) {
-				byHand = true;
-				return;
-			}
-
-			if (m[1]) m[1] = m[1].trim();
-			else m[1] = "walk";
-
-			if (ALLOWED.includes(m[1])) {
-				if (m[3]) {
-					out[m[1]] = {
-						number: Number(m[2]),
-						condition: m[3].trim()
-					};
-				} else out[m[1]] = Number(m[2]);
-			} else byHand = true;
-		});
-
-		// flag speed as invalid
-		if (Object.values(out).filter(s => (s.number != null ? s.number : s) % 5 !== 0).length) out.INVALID_SPEED = true;
-
-		// flag speed as needing hand-parsing
-		if (byHand) {
-			out.UNPARSED_SPEED = line;
-			options.cbWarning(`Speed requires manual conversion: "${line}"`);
-		}
-		stats.speed = out;
+		stats.speed = line;
+		SpeedConvert.tryConvertSpeed(stats, options.cbWarning);
 	}
 
-	static _setCleanSaves (stats, line) {
+	static _setCleanSaves (stats, line, options) {
 		stats.save = line.split_handleColon("Saving Throws", 1)[1].trim();
 		// convert to object format
 		if (stats.save && stats.save.trim()) {
 			const spl = stats.save.split(",").map(it => it.trim().toLowerCase()).filter(it => it);
 			const nu = {};
 			spl.forEach(it => {
-				const sv = it.split(" ");
-				nu[sv[0]] = sv[1];
+				const m = /(\w+)\s*([-+])\s*(\d+)/.exec(it);
+				if (m) {
+					nu[m[1]] = `${m[2]}${m[3]}`;
+				} else {
+					options.cbWarning(`Save "${it}" requires manual conversion`);
+				}
 			});
 			stats.save = nu;
 		}
@@ -1382,20 +1348,21 @@ class StatblockConverter {
 	static _setCleanSenses (stats, line) {
 		const senses = line.toLowerCase().split_handleColon("senses", 1)[1].trim();
 		const tempSenses = [];
-		senses.split(",").forEach(s => {
+		senses.split(StrUtil.COMMA_SPACE_NOT_IN_PARENTHESES_REGEX).forEach(s => {
 			s = s.trim();
 			if (s) {
 				if (s.includes("passive perception")) stats.passive = StatblockConverter._tryConvertNumber(s.split("passive perception")[1].trim());
 				else tempSenses.push(s.trim());
 			}
 		});
-		if (tempSenses.length) stats.senses = tempSenses.join(", ");
+		if (tempSenses.length) stats.senses = tempSenses;
 		else delete stats.senses;
 	}
 
 	static _setCleanLanguages (stats, line) {
 		stats.languages = line.split_handleColon("Languages", 1)[1].trim();
 		if (stats.languages && /^([-–‒—]|\\u201\d)$/.exec(stats.languages.trim())) delete stats.languages;
+		else stats.languages = stats.languages.split(StrUtil.COMMA_SPACE_NOT_IN_PARENTHESES_REGEX);
 	}
 
 	static _setCleanCr (stats, line) {
@@ -1646,11 +1613,11 @@ class TableConverter {
 					if (cells.every(c => !c || !!/^:?\s*---+\s*:?$/.exec(c))) { // a header break
 						alignment = cells.map(c => {
 							if (c.startsWith(":") && c.endsWith(":")) {
-								return "text-align-center";
+								return "text-center";
 							} else if (c.startsWith(":")) {
 								return "text-align-left";
 							} else if (c.endsWith(":")) {
-								return "text-align-right";
+								return "text-right";
 							} else {
 								return "";
 							}
@@ -1759,7 +1726,7 @@ class TableConverter {
 			tbl.rows.forEach(r => {
 				if (isNaN(Number(r[0]))) isDiceCol0 = false;
 			});
-			if (isDiceCol0 && !tbl.colStyles.includes("text-align-center")) tbl.colStyles[0] += " text-align-center";
+			if (isDiceCol0 && !tbl.colStyles.includes("text-center")) tbl.colStyles[0] += " text-center";
 		})();
 
 		(function tagRowDice () {

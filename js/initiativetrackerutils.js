@@ -372,20 +372,22 @@ class InitiativeTrackerPlayerMessageHandler {
 		};
 		const {hpText, hpColor} = getHpContent();
 
-		return $(`
+		const $namePart = $(`<div/>`).text(`${(rowData.m || rowData.n || "")}${rowData.o != null ? ` (${rowData.o})` : ""}`);
+
+		return $$`
 			<div class="initp__r${rowData.a ? ` initp__r--active` : ""}">
 				<div class="initp__r_name">
-					<div>${(rowData.n || "").escapeQuotes()}${rowData.o != null ? ` (${rowData.o})` : ""}</div>
-					<div data-r="$conds"/>
+					${$namePart}
+					${$conds}
 				</div>
 				<div class="initp__r_hp">
 					<div class="initp__r_hp_pill" style="background: ${hpColor};">${hpText}</div>
 				</div>
 				${(rowData.k || []).map(statVal => `<div class="initp__r_stat flex-vh-center">
-					${statVal.v === true ? `<span class="text-success glyphicon glyphicon-ok"/>` : statVal.v === false ? `<span class="text-danger glyphicon glyphicon-remove"/>` : statVal.v}
+					${statVal.u ? "?" : statVal.v === true ? `<span class="text-success glyphicon glyphicon-ok"/>` : statVal.v === false ? `<span class="text-danger glyphicon glyphicon-remove"/>` : statVal.v}
 				</div>`).join("")}
 				<div class="initp__r_score${this._isCompact ? " initp__r_score--compact" : ""}">${rowData.i}</div>
 			</div>
-		`).swap({$conds});
+		`;
 	}
 }

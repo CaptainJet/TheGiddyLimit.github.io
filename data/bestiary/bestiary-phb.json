@@ -30,8 +30,9 @@
 			"wis": 3,
 			"cha": 1,
 			"passive": 6,
-			"cr": "Unknown",
-			"senses": "blindsight 30 ft. (blind beyond this radius)",
+			"senses": [
+				"blindsight 30 ft. (blind beyond this radius)"
+			],
 			"trait": [
 				{
 					"name": "Animated",
@@ -56,6 +57,9 @@
 			],
 			"damageTags": [
 				"B"
+			],
+			"miscTags": [
+				"MW"
 			]
 		},
 		{
@@ -88,8 +92,9 @@
 			"wis": 3,
 			"cha": 1,
 			"passive": 6,
-			"cr": "Unknown",
-			"senses": "blindsight 30 ft. (blind beyond this radius)",
+			"senses": [
+				"blindsight 30 ft. (blind beyond this radius)"
+			],
 			"trait": [
 				{
 					"name": "Animated",
@@ -114,6 +119,9 @@
 			],
 			"damageTags": [
 				"B"
+			],
+			"miscTags": [
+				"MW"
 			]
 		},
 		{
@@ -146,8 +154,9 @@
 			"wis": 3,
 			"cha": 1,
 			"passive": 6,
-			"cr": "Unknown",
-			"senses": "blindsight 30 ft. (blind beyond this radius)",
+			"senses": [
+				"blindsight 30 ft. (blind beyond this radius)"
+			],
 			"trait": [
 				{
 					"name": "Animated",
@@ -172,6 +181,9 @@
 			],
 			"damageTags": [
 				"B"
+			],
+			"miscTags": [
+				"MW"
 			]
 		},
 		{
@@ -204,8 +216,9 @@
 			"wis": 3,
 			"cha": 1,
 			"passive": 6,
-			"cr": "Unknown",
-			"senses": "blindsight 30 ft. (blind beyond this radius)",
+			"senses": [
+				"blindsight 30 ft. (blind beyond this radius)"
+			],
 			"trait": [
 				{
 					"name": "Animated",
@@ -230,6 +243,9 @@
 			],
 			"damageTags": [
 				"B"
+			],
+			"miscTags": [
+				"MW"
 			]
 		},
 		{
@@ -262,8 +278,9 @@
 			"wis": 3,
 			"cha": 1,
 			"passive": 6,
-			"cr": "Unknown",
-			"senses": "blindsight 30 ft. (blind beyond this radius)",
+			"senses": [
+				"blindsight 30 ft. (blind beyond this radius)"
+			],
 			"trait": [
 				{
 					"name": "Animated",
@@ -288,6 +305,9 @@
 			],
 			"damageTags": [
 				"B"
+			],
+			"miscTags": [
+				"MW"
 			]
 		}
 	]

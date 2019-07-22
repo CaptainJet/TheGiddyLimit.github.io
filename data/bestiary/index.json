@@ -1,7 +1,11 @@
 {
+	"AI": "bestiary-ai.json",
 	"CoS": "bestiary-cos.json",
+	"DIP": "bestiary-dip.json",
 	"DMG": "bestiary-dmg.json",
 	"GGR": "bestiary-ggr.json",
+	"GoS": "bestiary-gos.json",
+	"HftT": "bestiary-hftt.json",
 	"HotDQ": "bestiary-hotdq.json",
 	"KKW": "bestiary-kkw.json",
 	"LLK": "bestiary-llk.json",
@@ -10,6 +14,7 @@
 	"MM": "bestiary-mm.json",
 	"MTF": "bestiary-mtf.json",
 	"OotA": "bestiary-oota.json",
+	"OoW": "bestiary-oow.json",
 	"PSA": "bestiary-ps-a.json",
 	"PSD": "bestiary-ps-d.json",
 	"PSI": "bestiary-ps-i.json",
@@ -27,7 +32,7 @@
 	"VGM": "bestiary-vgm.json",
 	"XGE": "bestiary-xge.json",
 	"UAArtificerRevisited": "bestiary-ua-ar.json",
-	"UAWGE": "bestiary-uawge.json",
+	"UAWGE": "bestiary-ua-wge.json",
 	"WDH": "bestiary-wdh.json",
 	"WDMM": "bestiary-wdmm.json"
 }

@@ -6,7 +6,7 @@
 			"type": "undead",
 			"source": "DMG",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -41,10 +41,14 @@
 				"poisoned",
 				"unconscious"
 			],
-			"senses": "darkvision 60 ft., truesight 60 ft.",
+			"senses": [
+				"darkvision 60 ft.",
+				"truesight 60 ft."
+			],
 			"passive": 13,
-			"languages": "all languages known to its summoner",
-			"cr": "Unknown",
+			"languages": [
+				"all languages known to its summoner"
+			],
 			"trait": [
 				{
 					"name": "Incorporeal Movement",
@@ -110,7 +114,9 @@
 			"int": 2,
 			"wis": 10,
 			"cha": 3,
-			"senses": "darkvision 60 ft.",
+			"senses": [
+				"darkvision 60 ft."
+			],
 			"passive": 10,
 			"cr": "0",
 			"page": 169,
@@ -124,7 +130,7 @@
 			"size": "M",
 			"type": "fiend",
 			"alignment": [
-				"L",
+				"N",
 				"E"
 			],
 			"ac": [
@@ -144,7 +150,9 @@
 			"wis": 10,
 			"cha": 2,
 			"passive": 10,
-			"languages": "understands the languages it knew in life but can't speak",
+			"languages": [
+				"understands the languages it knew in life but can't speak"
+			],
 			"cr": "0",
 			"action": [
 				{
@@ -160,6 +168,9 @@
 			],
 			"damageTags": [
 				"P"
+			],
+			"miscTags": [
+				"MW"
 			]
 		}
 	]

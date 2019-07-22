@@ -346,7 +346,13 @@
 					"entries": [
 						"Just as angels are incarnations of the ideals of justice, demons embody depraved impulses: selfishness, cruelty, hatred, greed, and lust for power. Demons are strongly associated with the Cult of Rakdos; in fact, the demons of Ravnica might have been created by Rakdos in the same way that angels were created by the Boros Legion's founder. As a demon lord who has chosen to live in Ravnica, Rakdos claims authority over all the demons of this world-even if some of them, ambitious and headstrong as demons are, rebel against his authority.",
 						"Demons are agents of destruction that work their acts of terror in plain sight under the auspices of the Cult of Rakdos. They exhibit their cruelty in dramatic performances that leave the audience members blood-soaked but ecstatic. They incite mob riots that raze entire city blocks. The only thing demons fear is Rakdos himself, who doesn't tolerate rivals and hates to be upstaged.",
-						"Demonic \"Devils.\" The creatures called \"devils\" in Ravnica are minor demons akin to quasits. While the larger demons embody evil qualities such as blood lust and torment, these lesser demons reflect the whimsical and chaotic side of Rakdos and his cult. Their mischievous antics cause disorder and destruction out of proportion to the demons' small size.",
+						{
+							"name": "Demonic \"Devils\"",
+							"entries": [
+								"The creatures called \"devils\" in Ravnica are minor demons akin to quasits. While the larger demons embody evil qualities such as blood lust and torment, these lesser demons reflect the whimsical and chaotic side of Rakdos and his cult. Their mischievous antics cause disorder and destruction out of proportion to the demons' small size."
+							],
+							"type": "entries"
+						},
 						{
 							"name": "Diabolic Demons",
 							"type": "entries",
@@ -392,7 +398,7 @@
 								"Major Adaptation"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -438,7 +444,7 @@
 								"Minor Adaptation"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -514,7 +520,7 @@
 								"Major Adaptation"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -560,7 +566,7 @@
 								"Minor Adaptation"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -636,7 +642,7 @@
 								"Major Adaptation"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -682,7 +688,7 @@
 								"Minor Adaptation"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -1038,7 +1044,7 @@
 								"Madness"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -1081,7 +1087,7 @@
 								"Feature"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -1111,7 +1117,7 @@
 								"Feature"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -1666,7 +1672,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/GGR/Niv Mizzet.jpg"
+						"path": "bestiary/GGR/Niv-Mizzet.jpg"
 					}
 				}
 			],
@@ -2015,7 +2021,7 @@
 								"Madness"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -2057,7 +2063,7 @@
 								"Feature"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -2087,7 +2093,7 @@
 								"Feature"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -2139,7 +2145,13 @@
 					"entries": [
 						"Just as angels are incarnations of the ideals of justice, demons embody depraved impulses: selfishness, cruelty, hatred, greed, and lust for power. Demons are strongly associated with the Cult of Rakdos; in fact, the demons of Ravnica might have been created by Rakdos in the same way that angels were created by the Boros Legion's founder. As a demon lord who has chosen to live in Ravnica, Rakdos claims authority over all the demons of this world-even if some of them, ambitious and headstrong as demons are, rebel against his authority.",
 						"Demons are agents of destruction that work their acts of terror in plain sight under the auspices of the Cult of Rakdos. They exhibit their cruelty in dramatic performances that leave the audience members blood-soaked but ecstatic. They incite mob riots that raze entire city blocks. The only thing demons fear is Rakdos himself, who doesn't tolerate rivals and hates to be upstaged.",
-						"Demonic \"Devils.\" The creatures called \"devils\" in Ravnica are minor demons akin to quasits. While the larger demons embody evil qualities such as blood lust and torment, these lesser demons reflect the whimsical and chaotic side of Rakdos and his cult. Their mischievous antics cause disorder and destruction out of proportion to the demons' small size.",
+						{
+							"name": "Demonic \"Devils\"",
+							"entries": [
+								"The creatures called \"devils\" in Ravnica are minor demons akin to quasits. While the larger demons embody evil qualities such as blood lust and torment, these lesser demons reflect the whimsical and chaotic side of Rakdos and his cult. Their mischievous antics cause disorder and destruction out of proportion to the demons' small size."
+							],
+							"type": "entries"
+						},
 						{
 							"name": "Diabolic Demons",
 							"type": "entries",
@@ -2183,7 +2195,7 @@
 								"Madness"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -2225,7 +2237,7 @@
 								"Feature"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -2255,7 +2267,7 @@
 								"Feature"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [

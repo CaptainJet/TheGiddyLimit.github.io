@@ -11,28 +11,14 @@ window.PROF_MODE_BONUS = "bonus";
 window.PROF_MODE_DICE = "dice";
 window.PROF_DICE_MODE = PROF_MODE_BONUS;
 
-function imgError (x) {
-	if (x) $(x).remove();
-	$(`#pagecontent th.name`).css("padding-right", "0.3em");
-	$(`.mon__wrp-size-type-align`).css("max-width", "none");
-	$(`.mon__wrp-hp`).css("max-width", "none");
-}
-
-function handleStatblockScroll (event, ele) {
-	$(`#token_image`)
-		.toggle(ele.scrollTop < 32)
-		.css({
-			opacity: (32 - ele.scrollTop) / 32,
-			top: -ele.scrollTop
-		});
-}
-
 const _MISC_FILTER_SPELLCASTER = "Spellcaster, ";
 function ascSortMiscFilter (a, b) {
+	a = a.item;
+	b = b.item;
 	if (a.includes(_MISC_FILTER_SPELLCASTER) && b.includes(_MISC_FILTER_SPELLCASTER)) {
 		a = Parser.attFullToAbv(a.replace(_MISC_FILTER_SPELLCASTER, ""));
 		b = Parser.attFullToAbv(b.replace(_MISC_FILTER_SPELLCASTER, ""));
-		return SortUtil.ascSortAtts(b, a);
+		return SortUtil.ascSortAtts(a, b);
 	} else return SortUtil.ascSort(a, b);
 }
 
@@ -65,7 +51,8 @@ function pLoadMeta () {
 				});
 
 				Object.keys(data.language).forEach(k => languages[k] = data.language[k]);
-				languageFilter.items = Object.keys(languages).sort((a, b) => SortUtil.ascSortLower(languages[a], languages[b]));
+				Object.keys(languages).sort((a, b) => SortUtil.ascSortLower(languages[a], languages[b]))
+					.forEach(la => languageFilter.addItem(la));
 				resolve();
 			});
 	});
@@ -111,49 +98,57 @@ function pPostLoad () {
 let filterBox;
 let encounterBuilder;
 window.onload = async function load () {
-	filterBox = await pInitFilterBox(
-		sourceFilter,
-		crFilter,
-		typeFilter,
-		tagFilter,
-		environmentFilter,
-		defenceFilter,
-		conditionImmuneFilter,
-		traitFilter,
-		actionReactionFilter,
-		miscFilter,
-		spellcastingTypeFilter,
-		sizeFilter,
-		speedFilter,
-		speedTypeFilter,
-		alignmentFilter,
-		saveFilter,
-		skillFilter,
-		senseFilter,
-		languageFilter,
-		damageTypeFilter,
-		acFilter,
-		averageHpFilter,
-		abilityScoreFilter
-	);
+	filterBox = await pInitFilterBox({
+		filters: [
+			sourceFilter,
+			crFilter,
+			typeFilter,
+			tagFilter,
+			environmentFilter,
+			defenceFilter,
+			conditionImmuneFilter,
+			traitFilter,
+			actionReactionFilter,
+			miscFilter,
+			spellcastingTypeFilter,
+			sizeFilter,
+			speedFilter,
+			speedTypeFilter,
+			alignmentFilter,
+			saveFilter,
+			skillFilter,
+			senseFilter,
+			languageFilter,
+			damageTypeFilter,
+			acFilter,
+			averageHpFilter,
+			abilityScoreFilter
+		]
+	});
 	encounterBuilder = new EncounterBuilder();
-	await ExcludeUtil.pInitialise();
 	SortUtil.initHandleFilterButtonClicks();
 	encounterBuilder.initUi();
-	pLoadMeta()
-		.then(pLoadFluffIndex)
-		.then(multisourceLoad.bind(null, JSON_DIR, JSON_LIST_NAME, pPageInit, addMonsters, pPostLoad))
-		.then(() => {
-			if (History.lastLoadedId == null) History._freshLoad();
-			ExcludeUtil.checkShowAllExcluded(monsters, $(`#pagecontent`));
-			encounterBuilder.initState();
-		});
+	await Promise.all([
+		ExcludeUtil.pInitialise(),
+		pLoadMeta(),
+		pLoadFluffIndex()
+	]);
+	await pMultisourceLoad(JSON_DIR, JSON_LIST_NAME, pPageInit, addMonsters, pPostLoad);
+	if (Hist.lastLoadedId == null) Hist._freshLoad();
+	ExcludeUtil.checkShowAllExcluded(monsters, $(`#pagecontent`));
+	handleFilterChange();
+	encounterBuilder.initState();
 };
 
 let list;
 let printBookView;
 const sourceFilter = getSourceFilter();
-const crFilter = new RangeFilter({header: "Challenge Rating", labels: true});
+const crFilter = new RangeFilter({
+	header: "Challenge Rating",
+	isLabelled: true,
+	labelSortFn: SortUtil.ascSortCr,
+	labels: [...Parser.CRS]
+});
 const sizeFilter = new Filter({
 	header: "Size",
 	items: [
@@ -165,7 +160,8 @@ const sizeFilter = new Filter({
 		SZ_GARGANTUAN,
 		SZ_VARIES
 	],
-	displayFn: Parser.sizeAbvToFull
+	displayFn: Parser.sizeAbvToFull,
+	itemSortFn: null
 });
 const speedFilter = new RangeFilter({header: "Speed", min: 30, max: 30});
 const speedTypeFilter = new Filter({header: "Speed Type", items: ["walk", "burrow", "climb", "fly", "hover", "swim"], displayFn: StrUtil.uppercaseFirst});
@@ -175,19 +171,25 @@ const constitutionFilter = new RangeFilter({header: "Constitution", min: 1, max:
 const intelligenceFilter = new RangeFilter({header: "Intelligence", min: 1, max: 30});
 const wisdomFilter = new RangeFilter({header: "Wisdom", min: 1, max: 30});
 const charismaFilter = new RangeFilter({header: "Charisma", min: 1, max: 30});
-const abilityScoreFilter = new MultiFilter({name: "Ability Scores", compact: true, mode: "and"}, strengthFilter, dexterityFilter, constitutionFilter, intelligenceFilter, wisdomFilter, charismaFilter);
+const abilityScoreFilter = new MultiFilter({
+	header: "Ability Scores",
+	mode: "and",
+	filters: [strengthFilter, dexterityFilter, constitutionFilter, intelligenceFilter, wisdomFilter, charismaFilter]
+});
 const acFilter = new RangeFilter({header: "Armor Class"});
 const averageHpFilter = new RangeFilter({header: "Average Hit Points"});
 const typeFilter = new Filter({
 	header: "Type",
 	items: Parser.MON_TYPES,
-	displayFn: StrUtil.toTitleCase
+	displayFn: StrUtil.toTitleCase,
+	itemSortFn: SortUtil.ascSortLower
 });
 const tagFilter = new Filter({header: "Tag", displayFn: StrUtil.uppercaseFirst});
 const alignmentFilter = new Filter({
 	header: "Alignment",
 	items: ["L", "NX", "C", "G", "NY", "E", "N", "U", "A"],
-	displayFn: Parser.alignmentAbvToFull
+	displayFn: Parser.alignmentAbvToFull,
+	itemSortFn: null
 });
 const languageFilter = new Filter({
 	header: "Languages",
@@ -213,7 +215,8 @@ const skillFilter = new Filter({
 const saveFilter = new Filter({
 	header: "Saves",
 	displayFn: Parser.attAbvToFull,
-	items: [...Parser.ABIL_ABVS]
+	items: [...Parser.ABIL_ABVS],
+	itemSortFn: null
 });
 const environmentFilter = new Filter({
 	header: "Environment",
@@ -278,7 +281,7 @@ const immuneFilter = new Filter({
 	items: DMG_TYPES,
 	displayFn: dispImmFilter
 });
-const defenceFilter = new MultiFilter({name: "Damage", mode: "and"}, vulnerableFilter, resistFilter, immuneFilter);
+const defenceFilter = new MultiFilter({header: "Damage", mode: "and", filters: [vulnerableFilter, resistFilter, immuneFilter]});
 const conditionImmuneFilter = new Filter({
 	header: "Condition Immunity",
 	items: CONDS,
@@ -298,9 +301,10 @@ const actionReactionFilter = new Filter({
 });
 const miscFilter = new Filter({
 	header: "Miscellaneous",
-	items: ["Familiar", "Lair Actions", "Legendary", "Named NPC", "Spellcaster", "Regional Effects", "Reactions", "Swarm", "Has Variants"],
-	displayFn: StrUtil.uppercaseFirst,
-	deselFn: (it) => it === "Named NPC"
+	items: ["Familiar", ...Object.keys(Parser.MON_MISC_TAG_TO_FULL), "Lair Actions", "Legendary", "Named NPC", "Spellcaster", ...Object.values(Parser.ATB_ABV_TO_FULL).map(it => `${_MISC_FILTER_SPELLCASTER}${it}`), "Regional Effects", "Reactions", "Swarm", "Has Variants", "Modified Copy", "Has Alternate Token"],
+	displayFn: (it) => Parser.monMiscTagToFull(it).uppercaseFirst(),
+	deselFn: (it) => it === "Named NPC",
+	itemSortFn: ascSortMiscFilter
 });
 const spellcastingTypeFilter = new Filter({
 	header: "Spellcasting Type",
@@ -309,16 +313,18 @@ const spellcastingTypeFilter = new Filter({
 });
 
 function pPageInit (loadedSources) {
-	sourceFilter.items = Object.keys(loadedSources).map(src => new FilterItem({item: src, changeFn: loadSource(JSON_LIST_NAME, addMonsters)}));
-	sourceFilter.items.sort(SortUtil.ascSort);
+	Object.keys(loadedSources)
+		.map(src => new FilterItem({item: src, changeFn: loadSource(JSON_LIST_NAME, addMonsters)}))
+		.forEach(fi => sourceFilter.addItem(fi));
 
 	list = ListUtil.search({
 		valueNames: ["name", "source", "type", "cr", "group", "alias", "uniqueid"],
 		listClass: "monsters",
 		sortFunction: sortMonsters
 	});
+	const $outVisibleResults = $(`.lst__wrp-search-visible`);
 	list.on("updated", () => {
-		filterBox.setCount(list.visibleItems.length, list.items.length);
+		$outVisibleResults.html(`${list.visibleItems.length}/${list.items.length}`);
 	});
 
 	// filtering function
@@ -350,8 +356,8 @@ function pPageInit (loadedSources) {
 		return (evt, proxyEvt) => {
 			evt = proxyEvt || evt;
 			if (lastRendered.isScaled) {
-				if (evt.shiftKey) ListUtil.pDoSublistAdd(History.lastLoadedId, true, 5, getScaledData());
-				else ListUtil.pDoSublistAdd(History.lastLoadedId, true, 1, getScaledData());
+				if (evt.shiftKey) ListUtil.pDoSublistAdd(Hist.lastLoadedId, true, 5, getScaledData());
+				else ListUtil.pDoSublistAdd(Hist.lastLoadedId, true, 1, getScaledData());
 			} else ListUtil.genericAddButtonHandler(evt, baseHandlerOptions);
 		};
 	}
@@ -359,8 +365,8 @@ function pPageInit (loadedSources) {
 		return (evt, proxyEvt) => {
 			evt = proxyEvt || evt;
 			if (lastRendered.isScaled) {
-				if (evt.shiftKey) ListUtil.pDoSublistSubtract(History.lastLoadedId, 5, getScaledData());
-				else ListUtil.pDoSublistSubtract(History.lastLoadedId, 1, getScaledData());
+				if (evt.shiftKey) ListUtil.pDoSublistSubtract(Hist.lastLoadedId, 5, getScaledData());
+				else ListUtil.pDoSublistSubtract(Hist.lastLoadedId, 1, getScaledData());
 			} else ListUtil.genericSubtractButtonHandler(evt, baseHandlerOptions);
 		};
 	}
@@ -396,8 +402,8 @@ function pPageInit (loadedSources) {
 
 					stack.push(`<tr class="printbook-bestiary"><td>`);
 					toShow.forEach(mon => renderCreature(mon));
-					if (!toShow.length && History.lastLoadedId != null) {
-						renderCreature(monsters[History.lastLoadedId]);
+					if (!toShow.length && Hist.lastLoadedId != null) {
+						renderCreature(monsters[Hist.lastLoadedId]);
 					}
 					stack.push(`</td></tr>`);
 
@@ -483,7 +489,7 @@ class EncounterBuilderUtils {
 		const crCutoff = EncounterBuilderUtils.getCrCutoff(data);
 		data.forEach(it => {
 			if (getCr(it) >= crCutoff) relevantCount += it.count;
-			baseXp += Parser.crToXpNumber(Parser.numberToCr(getCr(it))) * it.count;
+			baseXp += (Parser.crToXpNumber(Parser.numberToCr(getCr(it))) || 0) * it.count;
 		});
 
 		const playerAdjustedXpMult = Parser.numMonstersToXpMult(relevantCount, playerCount);
@@ -503,6 +509,8 @@ function onSublistChange () {
 }
 
 function handleFilterChange () {
+	if (Hist.initialLoad) return;
+
 	const f = filterBox.getValues();
 	list.filter(function (item) {
 		const m = monsters[$(item.elm).attr(FLTR_ID)];
@@ -560,6 +568,24 @@ function getUid (name, source, scaledCr) {
 	return `${name}_${source}_${scaledCr}`.toLowerCase();
 }
 
+function handleBestiaryLiClick (evt, ele, ixMon) {
+	if (encounterBuilder.isActive()) {
+		const mon = monsters[ixMon];
+		const fakeEvt = {clientX: evt.clientX, clientY: evt.clientY, shiftKey: true};
+		Renderer.hover.mouseOver(fakeEvt, ele, UrlUtil.PG_BESTIARY, mon.source, UrlUtil.autoEncodeHash(mon));
+	} else ListUtil.toggleSelected(evt, ele)
+}
+
+function handleBestiaryLiContext (evt, ele) {
+	if (!encounterBuilder.isActive()) ListUtil.openContextMenu(evt, ele);
+}
+
+function handleBestiaryLinkClick (evt) {
+	if (encounterBuilder.isActive()) {
+		evt.preventDefault();
+	}
+}
+
 const _NEUT_ALIGNS = ["NX", "NY"];
 const _addedHashes = new Set();
 function addMonsters (data) {
@@ -573,7 +599,7 @@ function addMonsters (data) {
 	for (; mI < monsters.length; mI++) {
 		const mon = monsters[mI];
 		const monHash = UrlUtil.autoEncodeHash(mon);
-		if (_addedHashes.has(monHash)) continue;
+		if (!mon.uniqueId && _addedHashes.has(monHash)) continue;
 		_addedHashes.add(monHash);
 		if (ExcludeUtil.isExcluded(mon.name, "monster", mon.source)) continue;
 		RenderBestiary.initParsed(mon);
@@ -583,31 +609,33 @@ function addMonsters (data) {
 		if (mon.speed.canHover) mon._fSpeedType.push("hover");
 		mon._fAc = mon.ac.map(it => it.ac || it);
 		mon._fHp = mon.hp.average;
-		const tempAlign = typeof mon.alignment[0] === "object"
-			? Array.prototype.concat.apply([], mon.alignment.map(a => a.alignment))
-			: [...mon.alignment];
-		if (tempAlign.includes("N") && !tempAlign.includes("G") && !tempAlign.includes("E")) tempAlign.push("NY");
-		else if (tempAlign.includes("N") && !tempAlign.includes("L") && !tempAlign.includes("C")) tempAlign.push("NX");
-		else if (tempAlign.length === 1 && tempAlign.includes("N")) Array.prototype.push.apply(tempAlign, _NEUT_ALIGNS);
-		mon._fAlign = tempAlign;
+		if (mon.alignment) {
+			const tempAlign = typeof mon.alignment[0] === "object"
+				? Array.prototype.concat.apply([], mon.alignment.map(a => a.alignment))
+				: [...mon.alignment];
+			if (tempAlign.includes("N") && !tempAlign.includes("G") && !tempAlign.includes("E")) tempAlign.push("NY");
+			else if (tempAlign.includes("N") && !tempAlign.includes("L") && !tempAlign.includes("C")) tempAlign.push("NX");
+			else if (tempAlign.length === 1 && tempAlign.includes("N")) Array.prototype.push.apply(tempAlign, _NEUT_ALIGNS);
+			mon._fAlign = tempAlign;
+		} else {
+			mon._fAlign = null;
+		}
 		mon._fVuln = mon.vulnerable ? getAllImmRest(mon.vulnerable, "vulnerable") : [];
 		mon._fRes = mon.resist ? getAllImmRest(mon.resist, "resist") : [];
 		mon._fImm = mon.immune ? getAllImmRest(mon.immune, "immune") : [];
 		mon._fCondImm = mon.conditionImmune ? getAllImmRest(mon.conditionImmune, "conditionImmune") : [];
 		mon._fSave = mon.save ? Object.keys(mon.save) : [];
 		mon._fSkill = mon.skill ? Object.keys(mon.skill) : [];
-		mon._fSources = ListUtil.getCompleteSources(mon);
-
-		const abvSource = Parser.sourceJsonToAbv(mon.source);
+		mon._fSources = ListUtil.getCompleteFilterSources(mon);
 
 		textStack +=
-			`<li class="row" ${FLTR_ID}="${mI}" onclick="ListUtil.toggleSelected(event, this)" oncontextmenu="ListUtil.openContextMenu(event, this)">
-				<a id=${mI} href="#${monHash}" title="${mon.name}">
+			`<li class="row" ${FLTR_ID}="${mI}" onclick="handleBestiaryLiClick(event, this, ${mI})" oncontextmenu="handleBestiaryLiContext(event, this)">
+				<a id=${mI} href="#${monHash}" title="${mon.name}" onclick="handleBestiaryLinkClick(event)">
 					${EncounterBuilder.getButtons(mI)}
-					<span class="ecgen__name name col-4-2">${mon.name}</span>
+					<span class="ecgen__name name col-4-2 pl-0">${mon.name}</span>
 					<span class="type col-4-1">${mon._pTypes.asText.uppercaseFirst()}</span>
-					<span class="col-1-7 text-align-center cr">${mon._pCr}</span>
-					<span title="${Parser.sourceJsonToFull(mon.source)}${Renderer.utils.getSourceSubText(mon)}" class="col-2 source text-align-center ${Parser.sourceJsonToColor(mon.source)}">${abvSource}</span>
+					<span class="col-1-7 text-center cr">${mon._pCr || "\u2014"}</span>
+					<span title="${Parser.sourceJsonToFull(mon.source)}${Renderer.utils.getSourceSubText(mon)}" class="col-2 source text-center ${Parser.sourceJsonToColor(mon.source)} pr-0" ${BrewUtil.sourceJsonToStyle(mon.source)}>${Parser.sourceJsonToAbv(mon.source)}</span>
 					
 					${mon.group ? `<span class="group hidden">${mon.group}</span>` : ""}
 					<span class="alias hidden">${(mon.alias || []).map(it => `"${it}"`).join(",")}</span>
@@ -616,29 +644,25 @@ function addMonsters (data) {
 			</li>`;
 
 		// populate filters
-		sourceFilter.addIfAbsent(mon._fSources);
-		crFilter.addIfAbsent(mon._pCr);
-		strengthFilter.addIfAbsent(mon.str);
-		dexterityFilter.addIfAbsent(mon.dex);
-		constitutionFilter.addIfAbsent(mon.con);
-		intelligenceFilter.addIfAbsent(mon.int);
-		wisdomFilter.addIfAbsent(mon.wis);
-		charismaFilter.addIfAbsent(mon.cha);
-		speedFilter.addIfAbsent(mon._fSpeed);
-		mon.ac.forEach(it => acFilter.addIfAbsent(it.ac || it));
-		if (mon.hp.average) averageHpFilter.addIfAbsent(mon.hp.average);
-		mon._pTypes.tags.forEach(t => tagFilter.addIfAbsent(t));
+		sourceFilter.addItem(mon._fSources);
+		if (mon._pCr != null) crFilter.addItem(mon._pCr);
+		strengthFilter.addItem(mon.str);
+		dexterityFilter.addItem(mon.dex);
+		constitutionFilter.addItem(mon.con);
+		intelligenceFilter.addItem(mon.int);
+		wisdomFilter.addItem(mon.wis);
+		charismaFilter.addItem(mon.cha);
+		speedFilter.addItem(mon._fSpeed);
+		mon.ac.forEach(it => acFilter.addItem(it.ac || it));
+		if (mon.hp.average) averageHpFilter.addItem(mon.hp.average);
+		mon._pTypes.tags.forEach(t => tagFilter.addItem(t));
 		mon._fMisc = mon.legendary || mon.legendaryGroup ? ["Legendary"] : [];
 		if (mon.familiar) mon._fMisc.push("Familiar");
 		if (mon.type.swarmSize) mon._fMisc.push("Swarm");
 		if (mon.spellcasting) {
 			mon._fMisc.push("Spellcaster");
 			mon.spellcasting.forEach(sc => {
-				if (sc.ability) {
-					const scAbility = `${_MISC_FILTER_SPELLCASTER}${Parser.attAbvToFull(sc.ability)}`;
-					mon._fMisc.push(scAbility);
-					miscFilter.addIfAbsent(scAbility);
-				}
+				if (sc.ability) mon._fMisc.push(`${_MISC_FILTER_SPELLCASTER}${Parser.attAbvToFull(sc.ability)}`);
 			});
 		}
 		if (mon.isNpc) mon._fMisc.push("Named NPC");
@@ -648,21 +672,15 @@ function addMonsters (data) {
 		}
 		if (mon.reaction) mon._fMisc.push("Reactions");
 		if (mon.variant) mon._fMisc.push("Has Variants");
-		traitFilter.addIfAbsent(mon.traitTags);
-		actionReactionFilter.addIfAbsent(mon.actionTags);
-		environmentFilter.addIfAbsent(mon.environment);
+		if (mon.miscTags) mon._fMisc.push(...mon.miscTags);
+		if (mon._isCopy) mon._fMisc.push("Modified Copy");
+		if (mon.altArt) mon._fMisc.push("Has Alternate Token");
+		traitFilter.addItem(mon.traitTags);
+		actionReactionFilter.addItem(mon.actionTags);
+		environmentFilter.addItem(mon.environment);
 	}
 	const lastSearch = ListUtil.getSearchTermAndReset(list);
 	table.append(textStack);
-
-	// sort filters
-	sourceFilter.items.sort(SortUtil.ascSort);
-	crFilter.items.sort(SortUtil.ascSortCr);
-	typeFilter.items.sort(SortUtil.ascSortLower);
-	tagFilter.items.sort(SortUtil.ascSort);
-	miscFilter.items.sort(ascSortMiscFilter);
-	traitFilter.items.sort(SortUtil.ascSort);
-	actionReactionFilter.items.sort(SortUtil.ascSortCr);
 
 	list.reIndex();
 	if (lastSearch) list.search(lastSearch);
@@ -682,7 +700,7 @@ function addMonsters (data) {
 				Renderer.hover.handlePopoutCode(evt, toList, $btnPop, popoutCodeId);
 			} else {
 				if (lastRendered.mon != null && lastRendered.isScaled) Renderer.hover.doPopoutPreloaded($btnPop, lastRendered.mon, evt.clientX);
-				else if (History.lastLoadedId !== null) Renderer.hover.doPopout($btnPop, toList, History.lastLoadedId, evt.clientX);
+				else if (Hist.lastLoadedId !== null) Renderer.hover.doPopout($btnPop, toList, Hist.lastLoadedId, evt.clientX);
 			}
 		};
 	}
@@ -731,10 +749,11 @@ function pGetSublistItem (mon, pinId, addCount, data = {}) {
 			resolve(`
 				<li class="row row--bestiary_sublist" ${FLTR_ID}="${pinId}" oncontextmenu="ListUtil.openSubContextMenu(event, this)">
 					<a href="#${UrlUtil.autoEncodeHash(mon)}${subHash}" title="${mon._displayName || mon.name}" draggable="false" class="ecgen__hidden">
-						<span class="name col-5">${mon._displayName || mon.name}</span>
-						<span class="type col-3">${mon._pTypes.asText.uppercaseFirst()}</span>
-						<span class="cr col-2 text-align-center">${mon._pCr}</span>						
-						<span class="count col-2 text-align-center">${addCount || 1}</span>
+						<span class="name col-5 pl-0">${mon._displayName || mon.name}</span>
+						<span class="type col-3-8">${mon._pTypes.asText.uppercaseFirst()}</span>
+						<span class="cr col-1-2 text-center">${mon._pCr || "\u2014"}</span>
+						<span class="count col-2 text-center">${addCount || 1}</span>
+
 						<span class="id hidden">${pinId}</span>
 						<span class="uid hidden">${data.uid || ""}</span>
 					</a>
@@ -742,14 +761,15 @@ function pGetSublistItem (mon, pinId, addCount, data = {}) {
 					<div class="list__item_inner ecgen__visible--flex">
 						${EncounterBuilder.getButtons(pinId, true)}
 						<span class="ecgen__name--sub col-5">${mon._displayName || mon.name}</span>
-						<span class="col-1-5 help--hover ecgen__visible" onmouseover="EncounterBuilder.doStatblockMouseOver(event, this, ${pinId}, ${mon._isScaledCr})">Statblock</span>
-						<span class="col-1-5 ecgen__visible help--hover" ${EncounterBuilder.getTokenMouseOver(mon)}>Token</span>
+						<span class="col-1-4 help--hover ecgen__visible" onmouseover="EncounterBuilder.doStatblockMouseOver(event, this, ${pinId}, ${mon._isScaledCr})">Statblock</span>
+						<span class="col-1-2 ecgen__visible help--hover" ${EncounterBuilder.getTokenMouseOver(mon)}>Token</span>
+						<span class="col-1-2 ecgen__visible help--hover" onmouseover="EncounterBuilder.doImageMouseOver(event, this, ${pinId})">Image</span>
 						${mon._pCr !== "Unknown" ? `
-							<span class="col-2 text-align-center">
+							<span class="col-1-2 text-center">
 								<input value="${mon._pCr}" onchange="encounterBuilder.doCrChange(this, ${pinId}, ${mon._isScaledCr})" class="ecgen__cr_input form-control form-control--minimal input-xs">
 							</span>
-						` : `<span class="col-2 text-align-center">${mon._pCr}</span>`}
-						<span class="col-2 text-align-center count">${addCount || 1}</span>
+						` : `<span class="col-1-2 text-center">${mon._pCr || "\u2014"}</span>`}
+						<span class="col-2 pr-0 text-center count">${addCount || 1}</span>
 					</div>
 				</li>
 			`);
@@ -779,12 +799,12 @@ function sortMonsters (a, b, o) {
 
 let profBtn = null;
 // load selected monster stat block
-function loadhash (id) {
+function loadHash (id) {
 	const mon = monsters[id];
 
 	renderStatblock(mon);
 
-	loadsub([]);
+	loadSubHash([]);
 	ListUtil.updateSelected();
 }
 
@@ -802,38 +822,149 @@ function renderStatblock (mon, isScaled) {
 	}
 
 	function buildStatsTab () {
-		const $btnScaleCr = $(`
+		const $btnScaleCr = mon.cr != null ? $(`
 			<button id="btn-scale-cr" title="Scale Creature By CR (Highly Experimental)" class="mon__btn-scale-cr btn btn-xs btn-default">
 				<span class="glyphicon glyphicon-signal"/>
 			</button>`)
 			.off("click").click((evt) => {
 				evt.stopPropagation();
-				const mon = monsters[History.lastLoadedId];
+				const mon = monsters[Hist.lastLoadedId];
 				const lastCr = lastRendered.mon ? lastRendered.mon.cr.cr || lastRendered.mon.cr : mon.cr.cr || mon.cr;
 				Renderer.monster.getCrScaleTarget($btnScaleCr, lastCr, (targetCr) => {
 					if (targetCr === Parser.crToNumber(mon.cr)) renderStatblock(mon);
-					else History.setSubhash(MON_HASH_SCALED, targetCr);
+					else Hist.setSubhash(MON_HASH_SCALED, targetCr);
 				});
-			}).toggle(Parser.crToNumber(mon.cr.cr || mon.cr) !== 100);
+			}).toggle(Parser.crToNumber(mon.cr.cr || mon.cr) !== 100) : null;
 
-		const $btnResetScaleCr = $(`
+		const $btnResetScaleCr = mon.cr != null ? $(`
 			<button id="btn-reset-cr" title="Reset CR Scaling" class="mon__btn-reset-cr btn btn-xs btn-default">
 				<span class="glyphicon glyphicon-refresh"></span>
 			</button>`)
-			.click(() => History.setSubhash(MON_HASH_SCALED, null))
-			.toggle(isScaled);
+			.click(() => Hist.setSubhash(MON_HASH_SCALED, null))
+			.toggle(isScaled) : null;
 
 		$content.append(RenderBestiary.$getRenderedCreature(mon, meta, {$btnScaleCr, $btnResetScaleCr}));
 
-		const $floatToken = $(`#float-token`).empty();
-		if (mon.tokenUrl || !mon.uniqueId) {
-			const imgLink = Renderer.monster.getTokenUrl(mon);
-			$floatToken.append(`
-				<a href="${imgLink}" target="_blank" rel="noopener">
-					<img src="${imgLink}" id="token_image" class="token" onerror="imgError(this)" alt="${mon.name}">
-				</a>`
-			);
-		} else imgError();
+		// tokens
+		(() => {
+			const $tokenImages = [];
+
+			// statblock scrolling handler
+			$(`#wrp-pagecontent`).off("scroll").on("scroll", function () {
+				$tokenImages.forEach($img => {
+					$img
+						.toggle(this.scrollTop < 32)
+						.css({
+							opacity: (32 - this.scrollTop) / 32,
+							top: -this.scrollTop
+						});
+				});
+			});
+
+			const $floatToken = $(`#float-token`).empty();
+
+			function imgError (ele) {
+				if (ele) $(ele).parent().remove();
+				$(`#pagecontent th.name`).css("padding-right", "0.3em");
+				$(`.mon__wrp-size-type-align`).css("max-width", "none");
+				$(`.mon__wrp-avoid-token`).css("max-width", "none");
+			}
+
+			if (mon.tokenUrl || !mon.uniqueId) {
+				const imgLink = Renderer.monster.getTokenUrl(mon);
+				const $img = $(`<img src="${imgLink}" class="mon__token" alt="${mon.name}">`)
+					.on("error", () => imgError($img));
+				$tokenImages.push($img);
+				const $lnkToken = $$`<a href="${imgLink}" class="mon__wrp-token" target="_blank" rel="noopener">${$img}</a>`.appendTo($floatToken);
+
+				const altArtMeta = [];
+
+				if (mon.altArt) altArtMeta.push(...MiscUtil.copy(mon.altArt));
+				if (mon.variant) {
+					const variantTokens = mon.variant.filter(it => it.token).map(it => it.token);
+					if (variantTokens.length) altArtMeta.push(...MiscUtil.copy(variantTokens).map(it => ({...it, displayName: `Variant; ${it.name}`})));
+				}
+
+				if (altArtMeta.length) {
+					// make a fake entry for the original token
+					altArtMeta.unshift({$ele: $lnkToken});
+
+					const buildEle = (meta) => {
+						if (!meta.$ele) {
+							const imgLink = Renderer.monster.getTokenUrl({name: meta.name, source: meta.source});
+							const $img = $(`<img src="${imgLink}" class="mon__token" alt="${meta.displayName || meta.name}">`)
+								.on("error", () => {
+									$img.attr(
+										"src",
+										`data:image/svg+xml,${encodeURIComponent(`
+											<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+												<circle cx="200" cy="200" r="175" fill="#b00"/>
+												<rect x="190" y="40" height="320" width="20" fill="#ddd" transform="rotate(45 200 200)"/>
+												<rect x="190" y="40" height="320" width="20" fill="#ddd" transform="rotate(135 200 200)"/>
+											</svg>`
+										)}`
+									);
+								});
+							$tokenImages.push($img);
+							meta.$ele = $$`<a href="${imgLink}" class="mon__wrp-token" target="_blank" rel="noopener">${$img}</a>`
+								.hide()
+								.css("max-width", "100%") // hack to ensure the token gets shown at max width on first look
+								.appendTo($floatToken);
+						}
+					};
+					altArtMeta.forEach(buildEle);
+
+					let ix = 0;
+					const handleClick = (evt, direction) => {
+						evt.stopPropagation();
+						evt.preventDefault();
+
+						// avoid going off the edge of the list
+						if (ix === 0 && !~direction) return;
+						if (ix === altArtMeta.length - 1 && ~direction) return;
+
+						ix += direction;
+
+						if (!~direction) { // left
+							if (ix === 0) {
+								$btnLeft.hide();
+								$wrpFooter.hide();
+							}
+							$btnRight.show();
+						} else {
+							$btnLeft.show();
+							$wrpFooter.show();
+							if (ix === altArtMeta.length - 1) {
+								$btnRight.hide();
+							}
+						}
+						altArtMeta.filter(it => it.$ele).forEach(it => it.$ele.hide());
+
+						const meta = altArtMeta[ix];
+						meta.$ele.show();
+						setTimeout(() => meta.$ele.css("max-width", ""), 10); // hack to clear the earlier 100% width
+
+						if (meta.name && meta.source) $footer.html(`<div>${meta.displayName || meta.name}; <span title="${Parser.sourceJsonToFull(meta.source)}">${Parser.sourceJsonToAbv(meta.source)}${meta.page > 0 ? ` p${meta.page}` : ""}</span></div>`);
+						else $footer.html("");
+
+						$wrpFooter.detach().appendTo(meta.$ele);
+						$btnLeft.detach().appendTo(meta.$ele);
+						$btnRight.detach().appendTo(meta.$ele);
+					};
+
+					// append footer first to be behind buttons
+					const $footer = $(`<div class="mon__token-footer"/>`);
+					const $wrpFooter = $$`<div class="mon__wrp-token-footer">${$footer}</div>`.hide().appendTo($lnkToken);
+
+					const $btnLeft = $$`<div class="mon__btn-token-cycle mon__btn-token-cycle--left"><span class="glyphicon glyphicon-chevron-left"/></div>`
+						.click(evt => handleClick(evt, -1)).appendTo($lnkToken)
+						.hide();
+
+					const $btnRight = $$`<div class="mon__btn-token-cycle mon__btn-token-cycle--right"><span class="glyphicon glyphicon-chevron-right"/></div>`
+						.click(evt => handleClick(evt, 1)).appendTo($lnkToken);
+				}
+			} else imgError();
+		})();
 
 		// inline rollers //////////////////////////////////////////////////////////////////////////////////////////////
 		const isProfDiceMode = PROF_DICE_MODE === PROF_MODE_DICE;
@@ -905,21 +1036,28 @@ function renderStatblock (mon, isScaled) {
 			});
 
 		$content.find("p").each(function () {
-			$(this).html($(this).html().replace(/DC\s*(\d+)/g, function (match, capture) {
-				const dc = Number(capture);
+			$(this).find(`.rd__dc`).each((i, e) => {
+				const $e = $(e);
+				const dc = Number($e.html());
 
 				const expectedPB = Parser.crToPb(mon.cr);
-
 				if (expectedPB > 0) {
 					const withoutPB = dc - expectedPB;
 					const profDiceString = _addSpacesToDiceExp(`1d${(expectedPB * 2)}${withoutPB >= 0 ? "+" : ""}${withoutPB}`);
 
-					return `DC <span class="dc-roller" mode="${isProfDiceMode ? "dice" : ""}" onmousedown="window.PROF_DICE_MODE === window.PROF_MODE_DICE &&  event.preventDefault()" onclick="dcRollerClick(event, this, '${profDiceString}')" data-roll-prof-bonus="${capture}" data-roll-prof-dice="${profDiceString}">${isProfDiceMode ? profDiceString : capture}</span>`;
-				} else {
-					return match; // if there was no proficiency bonus to work with, fall back on this
+					$e
+						.addClass("dc-roller")
+						.attr("mode", isProfDiceMode ? "dice" : "")
+						.mousedown((evt) => window.PROF_DICE_MODE === window.PROF_MODE_DICE && evt.preventDefault())
+						.attr("onclick", `dcRollerClick(event, this, '${profDiceString}')`)
+						.attr("data-roll-prof-bonus", `${dc}`)
+						.attr("data-roll-prof-dice", profDiceString)
+						.html(isProfDiceMode ? profDiceString : dc)
 				}
-			}));
+			});
 		});
+
+		$(`#wrp-pagecontent`).scroll();
 	}
 
 	function buildFluffTab (isImageTab) {
@@ -966,7 +1104,7 @@ function handleUnknownHash (link, sub) {
 	if (src) {
 		loadSource(JSON_LIST_NAME, (monsters) => {
 			addMonsters(monsters);
-			History.hashChange();
+			Hist.hashChange();
 		})(src, "yes");
 	}
 }
@@ -987,11 +1125,12 @@ function getUnpackedUid (uid) {
 
 function getCr (obj) {
 	if (obj.crScaled != null) return obj.crScaled;
+	if (obj.cr == null) return null;
 	return typeof obj.cr === "string" ? obj.cr.includes("/") ? Parser.crToNumber(obj.cr) : Number(obj.cr) : obj.cr;
 }
 
-function loadsub (sub) {
-	filterBox.setFromSubHashes(sub);
+function loadSubHash (sub) {
+	sub = filterBox.setFromSubHashes(sub);
 	ListUtil.setFromSubHashes(sub, sublistFuncPreload);
 
 	printBookView.handleSub(sub);
@@ -1000,7 +1139,7 @@ function loadsub (sub) {
 	if (scaledHash) {
 		const scaleTo = Number(UrlUtil.unpackSubHash(scaledHash)[MON_HASH_SCALED][0]);
 		const scaleToStr = Parser.numberToCr(scaleTo);
-		const mon = monsters[History.lastLoadedId];
+		const mon = monsters[Hist.lastLoadedId];
 		if (Parser.isValidCr(scaleToStr) && scaleTo !== Parser.crToNumber(lastRendered.mon.cr)) {
 			ScaleCreature.scale(mon, scaleTo).then(scaled => renderStatblock(scaled, true));
 		}

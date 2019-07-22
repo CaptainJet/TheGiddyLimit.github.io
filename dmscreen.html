@@ -13,6 +13,7 @@
 	<link rel="manifest" href="manifest.json">
 
 	<link rel="stylesheet" href="css/bootstrap.css">
+	<link rel="stylesheet" href="css/fontawesome.css">
 	<link rel="stylesheet" href="css/jquery-ui.css">
 	<link rel="stylesheet" href="css/jquery-ui-slider-pips.css">
 	<link rel="stylesheet" href="css/style.css">
@@ -212,6 +213,13 @@
 			border-top: 0;
 			border-top-left-radius: 0;
 			border-top-right-radius: 0;
+		}
+
+		.content-tab-title {
+			max-width: 80px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			display: block;
 		}
 
 		.content-tab-remove {
@@ -456,7 +464,11 @@
 
 		body.is-fullscreen .sidemenu__toggle {
 			top: 12px;
-			left: -12px;
+			left: -31px;
+		}
+
+		body.is-fullscreen .sidemenu__hotzone {
+			width: 3px;
 		}
 
 		.sidemenu__history {
@@ -677,7 +689,7 @@
 
 		.dm-init-modal-wrp-rows {
 			min-width: 400px;
-			padding: 7px 0;
+			padding: 7px;
 		}
 
 		.btn-dm-init-cond {
@@ -764,6 +776,10 @@
 			border-radius: 0;
 			margin-right: 3px;
 			width: 40px;
+		}
+
+		.dm_init__stat_ipt[type=checkbox] {
+			margin-right: 3px;
 		}
 
 		/* player view */
@@ -875,6 +891,7 @@
 		@media (max-width: 991px) {
 			.viewport-wrapper {
 				bottom: 0;
+				height: 100vh;
 			}
 		}
 
@@ -890,7 +907,7 @@
 			display: none !important;
 		}
 
-		.panel-content-wrapper table.stats.stats-book--hover {
+		.panel-content-wrapper .stats--book-hover {
 			box-shadow: none;
 		}
 
@@ -900,12 +917,237 @@
 		}
 
 		.dm-book__wrp-controls {
-			padding-top: 2px;
-			padding-right: 2px;
-			padding-bottom: 1px;
+			padding: 2px 2px 1px 21px;
 			border-top: 1px solid #ccc;
 			justify-content: flex-end;
 		}
+
+		.dm-book__controls-title {
+			height: 20px;
+			padding: 0 3px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			width: 50%;
+			flex-grow: 0;
+		}
+
+		/* Clock/Calendar */
+		.dm-time__btn-time {
+			width: 20px;
+		}
+
+		.dm-time__btn-time--top {
+			border-bottom: 0;
+			border-bottom-left-radius: 0;
+			border-bottom-right-radius: 0;
+		}
+
+		.dm-time__btn-time--bottom {
+			border-top: 0;
+			border-top-left-radius: 0;
+			border-top-right-radius: 0;
+		}
+
+		.dm-time__sep-time {
+			font-size: 32px;
+			position: relative;
+			top: -2px;
+		}
+
+		.dm-time__ipt-time {
+			width: 20px;
+			font-size: 20px;
+			font-weight: bold;
+		}
+
+		.dm-time__bar-clock {
+			height: calc(100% - 8px);
+			margin: 4px 8px;
+			flex-shrink: 0;
+			border-left: 1px solid #eee;
+		}
+
+		.dm-time__btn-day {
+			width: 16px;
+		}
+
+		.dm-time__wrp-weather {
+			width: 100px;
+		}
+
+		.dm-time__btn-weather {
+			width: 34px;
+			padding: 0;
+			font-size: 21px;
+			text-align: center;
+			height: 33px;
+			line-height: 33px;
+		}
+
+		.dm-time__ipt-weather {
+			width: 40px;
+		}
+
+		.dm-time__btn-date-adjust {
+			width: 27px;
+			padding: 1px 3px;
+			flex-shrink: 0;
+			flex-grow: 0;
+		}
+
+		.dm-time__disp-calendar-day {
+			cursor: pointer;
+			text-align: center;
+			border: 1px solid #ccc;
+			border-radius: 3px;
+			padding: 0 2px;
+			font-size: 12px;
+			line-height: 1.5;
+			min-height: 21px;
+		}
+
+		.dm-time__disp-calendar-day--active {
+			background: #aaa4;
+		}
+
+		.dm-time__disp-day-entry {
+			position: absolute;
+			right: 1px;
+			border-radius: 3px;
+			width: 9px;
+			height: 9px;
+			line-height: 16px;
+			font-weight: bold;
+			font-size: 16px;
+		}
+
+		.dm-time__disp-day-entry--event {
+			top: 1px;
+			color: #61adef;
+		}
+
+		.dm-time__disp-day-entry--encounter {
+			top: 12px;
+			color: #5cb85c;
+		}
+
+		.night-mode .dm-time__disp-day-entry--event {
+			color: #7398b7;
+		}
+
+		.night-mode .dm-time__disp-day-entry--encounter {
+			color: #64cc64;
+		}
+
+		.dm-time__day-entry-header {
+			font-size: 15px;
+		}
+
+		.dm-time__day-entry-wrapper {
+			max-height: 70%;
+		}
+
+		.dm-time__spc-column-delete {
+			width: calc(24px + 0.5rem);
+		}
+
+		.dm-time__row-delete:only-child .btn-danger {
+			display: none;
+		}
+
+		.dm-time__spc-button {
+			display: none;
+			width: 24px;
+			height: 1px;
+			flex-shrink: 0;
+		}
+
+		.dm-time__row-delete:only-child .dm-time__spc-button {
+			display: block;
+		}
+
+		.dm-time__wrp-event-entries {
+			box-shadow: none;
+			border: 1px solid #ccc;
+			border-radius: 3px;
+			margin-top: 3px;
+			margin-left: 6px;
+			width: calc(100% - 6px);
+		}
+
+		.dm-time__bar-entry {
+			margin: 0 4px;
+			border-left: 1px solid #ccc;
+		}
+
+		.dm-time__wind-speed {
+			font-size: 10px;
+		}
+
+		.dm-time__ipt-color-moon {
+			width: 22px;
+		}
+
+		.dm-time__spc-drag-header {
+			width: 14px;
+		}
+
+		.dm-time__disp-day-moon {
+			position: absolute;
+			top: 1px;
+			left: 1px;
+		}
+
+		.dm-time__cvs-moon {
+			border-radius: 50%;
+		}
+
+		.night-mode .dm-time__cvs-moon {
+			border: 1px solid #ccc;
+		}
+
+		.dm-time__clock-moon-phase {
+			width: 16px;
+			height: 16px;
+		}
+
+		.dm-time__calendar-moon-phase {
+			width: 8px;
+			height: 8px;
+			margin-bottom: 1px;
+			line-height: 8px;
+		}
+
+		.dm-time__calendar-moon-phase .glyphicon {
+			top: 0;
+			font-size: 8px;
+		}
+
+		.dm-time__calendar-moon-phase:last-child {
+			margin-bottom: 0;
+		}
+
+		.dm-time__calendar-ipt-date,
+		.night-mode .dm-time__calendar-ipt-date{
+			background: transparent;
+		}
+
+		.dm-time__calendar-ipt-date--slashed-right {
+			border-right: 0;
+		}
+
+		.dm-time__calendar-ipt-date--slashed-left {
+			border-left: 0;
+		}
+
+		.dm-time__calendar-date-sep {
+			margin-left: -2px;
+			margin-right: -2px;
+			pointer-events: none;
+			user-select: none;
+		}
+		/* *** */
 	</style>
 </head>
 
@@ -919,7 +1161,7 @@
 		</div>
 	</header>
 	<nav class="container page__nav" id="navigation">
-		<ul class="nav nav-pills" id="navbar">
+		<ul class="nav page__nav-inner" id="navbar">
 		</ul>
 	</nav>
 	<div class="dm-screen">
@@ -952,7 +1194,8 @@
 <script type="text/javascript" src="js/dmscreen-initiativetracker.js"></script>
 <script type="text/javascript" src="js/dmscreen-playerinitiativetracker.js"></script>
 <script type="text/javascript" src="js/dmscreen-moneyconverter.js"></script>
-<script type="text/javascript" src="js/history.js"></script>
+<script type="text/javascript" src="js/dmscreen-timetracker.js"></script>
+<script type="text/javascript" src="js/hist.js"></script>
 <script type="text/javascript" src="lib/list.js"></script>
 <script type="text/javascript" src="lib/bootstrap-tooltip.js"></script>
 <script type="text/javascript" src="lib/elasticlunr.js"></script>

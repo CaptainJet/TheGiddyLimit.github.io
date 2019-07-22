@@ -93,7 +93,7 @@
 		</div>
 	</header>
 	<nav class="container page__nav" id="navigation">
-		<ul class="nav nav-pills" id="navbar">
+		<ul class="nav page__nav-inner" id="navbar">
 		</ul>
 	</nav>
 
@@ -103,7 +103,7 @@
 	<div class="container view-col-wrapper">
 		<div class="view-col" id="listcontainer">
 			<div class="input-group search-box">
-				<input type="search" id="search" class="search form-control" placeholder="Find race...">
+				<input type="search" id="search" autocomplete="off" autocapitalize="off" spellcheck="false" class="search form-control" placeholder="Find race...">
 				<span class="input-group-btn">
 						<button class="btn btn-default reset" id="reset" type="button">Reset</button>
 					</span>
@@ -116,7 +116,7 @@
 
 		<div class="view-col" id="tablecontainer">
 			<div class="rolltable" id="contentwrapper">
-				<table id="pagecontent" class="stats stats-book">
+				<table id="pagecontent" class="stats stats--book stats--book-large">
 					<!-- populate with JS -->
 				</table>
 			</div>
@@ -130,7 +130,7 @@
 <script type="text/javascript" src="js/omnisearch.js"></script>
 <script type="text/javascript" src="js/render.js"></script>
 <script type="text/javascript" src="js/scalecreature.js"></script>
-<script type="text/javascript" src="js/history.js"></script>
+<script type="text/javascript" src="js/hist.js"></script>
 <script type="text/javascript" src="js/names.js"></script>
 <script type="text/javascript" src="lib/list.js"></script>
 <script type="text/javascript" src="lib/jquery.js"></script>

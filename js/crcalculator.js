@@ -84,13 +84,13 @@ function addMonsterFeatures (mfData) {
 		const numBox = f.numbox ? `<input type="number" value="0" min="0" class="form-control form-control--minimal crc__mon_feature_num input-xs ml-2">` : "";
 
 		$wrpMonFeatures.append(`
-			<label class="row crc__mon_feature">
+			<label class="row crc__mon_feature ui-tip__parent">
 				<div class="col-1 crc__mon_feature_wrp_cb">
 					<input type="checkbox" id="mf-${Parser.stringToSlug(f.name)}" title="${f.name}" data-hp="${f.hp}" data-ac="${f.ac}" data-dpr="${f.dpr}" data-attackbonus="${f.attackbonus}" class="crc__mon_feature_cb">${numBox}
 				</div>
 				<div class="col-2">${f.name}</div>
 				<div class="col-2">${Renderer.get().render(`{@creature ${f.example}}`)}</div>
-				<div class="col-7"><span title="${effectOnCr.join(", ")}" class="explanation">${f.effect}</span></div>
+				<div class="col-7"><span title="${effectOnCr.join(", ")}">${f.effect}</span></div>
 			</label>
 		`);
 	});
@@ -115,7 +115,7 @@ function addMonsterFeatures (mfData) {
 			$(`.crc__mon_feature_cb`).each((i, e) => {
 				const $cb = $(e);
 				const idCb = $cb.attr("id");
-				const val = History.getSubHash(idCb);
+				const val = Hist.getSubHash(idCb);
 				if (val) {
 					$cb.prop("checked", true);
 					if (val !== "true") {
@@ -132,9 +132,9 @@ function addMonsterFeatures (mfData) {
 		const curFeature = $cbFeature.attr("id");
 
 		if ($cbFeature.prop("checked")) {
-			History.setSubhash(curFeature, $iptNum.length ? $iptNum.val() : true);
+			Hist.setSubhash(curFeature, $iptNum.length ? $iptNum.val() : true);
 		} else {
-			History.setSubhash(curFeature, null)
+			Hist.setSubhash(curFeature, null)
 		}
 	}
 

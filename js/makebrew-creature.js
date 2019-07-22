@@ -6,6 +6,7 @@ class CreatureBuilder extends Builder {
 
 		this._bestiaryMetaRaw = null;
 		this._bestiaryFluffIndex = null;
+		this._bestiaryTypeTags = null;
 		// FUTURE mechanism to update this select/etc if the user creates/edits homebrew legendary groups
 		this._bestiaryMetaCache = null;
 		this._legendaryGroups = null;
@@ -24,8 +25,7 @@ class CreatureBuilder extends Builder {
 
 		this._$btnSave = null;
 
-		this._tabMetaInput = [];
-		this._tabMetaOutput = [];
+		TabUiUtil.decorate(this);
 
 		this._$eles = {};
 
@@ -41,14 +41,21 @@ class CreatureBuilder extends Builder {
 	set ixBrew (val) { this._metaProxy.ixBrew = val; }
 
 	async pInit () {
-		this._bestiaryMetaRaw = await DataUtil.loadJSON("data/bestiary/meta.json");
+		const [bestiaryMetaRaw, bestiaryFluffIndex, jsonCreature, bestiaryIndex] = await Promise.all([
+			DataUtil.loadJSON("data/bestiary/meta.json"),
+			DataUtil.loadJSON("data/bestiary/fluff-index.json"),
+			DataUtil.loadJSON("data/makebrew-creature.json"),
+			DataUtil.loadJSON("data/bestiary/index.json")
+		]);
+
+		this._bestiaryFluffIndex = bestiaryFluffIndex;
+
+		this._bestiaryMetaRaw = bestiaryMetaRaw;
 		this._legendaryGroups = [...this._bestiaryMetaRaw.legendaryGroup, ...(BrewUtil.homebrew.legendaryGroup || [])];
 		this._bestiaryMetaCache = {};
 		this._legendaryGroups.forEach(it => (this._bestiaryMetaCache[it.source] = (this._bestiaryMetaCache[it.source] || {}))[it.name] = it);
 
-		this._bestiaryFluffIndex = await DataUtil.loadJSON("data/bestiary/fluff-index.json");
-
-		this._jsonCreature = await DataUtil.loadJSON("data/makebrew-creature.json");
+		this._jsonCreature = await jsonCreature;
 		this._indexedTraits = elasticlunr(function () {
 			this.addField("n");
 			this.setRef("id");
@@ -58,6 +65,11 @@ class CreatureBuilder extends Builder {
 			n: it.name,
 			id: i
 		}));
+
+		const allTypes = new Set();
+		const bestiaryData = await Promise.all(Object.values(bestiaryIndex).map(file => DataUtil.loadJSON(`data/bestiary/${file}`)));
+		bestiaryData.forEach(it => it.monster.forEach(mon => mon.type && mon.type.tags ? mon.type.tags.forEach(tp => allTypes.add(tp.tag || tp)) : ""));
+		this._bestiaryTypeTags = [...allTypes];
 	}
 
 	renderSideMenu () {
@@ -68,7 +80,7 @@ class CreatureBuilder extends Builder {
 				const searchWidget = new SearchWidget(
 					{Creature: SearchWidget.CONTENT_INDICES.Creature},
 					async (page, source, hash) => {
-						$modalInner.data("close")();
+						doClose();
 						const creature = MiscUtil.copy(await Renderer.hover.pCacheAndGet(page, source, hash));
 
 						if (this._bestiaryFluffIndex[creature.source] && !creature.fluff) {
@@ -94,10 +106,10 @@ class CreatureBuilder extends Builder {
 					},
 					{defaultCategory: "Creature"}
 				);
-				const $modalInner = UiUtil.getShow$Modal(
-					"Select Creature",
-					() => searchWidget.$wrpSearch.detach()
-				);
+				const {$modalInner, doClose} = UiUtil.getShowModal({
+					title: "Select Creature",
+					cbClose: () => searchWidget.$wrpSearch.detach()
+				});
 				$modalInner.append(searchWidget.$wrpSearch);
 				searchWidget.doFocus();
 			});
@@ -157,12 +169,12 @@ class CreatureBuilder extends Builder {
 					name: "View JSON",
 					action: (evt) => {
 						const out = this._ui._getJsonOutputTemplate();
-						out.monster = [DataUtil.cleanJson(MiscUtil.copy(mon))];
+						out.monster = [PropOrder.getOrdered(DataUtil.cleanJson(MiscUtil.copy(mon)), "monster")];
 
 						const popoutCodeId = Renderer.hover.__initOnMouseHoverEntry({
 							type: "code",
 							name: `${this._stateProxy.name} \u2014 Source Data`,
-							preformatted: JSON.stringify(out, null, 2)
+							preformatted: JSON.stringify(out, null, "\t")
 						});
 						$btnBurger.attr("data-hover-active", false);
 						Renderer.hover.mouseOverHoverTooltip({shiftKey: true, clientX: evt.clientX}, $btnBurger[0], popoutCodeId, true);
@@ -192,6 +204,8 @@ class CreatureBuilder extends Builder {
 							this.isEntrySaved = false;
 							this.ixBrew = null;
 							this._mutSavedButtonText();
+						} else if (this.ixBrew > ixBrew) {
+							this.ixBrew--; // handle the splice -- our index is not one lower
 						}
 						await BrewUtil.pRemoveEntry("monster", mon);
 						this._doUpdateSidemenu();
@@ -249,6 +263,11 @@ class CreatureBuilder extends Builder {
 	setStateFromLoaded (state) {
 		if (state && state.s && state.m) {
 			// TODO validate state
+
+			// clean old language/sense formats
+			if (state.s.languages && !(state.s.languages instanceof Array)) state.s.languages = [state.s.languages];
+			if (state.s.senses && !(state.s.senses instanceof Array)) state.s.senses = [state.s.senses];
+
 			this._state = state.s;
 			this._meta = state.m;
 
@@ -384,42 +403,11 @@ class CreatureBuilder extends Builder {
 		}).forEach($sel => $sel.change());
 	}
 
-	/**
-	 * Register a hook versus a root property on the state object. **INTERNAL CHANGES TO CHILD OBJECTS ON THE STATE
-	 *   OBJECT ARE NOT TRACKED**.
-	 * @param prop The root property to track.
-	 * @param hook The hook to run. Will be called with two arguments; the property and the value of the property being
-	 *   modified.
-	 */
-	_registerHook (prop, hook) {
-		((this._stateHooks = this._stateHooks || {})[prop] = (this._stateHooks[prop] || [])).push(hook);
-	}
-
-	_registerMetaHook (prop, hook) {
-		((this._metaHooks = this._metaHooks || {})[prop] = (this._metaHooks[prop] || [])).push(hook);
-	}
-
 	_doCreateProxies () {
-		this._stateProxy = this.__doCreateProxies__getProxy(this._state, "_stateHooks");
-		this._stateHooks = null;
-
-		this._metaProxy = this.__doCreateProxies__getProxy(this._meta, "_metaHooks");
-		this._metaHooks = null;
-	}
-
-	__doCreateProxies__getProxy (toProxy, hookProp) {
-		return new Proxy(toProxy, {
-			set: (object, prop, value) => {
-				object[prop] = value;
-				if (this[hookProp] && this[hookProp][prop]) this[hookProp][prop].forEach(hook => hook(prop, value));
-				return true;
-			},
-			deleteProperty: (object, prop) => {
-				delete object[prop];
-				if (this[hookProp] && this[hookProp][prop]) this[hookProp][prop].forEach(hook => hook(prop, null));
-				return true;
-			}
-		});
+		this._resetHooks("state");
+		this._resetHooks("meta");
+		this._stateProxy = this._getProxy("state", this._state);
+		this._metaProxy = this._getProxy("meta", this._state);
 	}
 
 	renderInput () {
@@ -466,14 +454,17 @@ class CreatureBuilder extends Builder {
 			RenderBestiary.updateParsed(this._stateProxy);
 
 			// do post-processing
+			DiceConvert.cleanHpDice(this._stateProxy);
 			TagAttack.tryTagAttacks(this._stateProxy);
 			TagHit.tryTagHits(this._stateProxy);
+			TagDc.tryTagDcs(this._stateProxy);
+			TagCondition.tryTagConditions(this._stateProxy);
 			TraitActionTag.tryRun(this._stateProxy);
 			LanguageTag.tryRun(this._stateProxy);
 			SenseTag.tryRun(this._stateProxy);
 			SpellcastingTypeTag.tryRun(this._stateProxy);
 			DamageTypeTag.tryRun(this._stateProxy);
-			DiceConvert.cleanHpDice(this._stateProxy);
+			MiscTag.tryRun(this._stateProxy);
 
 			this.renderOutput();
 			this._saveTemp();
@@ -484,20 +475,21 @@ class CreatureBuilder extends Builder {
 		this._cbCache = cb; // cache for use when updating sources
 
 		// initialise tabs
-		this._tabMetaInput = [];
-		this._metaProxy.activeTabInput = this._metaProxy.activeTabInput || 0;
-		const tabs = ["Info", "Race", "Core", "Defence", "Abilities", "Flavor/Misc"].map((it, ix) => this._getTab(ix, it, {isActive: ix === this._metaProxy.activeTabInput, hasBorder: true}));
+		this._resetTabs("input");
+		const tabs = ["Info", "Race", "Core", "Defence", "Abilities", "Flavor/Misc"].map((it, ix) => this._getTab(ix, it, {hasBorder: true, tabGroup: "input", stateObj: this._metaProxy, cbTabChange: this._saveTemp.bind(this)}));
 		const [infoTab, raceTab, coreTab, defenseTab, abilTab, miscTab] = tabs;
-		$$`<div class="flex-v-center full-width no-shrink mkbru__wrp-tab-heads--border">${tabs.map(it => it.$btnTab)}</div>`.appendTo($wrp);
+		$$`<div class="flex-v-center w-100 no-shrink ui-tab__wrp-tab-heads--border">${tabs.map(it => it.$btnTab)}</div>`.appendTo($wrp);
 		tabs.forEach(it => it.$wrpTab.appendTo($wrp));
 
 		// INFO
 		BuilderUi.$getStateIptString("Name", cb, this._stateProxy, {nullable: false, callback: () => this.renderSideMenu()}, "name").appendTo(infoTab.$wrpTab);
+		BuilderUi.$getStateIptString("Short Name", cb, this._stateProxy, {title: "If not supplied, this will be generated from the creature's full name. Used in Legendary Action header text."}, "shortName").appendTo(infoTab.$wrpTab);
 		this._$selSource = this.__$getSourceInput(cb).appendTo(infoTab.$wrpTab);
 		BuilderUi.$getStateIptNumber("Page", cb, this._stateProxy, {}, "page").appendTo(infoTab.$wrpTab);
 		this.__$getAlignmentInput(cb).appendTo(infoTab.$wrpTab);
 		this.__$getCrInput(cb).appendTo(infoTab.$wrpTab);
 		this.__$getProfBonusInput(cb).appendTo(infoTab.$wrpTab);
+		BuilderUi.$getStateIptNumber("Level", cb, this._stateProxy, {title: "Used for Sidekicks only"}, "level").appendTo(infoTab.$wrpTab);
 
 		// RACE
 		BuilderUi.$getStateIptEnum("Size", cb, this._stateProxy, {vals: Parser.SIZE_ABVS, fnDisplay: Parser.sizeAbvToFull, type: "string", nullable: false}, "size").appendTo(raceTab.$wrpTab);
@@ -559,7 +551,7 @@ class CreatureBuilder extends Builder {
 		this.__$getVariantInput(cb).appendTo(abilTab.$wrpTab);
 
 		// FLAVOR/MISC
-		BuilderUi.$getStateIptString("Token Image URL", cb, this._stateProxy, {type: "url"}, "tokenUrl").appendTo(miscTab.$wrpTab);
+		this.__$getTokenInput(cb).appendTo(miscTab.$wrpTab);
 		this.__$getFluffInput(cb).appendTo(miscTab.$wrpTab);
 		this.__$getEnvironmentInput(cb).appendTo(miscTab.$wrpTab);
 		BuilderUi.$getStateIptString("Group", cb, this._stateProxy, {title: "The family this creature belongs to, e.g. 'Modrons' in the case of a Duodrone."}, "group").appendTo(miscTab.$wrpTab);
@@ -590,29 +582,6 @@ class CreatureBuilder extends Builder {
 
 		// excluded fields:
 		// - otherSources: requires meta support
-	}
-
-	_getTab (ix, name, options) {
-		options = options || {};
-		const tabMeta = options.isOutput ? this._tabMetaOutput : this._tabMetaInput;
-		const $btnTab = $(`<button class="btn btn-default stat-tab ${options.isActive ? "stat-tab-sel" : ""}">${name}</button>`)
-			.click(() => {
-				const activeProp = options.isOutput ? "activeTabOutput" : "activeTabInput";
-				const prevTab = tabMeta[this._metaProxy[activeProp]];
-				prevTab.$btnTab.removeClass("stat-tab-sel");
-				prevTab.$wrpTab.hide();
-
-				this._metaProxy[activeProp] = ix;
-				$btnTab.addClass("stat-tab-sel");
-				$wrpTab.show();
-				this._saveTemp();
-			});
-
-		const $wrpTab = $(`<div class="mkbru__wrp-tab-body ${options.hasBorder ? "mkbru__wrp-tab-body--border" : ""}" ${options.isActive ? `style="display: block;"` : ""}/>`);
-
-		const out = {ix, $btnTab, $wrpTab};
-		tabMeta[ix] = out;
-		return out;
 	}
 
 	__$getSourceInput (cb) {
@@ -693,11 +662,11 @@ class CreatureBuilder extends Builder {
 
 		const $btnAddTag = $(`<button class="btn btn-xs btn-default">Add Tag</button>`)
 			.click(() => {
-				const $tagRow = CreatureBuilder.__$getTypeInput__getTagRow(null, tagRows, setStateCreature);
+				const $tagRow = this.__$getTypeInput__getTagRow(null, tagRows, setStateCreature);
 				$wrpTagRows.append($tagRow.$wrp);
 			});
 
-		const $initialTagRows = initial.tags ? initial.tags.map(tag => CreatureBuilder.__$getTypeInput__getTagRow(tag, tagRows, setStateCreature)) : null;
+		const $initialTagRows = initial.tags ? initial.tags.map(tag => this.__$getTypeInput__getTagRow(tag, tagRows, setStateCreature)) : null;
 
 		const $wrpTagRows = $$`<div>${$initialTagRows ? $initialTagRows.map(it => it.$wrp) : ""}</div>`;
 		const $stageType = $$`<div class="mt-2">
@@ -719,7 +688,7 @@ class CreatureBuilder extends Builder {
 		return $row;
 	}
 
-	static __$getTypeInput__getTagRow (tag, tagRows, setStateCreature) {
+	__$getTypeInput__getTagRow (tag, tagRows, setStateCreature) {
 		const $iptPrefix = $(`<input class="form-control input-xs form-control--minimal mr-2" placeholder="Prefix">`)
 			.change(() => {
 				$iptTag.removeClass("error-background");
@@ -733,13 +702,25 @@ class CreatureBuilder extends Builder {
 				setStateCreature();
 			});
 		if (tag) $iptTag.val(tag.tag || tag);
+		const $btnAddGeneric = $(`<button class="btn btn-xs btn-default mr-2">Add Tag...</button>`)
+			.click(async () => {
+				const tag = await InputUiUtil.pGetUserString({
+					title: "Enter a Tag",
+					autocomplete: this._bestiaryTypeTags
+				});
+
+				if (tag != null) {
+					$iptTag.val(tag);
+					setStateCreature();
+				}
+			});
 		const $btnRemove = $(`<button class="btn btn-xs btn-danger" title="Remove Row"><span class="glyphicon glyphicon-trash"/></button>`)
 			.click(() => {
 				tagRows.splice(tagRows.indexOf(out), 1);
 				$wrp.empty().remove();
 				setStateCreature();
 			});
-		const $wrp = $$`<div class="flex mb-2">${$iptPrefix}${$iptTag}${$btnRemove}</div>`;
+		const $wrp = $$`<div class="flex mb-2">${$iptPrefix}${$iptTag}${$btnAddGeneric}${$btnRemove}</div>`;
 		const out = {$wrp, $iptPrefix, $iptTag};
 		tagRows.push(out);
 		return out;
@@ -750,9 +731,9 @@ class CreatureBuilder extends Builder {
 
 		const doUpdateState = () => {
 			const raw = alignmentRows.map(row => row.getAlignment());
-			if (raw.some(it => it.special != null || it.alignment) || raw.length > 1) {
+			if (raw.some(it => it && (it.special != null || it.alignment !== undefined)) || raw.length > 1) {
 				this._stateProxy.alignment = raw.map(it => {
-					if (it.special != null || it.alignment) return it;
+					if (it && (it.special != null || it.alignment)) return it;
 					else return {alignment: it};
 				})
 			} else this._stateProxy.alignment = raw[0];
@@ -763,7 +744,7 @@ class CreatureBuilder extends Builder {
 
 		const $wrpRows = $(`<div/>`).appendTo($rowInner);
 
-		if (this._stateProxy.alignment.some(it => it.special != null || it.alignment) || !~CreatureBuilder.__$getAlignmentInput__getAlignmentIx(this._stateProxy.alignment)) {
+		if ((this._stateProxy.alignment && this._stateProxy.alignment.some(it => it && (it.special != null || it.alignment !== undefined))) || !~CreatureBuilder.__$getAlignmentInput__getAlignmentIx(this._stateProxy.alignment)) {
 			this._stateProxy.alignment.forEach(alignment => CreatureBuilder.__$getAlignmentInput__getAlignmentRow(doUpdateState, alignmentRows, alignment).$wrp.appendTo($wrpRows));
 		} else {
 			CreatureBuilder.__$getAlignmentInput__getAlignmentRow(doUpdateState, alignmentRows, this._stateProxy.alignment).$wrp.appendTo($wrpRows)
@@ -781,7 +762,7 @@ class CreatureBuilder extends Builder {
 	}
 
 	static __$getAlignmentInput__getAlignmentRow (doUpdateState, alignmentRows, alignment) {
-		const initialMode = alignment && alignment.chance ? "1" : alignment && alignment.special ? "2" : "0";
+		const initialMode = alignment && alignment.chance ? "1" : alignment && alignment.special ? "2" : (alignment === null || (alignment && alignment.alignment === null)) ? "3" : "0";
 
 		const getAlignment = () => {
 			switch ($selMode.val()) {
@@ -798,6 +779,9 @@ class CreatureBuilder extends Builder {
 					const specials = $iptSpecial.val().trim().split(",").map(it => it.trim()).filter(Boolean);
 					return specials.length ? specials.map(it => ({special: it})) : {special: ""};
 				}
+				case "3": {
+					return null;
+				}
 			}
 		};
 
@@ -805,6 +789,7 @@ class CreatureBuilder extends Builder {
 				<option value="0">Basic Alignment</option>
 				<option value="1">Chance-Based Alignment</option>
 				<option value="2">Special Alignment</option>
+				<option value="3">No Alignment (Sidekick)</option>
 			</select>`).val(initialMode).change(() => {
 			switch ($selMode.val()) {
 				case "0": {
@@ -819,6 +804,11 @@ class CreatureBuilder extends Builder {
 				}
 				case "2": {
 					$stageSingle.hide(); $stageMultiple.hide(); $stageSpecial.show();
+					doUpdateState();
+					break;
+				}
+				case "3": {
+					$stageSingle.hide(); $stageMultiple.hide(); $stageSpecial.hide();
 					doUpdateState();
 					break;
 				}
@@ -851,7 +841,7 @@ class CreatureBuilder extends Builder {
 				doUpdateState();
 			});
 
-		const $wrp = $$`<div class="flex-col mkbru_mon__wrp-rows mkbru_mon__wrp-rows--removable">${$selMode}${$stageSingle}${$stageMultiple}${$stageSpecial}${$$`<div class="text-align-right">${$btnRemove}</div>`}</div>`;
+		const $wrp = $$`<div class="flex-col mkbru_mon__wrp-rows mkbru_mon__wrp-rows--removable">${$selMode}${$stageSingle}${$stageMultiple}${$stageSpecial}${$$`<div class="text-right">${$btnRemove}</div>`}</div>`;
 		const out = {$wrp, getAlignment};
 		alignmentRows.push(out);
 		return out;
@@ -983,7 +973,7 @@ class CreatureBuilder extends Builder {
 			${$$`<div>${$stageFrom}</div>`}
 			<div class="flex-v-center mb-2"><span class="mr-2 mkbru__sub-name--50">Condition</span>${$iptCond}</div>
 			<label class="flex-v-center mb-2"><span class="mr-2 mkbru__sub-name--50">Surround with brackets</span>${$cbBraces}</label>
-			${$$`<div class="text-align-right">${$btnRemove}</div>`}
+			${$$`<div class="text-right">${$btnRemove}</div>`}
 			</div>`;
 		const out = {$wrp, getAc};
 		acRows.push(out);
@@ -1015,14 +1005,14 @@ class CreatureBuilder extends Builder {
 						const [encName, encSource] = hash.split(HASH_LIST_SEP);
 						$iptFrom.val(`{@item ${decodeURIComponent(encName)}${encSource !== UrlUtil.encodeForHash(SRC_DMG) ? `|${decodeURIComponent(encSource)}` : ""}}`);
 						doUpdateState();
-						$modalInner.data("close")();
+						doClose();
 					},
 					{defaultCategory: "Item"}
 				);
-				const $modalInner = UiUtil.getShow$Modal(
-					"Select Item",
-					() => searchWidget.$wrpSearch.detach() // guarantee survival of rendered element
-				);
+				const {$modalInner, doClose} = UiUtil.getShowModal({
+					title: "Select Item",
+					cbClose: () => searchWidget.$wrpSearch.detach() // guarantee survival of rendered element
+				});
 				$modalInner.append(searchWidget.$wrpSearch);
 				searchWidget.doFocus();
 			});
@@ -1111,7 +1101,7 @@ class CreatureBuilder extends Builder {
 			}
 		};
 
-		this._registerHook("con", conHook);
+		this._addHook("state", "con", conHook);
 
 		const hpSimpleAverageHook = () => { // no proxy required, due to being inside a child object
 			if (this._metaProxy.autoCalc.hpAverageSimple) {
@@ -1132,7 +1122,7 @@ class CreatureBuilder extends Builder {
 				doUpdateState();
 			});
 
-		const $iptSimpleMod = $(`<input class="form-control form-control--minimal input-xs text-align-right mr-2" type="number">`)
+		const $iptSimpleMod = $(`<input class="form-control form-control--minimal input-xs text-right mr-2" type="number">`)
 			.change(() => {
 				if (this._metaProxy.autoCalc.hpModifier) {
 					this._metaProxy.autoCalc.hpModifier = false;
@@ -1200,7 +1190,7 @@ class CreatureBuilder extends Builder {
 			}
 		};
 
-		const $iptComplexFormula = $(`<input class="form-control form-control--minimal input-xs text-align-right">`)
+		const $iptComplexFormula = $(`<input class="form-control form-control--minimal input-xs text-right">`)
 			.change(() => {
 				hpComplexAverageHook();
 				doUpdateState();
@@ -1347,7 +1337,7 @@ class CreatureBuilder extends Builder {
 					if (this._metaProxy.profSave[prop]) {
 						delete this._metaProxy.profSave[prop];
 						$iptVal.val("");
-						cb();
+						this.__$getSaveSkillInput__handleValChange(cb, "save", $iptVal, prop);
 					} else {
 						this._metaProxy.profSave[prop] = 1;
 						hook();
@@ -1361,8 +1351,8 @@ class CreatureBuilder extends Builder {
 			const hook = () => {
 				if (this._metaProxy.profSave[prop] === 1) _setFromAbility();
 			};
-			this._registerHook(prop, hook);
-			this._registerMetaHook("profBonus", hook);
+			this._addHook("state", prop, hook);
+			this._addHook("meta", "profBonus", hook);
 
 			return $$`<div class="flex-v-center flex-col mr-1 mb-2">
 			<span class="mr-2 bold">${prop.toUpperCase()}</span>
@@ -1406,7 +1396,7 @@ class CreatureBuilder extends Builder {
 					if (this._metaProxy.profSkill[prop] === 2) {
 						delete this._metaProxy.profSkill[prop];
 						$iptVal.val("");
-						cb();
+						this.__$getSaveSkillInput__handleValChange(cb, "skill", $iptVal, prop);
 					} else {
 						this._metaProxy.profSkill[prop] = 2;
 						hook();
@@ -1417,7 +1407,7 @@ class CreatureBuilder extends Builder {
 					if (this._metaProxy.profSkill[prop] === 1) {
 						delete this._metaProxy.profSkill[prop];
 						$iptVal.val("");
-						cb();
+						this.__$getSaveSkillInput__handleValChange(cb, "skill", $iptVal, prop);
 					} else {
 						this._metaProxy.profSkill[prop] = 1;
 						hook();
@@ -1441,8 +1431,8 @@ class CreatureBuilder extends Builder {
 				if (this._metaProxy.profSkill[prop] === 1) _setFromAbility();
 				else if (this._metaProxy.profSkill[prop] === 2) _setFromAbility(true);
 			};
-			this._registerHook(abilProp, hook);
-			this._registerMetaHook("profBonus", hook);
+			this._addHook("state", abilProp, hook);
+			this._addHook("meta", "profBonus", hook);
 
 			return $$`<div class="flex-v-center mb-2">
 			<span class="mr-2 mkbru__sub-name--33">${name}</span>
@@ -1457,14 +1447,19 @@ class CreatureBuilder extends Builder {
 	}
 
 	__$getSaveSkillInput__handleValChange (cb, mode, $iptVal, prop) {
+		// ensure to overwrite the entire object, so that any hooks trigger
 		const raw = $iptVal.val();
 		if (raw && raw.trim()) {
 			const num = Number(raw);
-			(this._stateProxy[mode] = this._stateProxy[mode] || {})[prop] = num < 0 ? `${num}` : `+${num}`;
+			const nextState = {...this._stateProxy[mode]} || {};
+			nextState[prop] = num < 0 ? `${num}` : `+${num}`;
+			this._stateProxy[mode] = nextState;
 		} else {
 			if (this._stateProxy[mode]) {
-				delete this._stateProxy[mode][prop];
-				if (Object.keys(this._stateProxy[mode]).length === 0) delete this._stateProxy[mode];
+				const nextState = {...this._stateProxy[mode]};
+				delete nextState[prop];
+				if (Object.keys(nextState).length === 0) delete this._stateProxy[mode];
+				else this._stateProxy[mode] = nextState;
 			}
 		}
 		cb();
@@ -1485,8 +1480,8 @@ class CreatureBuilder extends Builder {
 				cb();
 			}
 		};
-		this._registerHook("wis", hook);
-		this._registerHook("skill", hook);
+		this._addHook("state", "wis", hook);
+		this._addHook("state", "skill", hook);
 
 		const $iptPerception = $(`<input class="form-control form-control--minimal input-xs mr-2" type="number">`)
 			.change(() => {
@@ -1541,9 +1536,11 @@ class CreatureBuilder extends Builder {
 
 		const doUpdateState = () => {
 			const out = groups.map(it => it.getState());
-			// flatten a single group if there's no meta-information
-			if (out.length === 1 && !out[0].note && !out[0].preNote) this._stateProxy[prop] = [...out[0][prop]];
-			else this._stateProxy[prop] = out;
+			if (out.length) {
+				// flatten a single group if there's no meta-information
+				if (out.length === 1 && !out[0].note && !out[0].preNote) this._stateProxy[prop] = [...out[0][prop]];
+				else this._stateProxy[prop] = out;
+			} else delete this._stateProxy[prop];
 			cb();
 		};
 
@@ -1570,7 +1567,7 @@ class CreatureBuilder extends Builder {
 		const children = [];
 		const getState = () => {
 			const out = {
-				[prop]: children.map(it => it.getState())
+				[prop]: children.map(it => it.getState()).filter(Boolean)
 			};
 			if ($iptNotePre.val().trim()) out.preNote = $iptNotePre.val().trim();
 			if ($iptNotePost.val().trim()) out.note = $iptNotePost.val().trim();
@@ -1638,7 +1635,7 @@ class CreatureBuilder extends Builder {
 		const $ele = (() => {
 			const $base = $$`<div class="flex-col ${depth ? "" : "mkbru_mon__wrp-rows"}">${$wrpControls}${$wrpChildren}</div>`;
 			if (!depth) return $base;
-			else return $$`<div class="flex-v-center full-width"><div class="mkbru_mon__row-indent"/>${$base}</div>`
+			else return $$`<div class="flex-v-center w-100"><div class="mkbru_mon__row-indent"/>${$base}</div>`
 		})();
 
 		if (initial) {
@@ -1672,7 +1669,11 @@ class CreatureBuilder extends Builder {
 
 					return {
 						$ele: $$`<div class="mb-2 split flex-v-center mkbru__wrp-btn-xxs">${$iptSpecial}${$btnRemove}</div>`,
-						getState: () => ({special: $iptSpecial.val()})
+						getState: () => {
+							const raw = $iptSpecial.val().trim();
+							if (raw) return {special: raw};
+							return null;
+						}
 					}
 				}
 				default: {
@@ -1694,13 +1695,13 @@ class CreatureBuilder extends Builder {
 		const doUpdateState = () => {
 			const raw = $iptSenses.val().trim();
 			if (!raw) delete this._stateProxy.senses;
-			else this._stateProxy.senses = raw;
+			else this._stateProxy.senses = raw.split(StrUtil.COMMA_SPACE_NOT_IN_PARENTHESES_REGEX);
 			cb();
 		};
 
 		const $iptSenses = $(`<input class="form-control input-xs form-control--minimal mr-2">`)
 			.change(() => doUpdateState());
-		if (this._stateProxy.senses && this._stateProxy.senses.trim()) $iptSenses.val(this._stateProxy.senses);
+		if (this._stateProxy.senses && this._stateProxy.senses.length) $iptSenses.val(this._stateProxy.senses.join(", "));
 
 		const contextId = ContextUtil.getNextGenericMenuId();
 		const _CONTEXT_ENTRIES = ["Blindsight", "Darkvision", "Tremorsense", "Truesight"];
@@ -1734,13 +1735,13 @@ class CreatureBuilder extends Builder {
 		const doUpdateState = () => {
 			const raw = $iptLanguages.val().trim();
 			if (!raw) delete this._stateProxy.languages;
-			else this._stateProxy.languages = raw;
+			else this._stateProxy.languages = raw.split(StrUtil.COMMA_SPACE_NOT_IN_PARENTHESES_REGEX);
 			cb();
 		};
 
 		const $iptLanguages = $(`<input class="form-control input-xs form-control--minimal mr-2">`)
 			.change(() => doUpdateState());
-		if (this._stateProxy.languages && this._stateProxy.languages.trim()) $iptLanguages.val(this._stateProxy.languages);
+		if (this._stateProxy.languages && this._stateProxy.languages.length) $iptLanguages.val(this._stateProxy.languages.join(", "));
 
 		const availLanguages = Object.entries(this._bestiaryMetaRaw.language).filter(([k, v]) => !CreatureBuilder._LANGUAGE_BLACKLIST.has(k))
 			.map(([k, v]) => v === "Telepathy" ? "telepathy" : v); // lowercase telepathy
@@ -1771,21 +1772,22 @@ class CreatureBuilder extends Builder {
 	__$getCrInput (cb) {
 		const [$row, $rowInner] = BuilderUi.getLabelledRowTuple("Challenge Rating", {isMarked: true});
 
-		const initialMode = this._stateProxy.cr.lair ? "1" : this._stateProxy.cr.coven ? "2" : "0";
+		const initialMode = this._stateProxy.cr != null ? this._stateProxy.cr.lair ? "1" : this._stateProxy.cr.coven ? "2" : "0" : "3";
 
 		const $selMode = $(`<select class="form-control input-xs mb-2">
 			<option value="0">Basic Challenge Rating</option>
 			<option value="1">Has Lair Challenge Rating</option>
 			<option value="2">Has Coven Challenge Rating</option>
+			<option value="3">No Challenge Rating</option>
 		</select>`).val(initialMode).change(() => {
 			switch ($selMode.val()) {
 				case "0": {
-					$stageLair.hide(); $stageCoven.hide();
+					$stageBasic.show(); $stageLair.hide(); $stageCoven.hide();
 					this._stateProxy.cr = $selCr.val();
 					break;
 				}
 				case "1": {
-					$stageLair.show(); $stageCoven.hide();
+					$stageBasic.show(); $stageLair.show(); $stageCoven.hide();
 					this._stateProxy.cr = {
 						cr: $selCr.val(),
 						lair: $selCrLair.val()
@@ -1793,11 +1795,16 @@ class CreatureBuilder extends Builder {
 					break;
 				}
 				case "2": {
-					$stageLair.hide(); $stageCoven.show();
+					$stageBasic.show(); $stageLair.hide(); $stageCoven.show();
 					this._stateProxy.cr = {
 						cr: $selCr.val(),
 						coven: $selCrCoven.val()
 					};
+					break;
+				}
+				case "3": {
+					$stageBasic.hide(); $stageLair.hide(); $stageCoven.hide();
+					delete this._stateProxy.cr;
 					break;
 				}
 			}
@@ -1806,12 +1813,13 @@ class CreatureBuilder extends Builder {
 
 		// BASIC CONTROLS
 		const $selCr = $(`<select class="form-control input-xs mb-2">${Parser.CRS.map(it => `<option>${it}</option>`).join("")}</select>`)
-			.val(this._stateProxy.cr.cr || this._stateProxy.cr).change(() => {
+			.val(this._stateProxy.cr ? (this._stateProxy.cr.cr || this._stateProxy.cr) : null).change(() => {
 				if ($selMode.val() === "0") this._stateProxy.cr = $selCr.val();
 				else this._stateProxy.cr.cr = $selCr.val();
 				cb();
 			});
-		$$`<div>${$selCr}</div>`.appendTo($rowInner);
+		const $stageBasic = $$`<div>${$selCr}</div>`
+			.appendTo($rowInner).toggle(initialMode !== "3");
 
 		// LAIR CONTROLS
 		const $selCrLair = $(`<select class="form-control input-xs">${Parser.CRS.map(it => `<option>${it}</option>`).join("")}</select>`)
@@ -1843,13 +1851,18 @@ class CreatureBuilder extends Builder {
 		const hook = () => {
 			// update proficiency bonus input as required
 			if (this._metaProxy.autoCalc.proficiency) {
-				const pb = Parser.crToPb(this._stateProxy.cr.cr || this._stateProxy.cr);
-				$iptProfBonus.val(pb);
-				this._metaProxy.profBonus = pb;
+				if (this._stateProxy.cr == null) {
+					$iptProfBonus.val(0);
+					this._metaProxy.profBonus = 0;
+				} else {
+					const pb = Parser.crToPb(this._stateProxy.cr.cr || this._stateProxy.cr);
+					$iptProfBonus.val(pb);
+					this._metaProxy.profBonus = pb;
+				}
 				cb();
 			}
 		};
-		this._registerHook("cr", hook);
+		this._addHook("state", "cr", hook);
 
 		const $iptProfBonus = $(`<input class="form-control form-control--minimal input-xs mr-2" type="number" min="0">`)
 			.val(this._getProfBonus())
@@ -1878,7 +1891,7 @@ class CreatureBuilder extends Builder {
 
 	_getProfBonus () {
 		if (this._metaProxy.profBonus != null) return this._metaProxy.profBonus || 0;
-		else return Parser.crToPb(this._stateProxy.cr.cr || this._stateProxy.cr);
+		else return this._stateProxy.cr == null ? 0 : Parser.crToPb(this._stateProxy.cr.cr || this._stateProxy.cr);
 	}
 
 	__$getSpellcastingInput (cb) {
@@ -1922,9 +1935,9 @@ class CreatureBuilder extends Builder {
 				name: $iptName.val().trim()
 			};
 
-			if ($btnToggleHeader.hasClass("active")) out.headerEntries = BuilderUi.getTextAsEntries($iptHeader.val());
+			if ($btnToggleHeader.hasClass("active")) out.headerEntries = UiUtil.getTextAsEntries($iptHeader.val());
 			if (out.headerEntries && !out.headerEntries.length) delete out.headerEntries;
-			if ($btnToggleFooter.hasClass("active")) out.footerEntries = BuilderUi.getTextAsEntries($iptFooter.val());
+			if ($btnToggleFooter.hasClass("active")) out.footerEntries = UiUtil.getTextAsEntries($iptFooter.val());
 			if (out.footerEntries && !out.footerEntries.length) delete out.footerEntries;
 
 			const deepMerge = (target, k, v) => {
@@ -2059,15 +2072,15 @@ class CreatureBuilder extends Builder {
 		const $btnAddSpell = $(`<button class="btn btn-xs btn-default">Add...</button>`)
 			.click((evt) => ContextUtil.handleOpenContextMenu(evt, $btnAddSpell, contextId));
 
-		const $iptHeader = $(`<textarea class="form-control form-control--minimal mkbru__ipt-textarea mb-2" placeholder="Header text"/>`)
+		const $iptHeader = $(`<textarea class="form-control form-control--minimal resize-vertical mb-2" placeholder="Header text"/>`)
 			.toggle(!!(trait && trait.headerEntries))
 			.change(() => doUpdateState());
-		if (trait && trait.headerEntries) $iptHeader.val(BuilderUi.getEntriesAsText(trait.headerEntries));
+		if (trait && trait.headerEntries) $iptHeader.val(UiUtil.getEntriesAsText(trait.headerEntries));
 
-		const $iptFooter = $(`<textarea class="form-control form-control--minimal mkbru__ipt-textarea mb-2" placeholder="Footer text"/>`)
+		const $iptFooter = $(`<textarea class="form-control form-control--minimal resize-vertical mb-2" placeholder="Footer text"/>`)
 			.toggle(!!(trait && trait.footerEntries))
 			.change(() => doUpdateState());
-		if (trait && trait.footerEntries) $iptFooter.val(BuilderUi.getEntriesAsText(trait.footerEntries));
+		if (trait && trait.footerEntries) $iptFooter.val(UiUtil.getEntriesAsText(trait.footerEntries));
 
 		const $wrpControls = $$`<div class="flex-v-center mb-2">${$iptName}${$btnToggleHeader}${$btnToggleFooter}${$btnAddSpell}</div>`;
 		const $wrpSubRows = $$`<div class="flex-col"></div>`;
@@ -2089,7 +2102,7 @@ class CreatureBuilder extends Builder {
 		const $ele = $$`<div class="flex-col mkbru_mon__wrp-rows">
 		${$wrpControls}
 		${$wrpSubRowsOuter}
-		<div class="text-align-right mb-2">${$btnRemove}</div>
+		<div class="text-right mb-2">${$btnRemove}</div>
 		</div>`;
 
 		if (trait) {
@@ -2325,7 +2338,7 @@ class CreatureBuilder extends Builder {
 								{Trait: this._indexedTraits},
 								async (ix) => {
 									traitIndex = ix;
-									$modalInner.data("close")(true);
+									doClose(true);
 								},
 								{
 									defaultCategory: "Trait",
@@ -2338,16 +2351,16 @@ class CreatureBuilder extends Builder {
 									fnTransform: (doc) => doc.id
 								}
 							);
-							const $modalInner = UiUtil.getShow$Modal(
-								"Select a Trait",
-								(isDataEntered) => {
+							const {$modalInner, doClose} = UiUtil.getShowModal({
+								title: "Select a Trait",
+								cbClose: (isDataEntered) => {
 									searchWidget.$wrpSearch.detach();
 									if (!isDataEntered) return resolve(null);
 									const trait = MiscUtil.copy(this._jsonCreature.trait[traitIndex]);
 									trait.entries = JSON.parse(JSON.stringify(trait.entries).replace(/<\$name\$>/gi, this._stateProxy.name));
 									resolve(trait);
 								}
-							);
+							});
 							$modalInner.append(searchWidget.$wrpSearch);
 							searchWidget.doFocus();
 						})
@@ -2368,7 +2381,7 @@ class CreatureBuilder extends Builder {
 						name: "Generate Attack",
 						action: () => {
 							return new Promise(resolve => {
-								const $modalInner = UiUtil.getShow$Modal({
+								const {$modalInner, doClose} = UiUtil.getShowModal({
 									title: "Generate Attack",
 									cbClose: (isDataEntered) => {
 										this._generateAttackCache = getState();
@@ -2397,7 +2410,7 @@ class CreatureBuilder extends Builder {
 								const $iptMeleeDamDiceNum = $(`<input class="form-control form-control--minimal input-xs mr-2" type="number" placeholder="Dice Type" value="6">`);
 								const $iptMeleeDamType = $(`<input class="form-control form-control--minimal input-xs" placeholder="Melee Damage Type" autocomplete="off">`)
 									.typeahead({source: Parser.DMG_TYPES});
-								const $stageMelee = $$`<div class="flex-col"><hr class="hr--sm">
+								const $stageMelee = $$`<div class="flex-col"><hr class="hr-3">
 								<div class="flex-v-center mb-2"><span class="mr-2 no-shrink">Melee Range (ft.)</span>${$iptMeleeRange}</div>
 								<div class="flex-v-center mb-2">${$iptMeleeDamDiceCount}<span class="mr-2">d</span>${$iptMeleeDamDiceNum}${$iptMeleeDamType}</div>
 								</div>`;
@@ -2408,7 +2421,7 @@ class CreatureBuilder extends Builder {
 								const $iptRangedDamDiceNum = $(`<input class="form-control form-control--minimal input-xs mr-2" type="number" placeholder="Dice Type" value="6">`);
 								const $iptRangedDamType = $(`<input class="form-control form-control--minimal input-xs" placeholder="Ranged Damage Type">`)
 									.typeahead({source: Parser.DMG_TYPES});
-								const $stageRanged = $$`<div class="flex-col"><hr class="hr--sm">
+								const $stageRanged = $$`<div class="flex-col"><hr class="hr-3">
 								<div class="flex-v-center mb-2">
 									<span class="mr-2 no-shrink">Short Range (ft.)</span>${$iptRangedShort}
 									<span class="mr-2 no-shrink">Long Range (ft.)</span>${$iptRangedLong}
@@ -2420,7 +2433,7 @@ class CreatureBuilder extends Builder {
 								const $iptVersatileDamDiceNum = $(`<input class="form-control form-control--minimal input-xs mr-2" type="number" placeholder="Dice Type" value="8">`);
 								const $iptVersatileDamType = $(`<input class="form-control form-control--minimal input-xs" placeholder="Two-Handed Damage Type">`)
 									.typeahead({source: Parser.DMG_TYPES});
-								const $stageVersatile = $$`<div class="flex-col"><hr class="hr--sm">
+								const $stageVersatile = $$`<div class="flex-col"><hr class="hr-3">
 								<div class="flex-v-center mb-2">${$iptVersatileDamDiceCount}<span class="mr-2">d</span>${$iptVersatileDamDiceNum}${$iptVersatileDamType}</div>
 								</div>`.hide();
 
@@ -2428,7 +2441,7 @@ class CreatureBuilder extends Builder {
 								const $iptBonusDamDiceNum = $(`<input class="form-control form-control--minimal input-xs mr-2" type="number" placeholder="Dice Type" value="6">`);
 								const $iptBonusDamType = $(`<input class="form-control form-control--minimal input-xs" placeholder="Bonus Damage Type">`)
 									.typeahead({source: Parser.DMG_TYPES});
-								const $stageBonusDamage = $$`<div class="flex-col"><hr class="hr--sm">
+								const $stageBonusDamage = $$`<div class="flex-col"><hr class="hr-3">
 								<div class="flex-v-center mb-2">${$iptBonusDamDiceCount}<span class="mr-2">d</span>${$iptBonusDamDiceNum}${$iptBonusDamType}</div>
 								</div>`.hide();
 
@@ -2436,7 +2449,7 @@ class CreatureBuilder extends Builder {
 									.click(() => {
 										if (!$cbMelee.prop("checked") && !$cbRanged.prop("checked")) {
 											return JqueryUtil.doToast({type: "warning", content: "At least one of 'Melee' or 'Ranged' must be selected!"});
-										} else $modalInner.data("close")(true);
+										} else doClose(true);
 									});
 
 								const $btnReset = $(`<button class="btn btn-sm btn-danger">Reset</button>`)
@@ -2489,7 +2502,7 @@ class CreatureBuilder extends Builder {
 									const getDamageDicePt = ($iptNum, $iptFaces) => {
 										const num = Number($iptNum.val()) || 1;
 										const faces = Number($iptFaces.val()) || 6;
-										return `${Math.floor(num * ((faces + 1) / 2))} (${num}d${faces})`;
+										return `${Math.floor(num * ((faces + 1) / 2))} ({@damage ${num}d${faces}})`;
 									};
 									const getDamageTypePt = ($ipDamType) => $ipDamType.val().trim() ? ` ${$ipDamType.val().trim()}` : "";
 									const ptDamage = [
@@ -2646,7 +2659,7 @@ class CreatureBuilder extends Builder {
 		const getState = () => {
 			const out = {
 				name: $iptName.val().trim(),
-				entries: BuilderUi.getTextAsEntries($iptEntries.val())
+				entries: UiUtil.getTextAsEntries($iptEntries.val())
 			};
 
 			// additional state for variant inputs
@@ -2683,10 +2696,10 @@ class CreatureBuilder extends Builder {
 			$wrpRowsOuter: options.$wrpRowsOuter
 		}) : null;
 
-		const $iptEntries = $(`<textarea class="form-control form-control--minimal mkbru__ipt-textarea mb-2"/>`)
+		const $iptEntries = $(`<textarea class="form-control form-control--minimal resize-vertical mb-2"/>`)
 			.change(() => doUpdateState());
 
-		if (entry && entry.entries) $iptEntries.val(BuilderUi.getEntriesAsText(entry.entries));
+		if (entry && entry.entries) $iptEntries.val(UiUtil.getEntriesAsText(entry.entries));
 
 		const $btnRemove = $(`<button class="btn btn-xs btn-danger mb-2" title="Remove ${options.shortName}"><span class="glyphicon glyphicon-trash"/></button>`)
 			.click(() => {
@@ -2739,7 +2752,7 @@ class CreatureBuilder extends Builder {
 		</div>
 		${sourceControls ? sourceControls.$ele : null}
 		<div class="flex-v-center">${$iptEntries}</div>
-		<div class="text-align-right">${$btnRemove}</div>
+		<div class="text-right">${$btnRemove}</div>
 		</div>`;
 
 		out.$ele = $ele;
@@ -2779,6 +2792,46 @@ class CreatureBuilder extends Builder {
 		return this.__$getGenericEntryInput(cb, {name: "Variants", shortName: "Variant", prop: "variant"});
 	}
 
+	__$getTokenInput (cb) {
+		const [$row, $rowInner] = BuilderUi.getLabelledRowTuple("Token Image URL");
+
+		const $iptUrl = $(`<input class="form-control form-control--minimal input-xs mr-2">`)
+			.change(() => doUpdateState())
+			.val(this._stateProxy.tokenUrl || "");
+
+		const $btnPreview = $(`<button class="btn btn-xs btn-default mr-2" title="Preview Token"><span class="glyphicon glyphicon-fullscreen"/></button>`)
+			.click((evt) => {
+				const val = $iptUrl.val().trim();
+				if (!val) return JqueryUtil.doToast({content: "Please enter an image URL", type: "warning"});
+				Renderer.hover.doOpenWindow(
+					evt,
+					$btnPreview[0],
+					{
+						type: "image",
+						href: {
+							type: "external",
+							url: val
+						},
+						data: {
+							hoverTitle: `Token Preview`
+						}
+					}
+				);
+			});
+
+		const doUpdateState = () => {
+			const val = $iptUrl.val().trim();
+			if (val) this._stateProxy.tokenUrl = val;
+			else delete this._stateProxy.tokenUrl;
+
+			cb();
+		};
+
+		$$`<div class="flex">${$iptUrl}${$btnPreview}</div>`.appendTo($rowInner);
+
+		return $row;
+	}
+
 	__$getFluffInput (cb) {
 		const [$row, $rowInner] = BuilderUi.getLabelledRowTuple("Flavour Info");
 
@@ -2787,7 +2840,7 @@ class CreatureBuilder extends Builder {
 		const doUpdateState = () => {
 			const out = {};
 
-			const entries = BuilderUi.getTextAsEntries($iptEntries.val());
+			const entries = UiUtil.getTextAsEntries($iptEntries.val());
 			if (entries && entries.length) out.entries = entries;
 
 			const images = imageRows.map(it => it.getState()).filter(Boolean);
@@ -2810,7 +2863,7 @@ class CreatureBuilder extends Builder {
 
 		const rowOptions = {$wrpRowsOuter};
 
-		const $iptEntries = $(`<textarea class="form-control form-control--minimal mkbru__ipt-textarea mb-2"/>`)
+		const $iptEntries = $(`<textarea class="form-control form-control--minimal resize-vertical mb-2"/>`)
 			.change(() => doUpdateState());
 
 		const $btnAddImage = $(`<button class="btn btn-xs btn-default">Add Image</button>`)
@@ -2828,7 +2881,7 @@ class CreatureBuilder extends Builder {
 		</div>`.appendTo($rowInner);
 
 		if (this._stateProxy.fluff) {
-			if (this._stateProxy.fluff.entries) $iptEntries.val(BuilderUi.getEntriesAsText(this._stateProxy.fluff.entries));
+			if (this._stateProxy.fluff.entries) $iptEntries.val(UiUtil.getEntriesAsText(this._stateProxy.fluff.entries));
 			if (this._stateProxy.fluff.images) this._stateProxy.fluff.images.forEach(img => CreatureBuilder.__$getFluffInput__getImageRow(doUpdateState, doUpdateOrder, rowOptions, imageRows, img).$ele.appendTo($wrpRows));
 		}
 
@@ -2891,14 +2944,14 @@ class CreatureBuilder extends Builder {
 			cb();
 		};
 
-		const $wrpIpts = $(`<div class="flex-col full-width mr-2"/>`);
+		const $wrpIpts = $(`<div class="flex-col w-100 mr-2"/>`);
 		const inputs = [];
 		Parser.ENVIRONMENTS.forEach(val => {
 			const $cb = $(`<input class="mkbru__ipt-cb mkbru_mon__cb-environment" type="checkbox">`)
 				.prop("checked", this._stateProxy.environment && this._stateProxy.environment.includes(val))
 				.change(() => doUpdateState());
 			inputs.push({$ipt: $cb, getVal: () => val});
-			$$`<label class="flex-v-center split mkbru__multi-cb-row"><span>${StrUtil.toTitleCase(val)}</span>${$cb}</label>`.appendTo($wrpIpts);
+			$$`<label class="flex-v-center split stripe-odd--faint"><span>${StrUtil.toTitleCase(val)}</span>${$cb}</label>`.appendTo($wrpIpts);
 		});
 
 		const additionalEnvs = (this._stateProxy.environment || []).filter(it => !Parser.ENVIRONMENTS.includes(it)).filter(it => it && it.trim());
@@ -2943,7 +2996,7 @@ class CreatureBuilder extends Builder {
 				const raw = $iptEnv.val().toLowerCase().trim();
 				return raw || false;
 			},
-			$ele: $$`<label class="flex-v-center split mkbru__multi-cb-row mt-2"><span>${$iptEnv}</span>${$cb}${$btnRemove}</label>`
+			$ele: $$`<label class="flex-v-center split stripe-odd--faint mt-2"><span>${$iptEnv}</span>${$cb}${$btnRemove}</label>`
 		};
 
 		envRows.push(out);
@@ -2959,11 +3012,10 @@ class CreatureBuilder extends Builder {
 		const $wrp = this._ui.$wrpOutput.empty();
 
 		// initialise tabs
-		this._tabMetaOutput = [];
-		this._metaProxy.activeTabOutput = this._metaProxy.activeTabOutput || 0;
-		const tabs = ["Statblock", "Info", "Images"].map((it, ix) => this._getTab(ix, it, {isActive: ix === this._metaProxy.activeTabOutput, isOutput: true}));
+		this._resetTabs("output");
+		const tabs = ["Statblock", "Info", "Images"].map((it, ix) => this._getTab(ix, it, {tabGroup: "output", stateObj: this._metaProxy, cbTabChange: this._saveTemp.bind(this)}));
 		const [statTab, infoTab, imageTab] = tabs;
-		$$`<div class="flex-v-center full-width no-shrink">${tabs.map(it => it.$btnTab)}</div>`.appendTo($wrp);
+		$$`<div class="flex-v-center w-100 no-shrink">${tabs.map(it => it.$btnTab)}</div>`.appendTo($wrp);
 		tabs.forEach(it => it.$wrpTab.appendTo($wrp));
 
 		// statblock

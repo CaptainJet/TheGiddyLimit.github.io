@@ -1,7 +1,9 @@
 "use strict";
 
-class EncounterBuilder {
+class EncounterBuilder extends ProxyBase {
 	constructor () {
+		super();
+
 		this.stateInit = false;
 		this._cache = null;
 		this._lastPlayerCount = null;
@@ -9,17 +11,24 @@ class EncounterBuilder {
 
 		this._cachedTitle = null;
 
-		this._savedEncounters = null;
-		this._savedName = null;
-		this._lastClickedSave = null;
-		this._selectedSavedEncounter = null;
+		// Encounter save/load
+		this.__state = {
+			savedEncounters: {},
+			activeKey: null
+		};
+		this._state = this._getProxy("state", this.__state);
+		this._$iptName = null;
+		this._$btnSave = null;
+		this._$btnReload = null;
+		this._$btnLoad = null;
+		this.pSetSavedEncountersThrottled = MiscUtil.throttle(this._pSetSavedEncounters.bind(this), 50);
 
 		this.doSaveStateDebounced = MiscUtil.debounce(this.doSaveState, 50);
 	}
 
 	initUi () {
-		$(`#btn-encounterbuild`).click(() => History.setSubhash(EncounterBuilder.HASH_KEY, true));
-		$(`#btn-encounterstatblock`).click(() => History.setSubhash(EncounterBuilder.HASH_KEY, null));
+		$(`#btn-encounterbuild`).click(() => Hist.setSubhash(EncounterBuilder.HASH_KEY, true));
+		$(`#btn-encounterstatblock`).click(() => Hist.setSubhash(EncounterBuilder.HASH_KEY, null));
 
 		this._initRandomHandlers();
 		this._initAdjustHandlers();
@@ -55,7 +64,7 @@ class EncounterBuilder {
 		});
 
 		const $btnSvUrl = $(`.ecgen__sv_url`).click(async () => {
-			const encounterPart = UrlUtil.packSubHash(EncounterUtil.SUB_HASH_PREFIX, [JSON.stringify(this.getSaveableState())], true);
+			const encounterPart = UrlUtil.packSubHash(EncounterUtil.SUB_HASH_PREFIX, [JSON.stringify(this.getSaveableState())], {isEncodeBoth: true});
 			const parts = [location.href, encounterPart];
 			await MiscUtil.pCopyTextToClipboard(parts.join(HASH_PART_SEP));
 			JqueryUtil.showCopiedEffect($btnSvUrl);
@@ -73,11 +82,19 @@ class EncounterBuilder {
 		});
 		$(`.ecgen__reset`).click(() => confirm("Are you sure?") && encounterBuilder.pReset());
 
-		// local save browser
-		$('.ecgen__ld-browser').click(() => encounterBuilder.doToggleBrowserUi(true));
-		$('.ecgen__sv-cancel').click(() => encounterBuilder.doToggleBrowserUi(false));
-		$(".ecgen__sv-new-save-name").keydown(evt => { if (evt.which === 13) this.handleSaveClick(true); });
-		window.addEventListener("popstate", () => this.doToggleBrowserUi(false)); // exits load/save menu upon browser history change
+		const $btnSvTxt = $(`.ecgen__sv_text`).click(() => {
+			let xpTotal = 0;
+			const toCopyCreatures = ListUtil.sublist.items
+				.map(it => it.values())
+				.sort((a, b) => SortUtil.ascSortLower(a.name, b.name))
+				.map(it => {
+					xpTotal += Parser.crToXpNumber(it.cr) * it.count;
+					return `${it.count}× ${it.name}`;
+				})
+				.join(", ");
+			MiscUtil.pCopyTextToClipboard(`${toCopyCreatures} (${xpTotal.toLocaleString()} XP)`);
+			JqueryUtil.showCopiedEffect($btnSvTxt);
+		});
 	}
 
 	_initRandomHandlers () {
@@ -156,11 +173,10 @@ class EncounterBuilder {
 	}
 
 	async initState () {
-		EncounterUtil.pGetSavedState().then(async savedState => {
-			if (savedState) await this.pDoLoadState(savedState.data, savedState.type === "local");
-			else this.addInitialPlayerRows();
-			this.stateInit = true;
-		});
+		const initialState = await EncounterUtil.pGetInitialState();
+		if (initialState && initialState.data) await this.pDoLoadState(initialState.data, initialState.type === "local");
+		else this.addInitialPlayerRows();
+		this.stateInit = true;
 		await this._initSavedEncounters();
 	}
 
@@ -174,10 +190,14 @@ class EncounterBuilder {
 
 		this.removeAllPlayerRows();
 		if (doAddRows) this.addInitialPlayerRows();
+
+		this._state.activeKey = null;
+		this.pSetSavedEncountersThrottled();
 	}
 
 	async pDoLoadState (savedState, playersOnly) {
 		await this.pReset(false, playersOnly);
+		if (!savedState) return;
 		try {
 			if (savedState.a) {
 				this._advanced = true;
@@ -202,10 +222,6 @@ class EncounterBuilder {
 				ListUtil.doJsonLoad(savedState.l, false, sublistFuncPreload);
 			}
 
-			if (savedState.name) {
-				this._savedName = savedState.name;
-			}
-
 			this.updateDifficulty();
 		} catch (e) {
 			JqueryUtil.doToast({content: `Could not load encounter! Was the file valid?`, type: "danger"});
@@ -219,7 +235,6 @@ class EncounterBuilder {
 			l: ListUtil.getExportableSublist(),
 			a: this._advanced
 		};
-		if (this._savedName !== null) out.name = this._savedName;
 		if (this._advanced) {
 			out.c = $(`.ecgen__players_head_advanced`).find(`.ecgen__player_advanced_extra_head`).map((i, e) => $(e).val()).get();
 			out.d = $(`.ecgen__player_advanced`).map((i, e) => {
@@ -247,7 +262,7 @@ class EncounterBuilder {
 			this._cache = (() => {
 				const out = {};
 				list.visibleItems.map(it => monsters[Number(it.elm.getAttribute("filterid"))]).filter(m => !m.isNpc).forEach(m => {
-					const mXp = Parser.crToXpNumber(m.cr.cr || m.cr);
+					const mXp = Parser.crToXpNumber(m.cr);
 					if (mXp) (out[mXp] = out[mXp] || []).push(m);
 				});
 				return out;
@@ -352,10 +367,10 @@ class EncounterBuilder {
 						else if (xp < targetMin) return targetMin - xp;
 						else return 0;
 					})()
-				})).sort((a, b) => SortUtil.ascSort(a.distance, b.distance))[0];
+				})).sort((a, b) => SortUtil.ascSort(a.distance, b.distance))[0].encounter;
 			}
 
-			const belowCrCutoff = currentEncounter.filter(it => it.cr < crCutoff);
+			const belowCrCutoff = currentEncounter.filter(it => it.cr && it.cr < crCutoff);
 
 			if (belowCrCutoff.length) {
 				// do a post-step to randomly add "irrelevant" creatures, ensuring plenty of fireball fodder
@@ -418,134 +433,22 @@ class EncounterBuilder {
 
 		this.generateCache();
 
-		const generateClosestEncounter = () => {
-			const _xps = Object.keys(this._cache).map(it => Number(it)).sort(SortUtil.ascSort).reverse();
-			/*
-			Sorted array of:
-			{
-				cr: "1/2",
-				xp: 50,
-				crNum: 0.5
-			}
-			 */
-			const _meta = Object.entries(Parser.XP_CHART_ALT).map(([cr, xp]) => ({cr, xp, crNum: Parser.crToNumber(cr)}))
-				.sort((a, b) => SortUtil.ascSort(b.crNum, a.crNum));
-			const getXps = budget => _xps.filter(it => it <= budget);
-
-			const calcNextBudget = (encounter) => {
-				const data = encounter.map(it => ({cr: Parser.crToNumber(it.mon.cr.cr || it.mon.cr), count: it.count}));
-				if (!data.length) return budget;
-
-				const curr = EncounterBuilderUtils.calculateEncounterXp(data, xp.party.count);
-				const budgetRemaining = budget - curr.adjustedXp;
-
-				const meta = _meta.filter(it => it.xp <= budgetRemaining);
-				// if the highest CR creature has CR greater than the cutoff, adjust for next multiplier
-				if (meta.length && meta[0].crNum >= curr.meta.crCutoff) {
-					const nextMult = Parser.numMonstersToXpMult(curr.relevantCount + 1, xp.party.count);
-					return Math.floor((budget - (nextMult * curr.baseXp)) / nextMult);
-				}
-				// otherwise, no creature has CR greater than the cutoff, don't worry about multipliers
-				return budgetRemaining;
-			};
-
-			const addToEncounter = (encounter, xp) => {
-				const existing = encounter.filter(it => it.xp === xp);
-				if (existing.length && RollerUtil.roll(100) < 85) { // 85% chance to add another copy of an existing monster
-					RollerUtil.rollOnArray(existing).count++;
-				} else {
-					const rolled = RollerUtil.rollOnArray(this._cache[xp]);
-					// add to an existing group, if present
-					const existing = encounter.find(it => it.mon.source === rolled.source && it.mon.name === rolled.name);
-					if (existing) existing.count++;
-					else {
-						encounter.push({
-							xp: xp,
-							mon: rolled,
-							count: 1
-						});
-					}
-				}
-			};
-
-			let skipCount = 0;
-			const doSkip = (xps, encounter, xp) => {
-				// if there are existing entries at this XP, don't skip
-				const existing = encounter.filter(it => it.xp === xp);
-				if (existing.length) return false;
-
-				// skip 70% of the time by default, less 13% chance per item skipped
-				if (xps.length > 1) {
-					const isSkip = RollerUtil.roll(100) < (70 - (13 * skipCount));
-					if (isSkip) {
-						skipCount++;
-						const maxSkip = xps.length - 1;
-						// flip coins; so long as we get heads, keep skipping
-						for (let i = 0; i < maxSkip; ++i) {
-							if (RollerUtil.roll(2) === 0) {
-								return i;
-							}
-						}
-						return maxSkip - 1;
-					} else return 0;
-				} else return false;
-			};
-
-			const doInitialSkip = xps => {
-				// 50% of the time, skip the first 0-1/3rd of available CRs
-				if (xps.length > 4 && RollerUtil.roll(2) === 1) {
-					const skips = RollerUtil.roll(Math.ceil(xps.length / 3));
-					return xps.slice(skips);
-				} else return xps;
-			};
-
-			const doFind = (budget) => {
-				const enc = [];
-				const xps = doInitialSkip(getXps(budget));
-
-				let nextBudget = budget;
-				let skips = 0;
-				let steps = 0;
-				while (xps.length) {
-					if (steps++ > 100) break;
-
-					if (skips) {
-						skips--;
-						xps.shift();
-						continue;
-					}
-
-					const xp = xps[0];
-
-					if (xp > nextBudget) {
-						xps.shift();
-						continue;
-					}
-
-					skips = doSkip(xps, enc, xp);
-					if (skips) {
-						skips--;
-						xps.shift();
-						continue;
-					}
-
-					addToEncounter(enc, xp);
-
-					nextBudget = calcNextBudget(enc);
-				}
-
-				return enc;
-			};
-
-			return doFind(budget);
-		};
-
-		const closestSolution = generateClosestEncounter();
+		const closestSolution = (() => {
+			// If there are enough players that single-monster XP is halved, try generating a range of solutions.
+			if (xp.party.count > 5) {
+				const NUM_SAMPLES = 10; // should ideally be divisible by 2
+				const solutions = [...new Array(NUM_SAMPLES)]
+					.map((_, i) => this._pDoGenerateEncounter_generateClosestEncounter(xp, budget * ((i >= Math.floor(NUM_SAMPLES / 2)) + 1)));
+				const validSolutions = solutions.filter(it => it.adjustedXp >= (budget * 0.6) && it.adjustedXp <= (budget * 1.1));
+				if (validSolutions.length) return RollerUtil.rollOnArray(validSolutions);
+				return null;
+			} else return this._pDoGenerateEncounter_generateClosestEncounter(xp, budget);
+		})();
 
 		if (closestSolution) {
 			const toLoad = {items: []};
 			const sources = new Set();
-			closestSolution.forEach(it => {
+			closestSolution.encounter.forEach(it => {
 				toLoad.items.push({h: UrlUtil.autoEncodeHash(it.mon), c: String(it.count)});
 				sources.add(it.mon.source);
 			});
@@ -555,6 +458,133 @@ class EncounterBuilder {
 			await ListUtil.pDoSublistRemoveAll();
 			this.updateDifficulty();
 		}
+	}
+
+	_pDoGenerateEncounter_generateClosestEncounter (xp, budget) {
+		const _xps = Object.keys(this._cache).map(it => Number(it)).sort(SortUtil.ascSort).reverse();
+		/*
+		Sorted array of:
+		{
+			cr: "1/2",
+			xp: 50,
+			crNum: 0.5
+		}
+		 */
+		const _meta = Object.entries(Parser.XP_CHART_ALT).map(([cr, xp]) => ({cr, xp, crNum: Parser.crToNumber(cr)}))
+			.sort((a, b) => SortUtil.ascSort(b.crNum, a.crNum));
+		const getXps = budget => _xps.filter(it => it <= budget);
+
+		const getCurrentEncounterMeta = (encounter) => {
+			const data = encounter.map(it => ({cr: Parser.crToNumber(it.mon.cr), count: it.count}));
+			return EncounterBuilderUtils.calculateEncounterXp(data, xp.party.count);
+		};
+
+		const calcNextBudget = (encounter) => {
+			if (!encounter.length) return budget;
+
+			const curr = getCurrentEncounterMeta(encounter);
+			const budgetRemaining = budget - curr.adjustedXp;
+
+			const meta = _meta.filter(it => it.xp <= budgetRemaining);
+			// if the highest CR creature has CR greater than the cutoff, adjust for next multiplier
+			if (meta.length && meta[0].crNum >= curr.meta.crCutoff) {
+				const nextMult = Parser.numMonstersToXpMult(curr.relevantCount + 1, xp.party.count);
+				return Math.floor((budget - (nextMult * curr.baseXp)) / nextMult);
+			}
+			// otherwise, no creature has CR greater than the cutoff, don't worry about multipliers
+			return budgetRemaining;
+		};
+
+		const addToEncounter = (encounter, xp) => {
+			const existing = encounter.filter(it => it.xp === xp);
+			if (existing.length && RollerUtil.roll(100) < 85) { // 85% chance to add another copy of an existing monster
+				RollerUtil.rollOnArray(existing).count++;
+			} else {
+				const rolled = RollerUtil.rollOnArray(this._cache[xp]);
+				// add to an existing group, if present
+				const existing = encounter.find(it => it.mon.source === rolled.source && it.mon.name === rolled.name);
+				if (existing) existing.count++;
+				else {
+					encounter.push({
+						xp: xp,
+						mon: rolled,
+						count: 1
+					});
+				}
+			}
+		};
+
+		let skipCount = 0;
+		const doSkip = (xps, encounter, xp) => {
+			// if there are existing entries at this XP, don't skip
+			const existing = encounter.filter(it => it.xp === xp);
+			if (existing.length) return false;
+
+			// skip 70% of the time by default, less 13% chance per item skipped
+			if (xps.length > 1) {
+				const isSkip = RollerUtil.roll(100) < (70 - (13 * skipCount));
+				if (isSkip) {
+					skipCount++;
+					const maxSkip = xps.length - 1;
+					// flip coins; so long as we get heads, keep skipping
+					for (let i = 0; i < maxSkip; ++i) {
+						if (RollerUtil.roll(2) === 0) {
+							return i;
+						}
+					}
+					return maxSkip - 1;
+				} else return 0;
+			} else return false;
+		};
+
+		const doInitialSkip = xps => {
+			// 50% of the time, skip the first 0-1/3rd of available CRs
+			if (xps.length > 4 && RollerUtil.roll(2) === 1) {
+				const skips = RollerUtil.roll(Math.ceil(xps.length / 3));
+				return xps.slice(skips);
+			} else return xps;
+		};
+
+		const doFind = (budget) => {
+			const enc = [];
+			const xps = doInitialSkip(getXps(budget));
+
+			let nextBudget = budget;
+			let skips = 0;
+			let steps = 0;
+			while (xps.length) {
+				if (steps++ > 100) break;
+
+				if (skips) {
+					skips--;
+					xps.shift();
+					continue;
+				}
+
+				const xp = xps[0];
+
+				if (xp > nextBudget) {
+					xps.shift();
+					continue;
+				}
+
+				skips = doSkip(xps, enc, xp);
+				if (skips) {
+					skips--;
+					xps.shift();
+					continue;
+				}
+
+				addToEncounter(enc, xp);
+
+				nextBudget = calcNextBudget(enc);
+			}
+
+			return enc;
+		};
+
+		const encounter = doFind(budget);
+		return {encounter, adjustedXp: getCurrentEncounterMeta(encounter).adjustedXp};
 	}
 
 	_loadSublist (toLoad) {
@@ -582,7 +612,7 @@ class EncounterBuilder {
 	}
 
 	isActive () {
-		return History.getSubHash(EncounterBuilder.HASH_KEY) === "true";
+		return Hist.getSubHash(EncounterBuilder.HASH_KEY) === "true";
 	}
 
 	show () {
@@ -608,7 +638,7 @@ class EncounterBuilder {
 
 	handleShuffleClick (evt, ix) {
 		const mon = monsters[ix];
-		const xp = Parser.crToXpNumber(mon.cr.cr || mon.cr);
+		const xp = Parser.crToXpNumber(mon.cr);
 		if (!xp) return; // if Unknown/etc
 
 		const curr = ListUtil.getExportableSublist();
@@ -650,8 +680,8 @@ class EncounterBuilder {
 	}
 
 	handleSubhash () {
-		// loading state from the URL is instead handled as part of EncounterUtil.pGetSavedState
-		if (History.getSubHash(EncounterBuilder.HASH_KEY) === "true") this.show();
+		// loading state from the URL is instead handled as part of EncounterUtil.pGetInitialState
+		if (Hist.getSubHash(EncounterBuilder.HASH_KEY) === "true") this.show();
 		else this.hide();
 	}
 
@@ -674,11 +704,15 @@ class EncounterBuilder {
 		const $elmed = $(`.ecgen__medium`).removeClass("bold").text(`Medium: ${xp.party.medium.toLocaleString()} XP`);
 		const $elHard = $(`.ecgen__hard`).removeClass("bold").text(`Hard: ${xp.party.hard.toLocaleString()} XP`);
 		const $elDeadly = $(`.ecgen__deadly`).removeClass("bold").text(`Deadly: ${xp.party.deadly.toLocaleString()} XP`);
+		const $elAbsurd = $(`.ecgen__absurd`).removeClass("bold").text(`Absurd: ${xp.party.absurd.toLocaleString()} XP`);
 
 		$(`.ecgen__daily_budget`).removeClass("bold").text(`Daily Budget: ${xp.party.daily.toLocaleString()} XP`);
 
 		let difficulty = "Trivial";
-		if (xp.encounter.adjustedXp >= xp.party.deadly) {
+		if (xp.encounter.adjustedXp >= xp.party.absurd) {
+			difficulty = "Absurd";
+			$elAbsurd.addClass("bold");
+		} else if (xp.encounter.adjustedXp >= xp.party.deadly) {
 			difficulty = "Deadly";
 			$elDeadly.addClass("bold");
 		} else if (xp.encounter.adjustedXp >= xp.party.hard) {
@@ -771,7 +805,7 @@ class EncounterBuilder {
 			deadly: 0,
 			daily: 0
 		});
-		totals.yikes = totals.deadly + (totals.deadly - totals.hard);
+		totals.absurd = totals.deadly + (totals.deadly - totals.hard);
 		this._lastPlayerCount = totals.count;
 		return totals;
 	}
@@ -806,10 +840,53 @@ class EncounterBuilder {
 		);
 	}
 
+	static async doImageMouseOver (evt, ele, ixMon) {
+		const mon = monsters[ixMon];
+
+		const renderNoImages = () => {
+			const toShow = {
+				type: "entries",
+				entries: [
+					HTML_NO_IMAGES
+				],
+				data: {
+					hoverTitle: `Image \u2014 ${mon.name}`
+				}
+			};
+			Renderer.hover.doHover(evt, ele, toShow, true);
+		};
+
+		const renderImages = (data) => {
+			const fluff = Renderer.monster.getFluff(mon, meta, data);
+			if (fluff && fluff.images && fluff.images.length) {
+				const toShow = {
+					type: "image",
+					href: fluff.images[0].href,
+					data: {
+						hoverTitle: `Image \u2014 ${mon.name}`
+					}
+				};
+				Renderer.hover.doHover(evt, ele, toShow, true);
+			} else return renderNoImages();
+		};
+
+		if (ixFluff[mon.source] || mon.fluff) {
+			if (mon.fluff) {
+				return renderImages();
+			} else {
+				const data = await DataUtil.loadJSON(`${JSON_DIR}${ixFluff[mon.source]}`);
+				return renderImages(data);
+			}
+		} else {
+			return renderNoImages();
+		}
+	}
+
 	doCrChange (ele, ixMon, scaledTo) {
 		const $iptCr = $(ele);
 		const mon = monsters[ixMon];
 		const baseCr = mon.cr.cr || mon.cr;
+		if (baseCr == null) return;
 		const baseCrNum = Parser.crToNumber(baseCr);
 		const targetCr = $iptCr.val();
 
@@ -888,13 +965,13 @@ class EncounterBuilder {
 
 	static getAdvancedPlayerDetailHeader (name) {
 		return `
-			<input class="ecgen__player_advanced_narrow ecgen__player_advanced_extra_head form-control form-control--minimal input-xs text-align-center mr-1" value="${(name || "").escapeQuotes()}" onchange="encounterBuilder.doSaveStateDebounced()">
+			<input class="ecgen__player_advanced_narrow ecgen__player_advanced_extra_head form-control form-control--minimal input-xs text-center mr-1" value="${(name || "").escapeQuotes()}" onchange="encounterBuilder.doSaveStateDebounced()">
 		`;
 	}
 
 	static getAdvancedPlayerDetailColumn (value) {
 		return `
-			<input class="ecgen__player_advanced_narrow ecgen__player_advanced_extra form-control form-control--minimal input-xs text-align-center mr-1" value="${(value || "").escapeQuotes()}" onchange="encounterBuilder.doSaveStateDebounced()">
+			<input class="ecgen__player_advanced_narrow ecgen__player_advanced_extra form-control form-control--minimal input-xs text-center mr-1" value="${(value || "").escapeQuotes()}" onchange="encounterBuilder.doSaveStateDebounced()">
 		`;
 	}
 
@@ -902,9 +979,9 @@ class EncounterBuilder {
 		extraVals = extraVals || [...new Array($(`.ecgen__player_advanced_extra_head`).length)].map(() => "");
 		return `
 			<div class="row mb-2 ecgen__player_advanced">
-				<div class="col-12 flex ecgen__player_advanced_flex">
+				<div class="w-100 flex ecgen__player_advanced_flex">
 					<input class="ecgen__player_advanced__name form-control form-control--minimal input-xs mr-1" value="${(name || "").escapeQuotes()}" onchange="encounterBuilder.doSaveStateDebounced()">
-					<input value="${level || 1}" min="1" max="20" type="number" class="ecgen__player_advanced__level ecgen__player_advanced_narrow form-control form-control--minimal input-xs text-align-right mr-1" onchange="encounterBuilder.updateDifficulty()">
+					<input value="${level || 1}" min="1" max="20" type="number" class="ecgen__player_advanced__level ecgen__player_advanced_narrow form-control form-control--minimal input-xs text-right mr-1" onchange="encounterBuilder.updateDifficulty()">
 					${extraVals.map(it => EncounterBuilder.getAdvancedPlayerDetailColumn(it)).join("")}
 					${!isFirst ? `
 					<button class="btn btn-danger btn-xs ecgen__del_players" onclick="encounterBuilder.removeAdvancedPlayerRow(this)" title="Remove Player">
@@ -944,7 +1021,7 @@ class EncounterBuilder {
 
 	static getButtons (monId, isSublist) {
 		return `
-			<span class="ecgen__visible ${isSublist ? "col-1-5" : "col-1"} no-wrap" onclick="event.preventDefault()">
+			<span class="ecgen__visible ${isSublist ? "col-1-5" : "col-1"} no-wrap pl-0" onclick="event.preventDefault(); event.stopPropagation()">
 				<button title="Add (SHIFT for 5)" class="btn btn-success btn-xs ecgen__btn_list" onclick="encounterBuilder.handleClick(event, ${monId}, 1${isSublist ? `, this` : ""})">
 					<span class="glyphicon glyphicon-plus"></span>
 				</button>
@@ -960,115 +1037,167 @@ class EncounterBuilder {
 		`;
 	}
 
+	// region saved encounters
 	async _initSavedEncounters () {
-		this._savedEncounters = await EncounterUtil.pGetAllSaves();
-	}
+		const $wrpControls = $(`#ecgen__wrp-save-controls`).empty();
 
-	pSetSavedEncounters () {
-		return StorageUtil.pSet(EncounterUtil.SAVED_ENCOUNTER_SAVE_LOCATION, this._savedEncounters);
-	}
+		const savedState = await EncounterUtil.pGetSavedState();
+		Object.assign(this._state, savedState);
 
-	doToggleBrowserUi (state) {
-		$("#loadsaves").toggle(state);
-		$("#contentwrapper").toggle(!state);
-		if (state) this.renderBrowser();
-	}
+		const pLoadActiveEncounter = async () => {
+			// save/restore the active key, to prevent it from being killed by the reset
+			const cached = this._state.activeKey;
+			const encounter = this._state.savedEncounters[this._state.activeKey];
+			await this.pDoLoadState(encounter.data);
+			this._state.activeKey = cached;
+			this.pSetSavedEncountersThrottled();
+		};
 
-	setBrowserButtonsState (isReload = false, isDisabled = true) {
-		if (isReload) {
-			$(".ecgen__sv-save").prop("disabled", isDisabled).text("Update Save");
-			$(".ecgen__sv-load").prop("disabled", isDisabled).text("Reload");
-		} else {
-			$(".ecgen__sv-save").prop("disabled", isDisabled).text("Save");
-			$(".ecgen__sv-load").prop("disabled", isDisabled).text("Load");
-		}
-	}
-
-	renderBrowser () {
-		const names = Object.keys(this._savedEncounters);
-		const anyName = !!names.length;
-
-		const $lstSaves = $("#listofsaves").empty();
-		if (names.length) {
-			names.forEach(name => {
-				const $btnDel = $(`<button class="btn btn-danger btn-xs ecgen__btn_list"><span class="glyphicon glyphicon-trash"/></button>`)
-					.click(() => this.handleDeleteClick(name));
-
-				const $li = $$`<li class="${name === this._savedName ? "list-multi-selected" : ""}">
-					<div class="row">
-						<span class="col-4 name">${name}</span>
-						<span class="col-7-4"></span>
-						<span class="no-wrap col-0-6" onclick="event.preventDefault()">${$btnDel}</span>
-					</div>
-				</li>`.click(() => this._handleSavedClick($li, name)).appendTo($lstSaves)
+		this._$iptName = $(`<input class="form-control form-control--minimal mb-3 mt-0 px-2 text-right bold" style="max-width: 330px;"/>`)
+			.change(() => {
+				const name = this._$iptName.val().trim() || "(Unnamed Encounter)";
+				this._$iptName.val(name);
+				const encounter = this._state.savedEncounters[this._state.activeKey];
+				encounter.name = name;
+				this._state.savedEncounters = {
+					...this._state.savedEncounters,
+					[this._state.activeKey]: encounter
+				};
+				this.pSetSavedEncountersThrottled();
 			});
-		} else {
-			$lstSaves.append(`<div class="px-2" style="font-size: 14px;"><i>No saved encounters found.</i></div>`);
-		}
+		const hookName = () => {
+			if (this._state.activeKey) {
+				const encounter = this._state.savedEncounters[this._state.activeKey];
+				this._$iptName.val(encounter.name);
+			} else this._$iptName.val("");
+		};
+		this._addHook("state", "savedEncounters", hookName);
+		this._addHook("state", "activeKey", hookName);
+		hookName();
 
-		this.setBrowserButtonsState(anyName, !anyName);
-	}
+		// TODO set window title to encounter name on save?
+		this._$btnSave = $(`<button class="btn btn-primary btn-xs mr-2">Save Encounter</button>`)
+			.click(async () => {
+				if (this._state.activeKey) {
+					const encounter = this._state.savedEncounters[this._state.activeKey];
+					encounter.data = this.getSaveableState();
 
-	_handleSavedClick ($li, key) {
-		this._selectedSavedEncounter = this._savedEncounters[key];
-		this._lastClickedSave = key;
+					this._state.savedEncounters = {
+						...this._state.savedEncounters,
+						[this._state.activeKey]: encounter
+					};
+					this.pSetSavedEncountersThrottled();
+					JqueryUtil.doToast({type: "success", content: "Saved!"});
+				} else {
+					const name = await InputUiUtil.pGetUserString({title: "Enter Encounter Name"});
 
-		$("#listofsaves").children("li").removeClass("list-multi-selected");
-		$li.addClass("list-multi-selected");
-
-		if (this._savedName === this._lastClickedSave) this.setBrowserButtonsState(true, false);
-		else this.setBrowserButtonsState(false, false);
-	}
-
-	async handleSaveClick (isNew) {
-		const name = (() => {
-			if (isNew) {
-				const $iptName = $(".ecgen__sv-new-save-name");
-				const outName = $iptName.val().trim();
-
-				if (!outName) {
-					JqueryUtil.doToast({content: "Please enter an encounter name!", type: "warning"});
-					return null;
+					if (name != null) {
+						const key = CryptUtil.uid();
+						this._state.savedEncounters = {
+							...this._state.savedEncounters,
+							[key]: {
+								name,
+								data: this.getSaveableState()
+							}
+						};
+						this._state.activeKey = key;
+						this.pSetSavedEncountersThrottled();
+						JqueryUtil.doToast({type: "success", content: "Saved!"});
+					}
 				}
+			});
 
-				if (this._savedEncounters[outName] != null && !confirm(`Are you sure you want to overwrite the saved encounter "${name}"?`)) return null;
-				else {
-					$iptName.val("");
-					return outName;
-				}
-			} else if (this._savedName === this._lastClickedSave) return this._savedName;
-			else if (confirm(`Are you sure you want to overwrite the saved encounter "${this._lastClickedSave}"?`)) return this._savedName;
-		})();
+		const pDoReload = async () => {
+			const inStorage = await EncounterUtil.pGetSavedState();
+			const prev = inStorage.savedEncounters[this._state.activeKey];
+			if (!prev) {
+				return JqueryUtil.doToast({
+					content: `Could not find encounter in storage! Has it been deleted?`,
+					type: "danger"
+				});
+			} else {
+				this._state.savedEncounters = {
+					...this._state.savedEncounters,
+					[this._state.activeKey]: prev
+				};
+				await pLoadActiveEncounter();
+			}
+		};
+		this._$btnReload = $(`<button class="btn btn-default btn-xs mr-2" title="Reload Current Encounter"><span class="glyphicon glyphicon-refresh"/></button>`)
+			.click(() => pDoReload());
 
-		if (!name) return;
+		this._$btnLoad = $(`<button class="btn btn-primary btn-xs">Load Existing Encounter</button>`)
+			.click(async () => {
+				const inStorage = await EncounterUtil.pGetSavedState();
+				const {$modalInner} = UiUtil.getShowModal({title: "Saved Encounters"});
+				const $wrpRows = $(`<div class="flex-col w-100 h-100"/>`).appendTo($modalInner);
 
-		this._savedName = name;
-		this._savedEncounters[name] = this.getSaveableState();
-		this.pSetSavedEncounters();
-		this.doSaveState();
-		this.renderBrowser();
+				const encounters = inStorage.savedEncounters;
+				if (Object.keys(encounters).length) {
+					let rendered = Object.keys(encounters).length;
+					Object.entries(encounters)
+						.sort((a, b) => SortUtil.ascSortLower(a[1].name || "", b[1].name || ""))
+						.forEach(([k, v]) => {
+							const $iptName = $(`<input class="input input-xs form-control form-control--minimal mr-2">`)
+								.val(v.name)
+								.change(() => {
+									const name = $iptName.val().trim() || "(Unnamed Encounter)";
+									$iptName.val(name);
+									const loaded = this._state.savedEncounters[k];
+									loaded.name = name;
+									this._state.savedEncounters = {...this._state.savedEncounters};
+									this.pSetSavedEncountersThrottled();
+								});
+
+							const $btnLoad = $(`<button class="btn btn-primary btn-xs mr-2">Load</button>`)
+								.click(async () => {
+									// if we've already got the correct encounter loaded, reload it
+									if (this._state.activeKey === k) await pDoReload();
+									else this._state.activeKey = k;
+
+									await pLoadActiveEncounter();
+								});
+
+							const $btnDelete = $(`<button class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"/></button>`)
+								.click(() => {
+									this._state.savedEncounters = Object.keys(this._state.savedEncounters)
+										.filter(it => it !== k)
+										.map(it => ({[it]: this._state.savedEncounters[it]}))
+										.reduce((a, b) => Object.assign(a, b), {});
+									if (this._state.activeKey === k) this._state.activeKey = null;
+									$row.remove();
+									if (!--rendered) $$`<div class="w-100 flex-vh-center italic">No saved encounters</div>`.appendTo($wrpRows);
+									this.pSetSavedEncountersThrottled();
+								});
+
+							const $row = $$`<div class="flex-v-center w-100 mb-2">
+								${$iptName} 
+								${$btnLoad} 
+								${$btnDelete}
+							</div>`.appendTo($wrpRows);
+						});
+				} else $$`<div class="w-100 flex-vh-center italic">No saved encounters</div>`.appendTo($wrpRows)
+			});
+
+		const hookActiveKey = () => {
+			// show/hide controls
+			this._$iptName.toggle(!!this._state.activeKey);
+			this._$btnReload.toggle(!!this._state.activeKey);
+		};
+		this._addHook("state", "activeKey", hookActiveKey);
+		hookActiveKey();
+
+		$$`<div class="flex-col" style="align-items: flex-end;">
+			${this._$iptName}
+			<div class="flex-h-right">${this._$btnSave}${this._$btnReload}${this._$btnLoad}</div>
+		</div>`.appendTo($wrpControls);
 	}
 
-	async handleLoadClick () {
-		await this.pDoLoadState(this._selectedSavedEncounter);
-		this.doToggleBrowserUi(false);
+	_pSetSavedEncounters () {
+		if (!this.stateInit) return;
+		return StorageUtil.pSet(EncounterUtil.SAVED_ENCOUNTER_SAVE_LOCATION, this.__state);
 	}
-
-	handleDeleteClick (name) {
-		delete this._savedEncounters[name];
-		if (name === this._savedName) this._savedName = null;
-		this.pSetSavedEncounters();
-		this.renderBrowser();
-	}
-
-	handleResetEncounterSavesClick () {
-		if (confirm("Are you sure?")) {
-			this._savedEncounters = {};
-			this.pSetSavedEncounters();
-			this._lastClickedSave = null;
-			this.renderBrowser();
-		}
-	}
+	// endregion
 }
 EncounterBuilder.HASH_KEY = "encounterbuilder";
-EncounterBuilder.TIERS = ["easy", "medium", "hard", "deadly", "yikes"];
+EncounterBuilder.TIERS = ["easy", "medium", "hard", "deadly", "absurd"];

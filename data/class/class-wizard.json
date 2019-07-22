@@ -615,7 +615,7 @@
 													"Potion Created"
 												],
 												"colStyles": [
-													"col-3 text-align-center",
+													"col-3 text-center",
 													"col-9"
 												],
 												"rows": [
@@ -667,7 +667,7 @@
 													"Item Created"
 												],
 												"colStyles": [
-													"col-3 text-align-center",
+													"col-3 text-center",
 													"col-9"
 												],
 												"rows": [
@@ -728,7 +728,7 @@
 													"Magic Item"
 												],
 												"colStyles": [
-													"col-1 text-align-center",
+													"col-1 text-center",
 													"col-11"
 												],
 												"rows": [
@@ -774,7 +774,7 @@
 													"Magic Item"
 												],
 												"colStyles": [
-													"col-1 text-align-center",
+													"col-1 text-center",
 													"col-11"
 												],
 												"rows": [
@@ -1808,7 +1808,7 @@
 										"type": "entries",
 										"name": "Shapechanger",
 										"entries": [
-											"At 10th level, you add the {@spell polymorph} spell to your spellbook, if it is not there already. You can cast {@spell polymorph} without expending a spell slot. When you do so, you can target only yourself and transform into a {@filter beast whose challenge rating is 1 or lower|bestiary|challenge rating=0;1/8;1/4;1/2;1|type=beast|miscellaneous=!swarm}.",
+											"At 10th level, you add the {@spell polymorph} spell to your spellbook, if it is not there already. You can cast {@spell polymorph} without expending a spell slot. When you do so, you can target only yourself and transform into a {@filter beast whose challenge rating is 1 or lower|bestiary|challenge rating=[&0;&1]|type=beast|miscellaneous=!swarm}.",
 											"Once you cast {@spell polymorph} in this way, you can't do so again until you finish a short or long rest, though you can still cast it normally using an available spell slot."
 										]
 									}
@@ -2687,7 +2687,7 @@
 										"Spellbook"
 									],
 									"colStyles": [
-										"col-1 text-align-center",
+										"col-1 text-center",
 										"col-11"
 									],
 									"rows": [
@@ -2763,7 +2763,7 @@
 										"Ambition"
 									],
 									"colStyles": [
-										"col-1 text-align-center",
+										"col-1 text-center",
 										"col-11"
 									],
 									"rows": [
@@ -2839,7 +2839,7 @@
 										"Eccentricity"
 									],
 									"colStyles": [
-										"col-1 text-align-center",
+										"col-1 text-center",
 										"col-11"
 									],
 									"rows": [
@@ -2905,7 +2905,8 @@
 					"page": 58,
 					"source": "XGE"
 				}
-			]
+			],
+			"page": 112
 		}
 	]
 }

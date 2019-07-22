@@ -31,7 +31,6 @@
 			"wis": 10,
 			"cha": 1,
 			"passive": 10,
-			"cr": "Unknown",
 			"immune": [
 				"poison",
 				"psychic"
@@ -46,7 +45,9 @@
 				"petrified",
 				"poisoned"
 			],
-			"senses": "blindsight 60 ft. (blind beyond this radius)",
+			"senses": [
+				"blindsight 60 ft. (blind beyond this radius)"
+			],
 			"action": [
 				{
 					"name": "Slam",
@@ -61,6 +62,9 @@
 			],
 			"damageTags": [
 				"B"
+			],
+			"miscTags": [
+				"MW"
 			]
 		}
 	]

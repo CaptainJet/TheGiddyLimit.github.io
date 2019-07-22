@@ -10,7 +10,7 @@
 				"Object"
 			],
 			"colStyles": [
-				"col-2 text-align-center",
+				"col-2 text-center",
 				"col-12"
 			],
 			"rows": [
@@ -66,7 +66,7 @@
 				"Object"
 			],
 			"colStyles": [
-				"col-2 text-align-center",
+				"col-2 text-center",
 				"col-12"
 			],
 			"rows": [
@@ -122,7 +122,7 @@
 				"Object"
 			],
 			"colStyles": [
-				"col-2 text-align-center",
+				"col-2 text-center",
 				"col-12"
 			],
 			"rows": [
@@ -178,7 +178,7 @@
 				"Object"
 			],
 			"colStyles": [
-				"col-2 text-align-center",
+				"col-2 text-center",
 				"col-12"
 			],
 			"rows": [
@@ -234,7 +234,7 @@
 				"Object"
 			],
 			"colStyles": [
-				"col-2 text-align-center",
+				"col-2 text-center",
 				"col-12"
 			],
 			"rows": [
@@ -290,7 +290,7 @@
 				"Origin or Intended User"
 			],
 			"colStyles": [
-				"col-2 text-align-center",
+				"col-2 text-center",
 				"col-12"
 			],
 			"rows": [
@@ -337,7 +337,7 @@
 				"Major Adaptation"
 			],
 			"colStyles": [
-				"col-2 text-align-center",
+				"col-2 text-center",
 				"col-10"
 			],
 			"rows": [
@@ -373,7 +373,8 @@
 					"8",
 					"Regeneration. The krasis regains hit points (2 for a category 1, 5 for a category 2, and 10 for a category 3) at the start of each of its turns if it has at least 1 hit point."
 				]
-			]
+			],
+			"page": 210
 		},
 		{
 			"name": "Minor Adaptations",
@@ -384,7 +385,7 @@
 				"Minor Adaptations"
 			],
 			"colStyles": [
-				"col-2 text-align-center",
+				"col-2 text-center",
 				"col-10"
 			],
 			"rows": [
@@ -420,7 +421,115 @@
 					"8",
 					"Stabilizing Legs. The krasis has several crablike legs. As a result, it has advantage on Strength and Dexterity saving throws made against effects that would knock it {@condition prone}."
 				]
-			]
+			],
+			"page": 212
+		},
+		{
+			"name": "Whirlpools; Whirlpool Rank",
+			"source": "GoS",
+			"caption": "Whirlpool Rank",
+			"colStyles": [
+				"text-center col-2-1",
+				"col-3-3",
+				"col-3-3",
+				"col-3-3 text-center"
+			],
+			"colLabels": [
+				"Rank",
+				"Diameter",
+				"Velocity",
+				"DC"
+			],
+			"rows": [
+				[
+					"1",
+					"22 ({@dice 4d10}) ft.",
+					"5 ft.",
+					"5"
+				],
+				[
+					"2",
+					"55 ({@dice 10d10}) ft.",
+					"15 ft.",
+					"10"
+				],
+				[
+					"3",
+					"110 ({@dice 20d10}) ft.",
+					"25 ft.",
+					"15"
+				],
+				[
+					"4",
+					"165 ({@dice 30d10}) ft.",
+					"35 ft.",
+					"20"
+				]
+			],
+			"page": 206
+		},
+		{
+			"name": "Damage Types",
+			"source": "PHB",
+			"colStyles": [
+				"col-2 bold",
+				"col-10"
+			],
+			"rows": [
+				[
+					"Acid",
+					"The corrosive spray of a black dragon's breath and the dissolving enzymes secreted by a black pudding deal acid damage."
+				],
+				[
+					"Bludgeoning",
+					"Blunt force attacks\u2014hammers, falling, constriction, and the like\u2014deal bludgeoning damage."
+				],
+				[
+					"Cold",
+					"The infernal chill radiating from an ice devil's spear and the frigid blast of a white dragon's breath deal cold damage."
+				],
+				[
+					"Fire",
+					"Red dragons breathe fire, and many spells conjure flames to deal fire damage."
+				],
+				[
+					"Force",
+					"Force is pure magical energy focused into a damaging form. Most effects that deal force damage are spells, including magic missile and spiritual weapon."
+				],
+				[
+					"Lightning",
+					"A lightning bolt spell and a blue dragon's breath deal lightning damage."
+				],
+				[
+					"Necrotic",
+					"Necrotic damage, dealt by certain undead and some spells, withers matter and even the soul."
+				],
+				[
+					"Piercing",
+					"Puncturing and impaling attacks, including spears and monsters' bites, deal piercing damage."
+				],
+				[
+					"Poison",
+					"Venomous stings and the toxic gas of a green dragon's breath deal poison damage."
+				],
+				[
+					"Psychic",
+					"Mental abilities such as a mind flayer's psionic blast deal psychic damage."
+				],
+				[
+					"Radiant",
+					"Radiant damage, dealt by a cleric's flame strike spell or an angel's smiting weapon, sears the flesh like fire and overloads the spirit with power."
+				],
+				[
+					"Slashing",
+					"Swords, axes, and monsters' claws deal slashing damage."
+				],
+				[
+					"Thunder",
+					"A concussive burst of sound, such as the effect of the thunderwave spell, deals thunder damage."
+				]
+			],
+			"page": 196
 		}
 	]
 }

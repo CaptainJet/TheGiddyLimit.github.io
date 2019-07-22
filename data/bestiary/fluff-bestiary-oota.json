@@ -64,7 +64,7 @@
 								"Flaw (lasts until cured)"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -90,48 +90,6 @@
 								]
 							]
 						}
-					]
-				}
-			]
-		},
-		{
-			"name": "Bridesmaid of Zuggtmoy",
-			"source": "OotA",
-			"images": [
-				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "bestiary/OotA/Underdark Mushrooms 1.jpg"
-					}
-				}
-			],
-			"entries": [
-				{
-					"type": "entries",
-					"entries": [
-						"The bridesmaids of Zuggtmoy are plant creatures with vaguely humanoid forms. Their frail bodies are covered with clusters of luminescent lichen and crusty, tumescent growths."
-					]
-				}
-			]
-		},
-		{
-			"name": "Chamberlain of Zuggtmoy",
-			"source": "OotA",
-			"images": [
-				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "bestiary/OotA/Underdark Mushrooms 1.jpg"
-					}
-				}
-			],
-			"entries": [
-				{
-					"type": "entries",
-					"entries": [
-						"A chamberlain of Zuggtmoy looks like a vaguely bipedal mass of blue mold with the barest hint of a face nested deep inside a mossy cowl. It pummels enemies with its mossy fists."
 					]
 				}
 			]
@@ -177,7 +135,7 @@
 								"Flaw (lasts until cured)"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -235,7 +193,13 @@
 							"type": "entries",
 							"entries": [
 								"Derro can live to be one hundred and fifty years old, but they mature and breed quickly. When their elders deem that their numbers are becoming unmanageable, the derro declare war on some other race and surge forth in a reckless horde, fighting until their population dwindles to a tolerable size. These ghastly purges weed out the weak among the derro and are referred to as \"Uniting Wars.\"",
-								"Second-Class Citizens. Derro create no settlements of their own. Instead, they form small, isolated enclaves in non-derro settlements throughout the Underdark, where they are treated as vermin or slaves. Their own cutthroat politics prevent the derro from mounting any effective resistance against such exploitation."
+								{
+									"name": "Second-Class Citizens",
+									"entries": [
+										" Derro create no settlements of their own. Instead, they form small, isolated enclaves in non-derro settlements throughout the Underdark, where they are treated as vermin or slaves. Their own cutthroat politics prevent the derro from mounting any effective resistance against such exploitation."
+									],
+									"type": "entries"
+								}
 							]
 						},
 						{
@@ -305,7 +269,13 @@
 							"type": "entries",
 							"entries": [
 								"Derro can live to be one hundred and fifty years old, but they mature and breed quickly. When their elders deem that their numbers are becoming unmanageable, the derro declare war on some other race and surge forth in a reckless horde, fighting until their population dwindles to a tolerable size. These ghastly purges weed out the weak among the derro and are referred to as \"Uniting Wars.\"",
-								"Second-Class Citizens. Derro create no settlements of their own. Instead, they form small, isolated enclaves in non-derro settlements throughout the Underdark, where they are treated as vermin or slaves. Their own cutthroat politics prevent the derro from mounting any effective resistance against such exploitation."
+								{
+									"name": "Second-Class Citizens",
+									"entries": [
+										" Derro create no settlements of their own. Instead, they form small, isolated enclaves in non-derro settlements throughout the Underdark, where they are treated as vermin or slaves. Their own cutthroat politics prevent the derro from mounting any effective resistance against such exploitation."
+									],
+									"type": "entries"
+								}
 							]
 						},
 						{
@@ -648,7 +618,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/OotA/Fraz Urbluu.jpg"
+						"path": "bestiary/OotA/Fraz-Urb'luu.jpg"
 					}
 				}
 			],
@@ -682,7 +652,7 @@
 								"Flaw (lasts until cured)"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -720,7 +690,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/OotA/Grazzt.jpg"
+						"path": "bestiary/OotA/Graz'zt.jpg"
 					}
 				}
 			],
@@ -754,7 +724,7 @@
 								"Flaw (lasts until cured)"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -796,7 +766,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/OotA/Ixitachitl.jpg"
+						"path": "bestiary/OotA/Ixitxachitl.jpg"
 					}
 				}
 			],
@@ -805,7 +775,13 @@
 					"type": "entries",
 					"entries": [
 						"Ixitxachitl (pronounced ick-zit-zah-chit-ul) are aquatic creatures resembling manta rays, with small, clawed hands at the ends of their \"wings\" and black eyes gleaming with sinister intelligence. Many creatures mistake ixitxachitl for common manta rays, but this can prove a deadly mistake. The ixitxachitl are as evil as they are cunning, leading to their common nickname \"demon rays.\" They inhabit bodies of fresh and salt water, but their violent nature means that little is known of them.",
-						"Struggle for Survival. Ixitxachitl emerge from eggs as tiny creatures little more than a hand span in width. From that time onward, they struggle to survive at all costs, growing throughout their lives. Those ixitxachitl that master the secrets of survival gain powers of regeneration and feed on the life force of other creatures.",
+						{
+							"name": "Struggle for Survival",
+							"entries": [
+								" Ixitxachitl emerge from eggs as tiny creatures little more than a hand span in width. From that time onward, they struggle to survive at all costs, growing throughout their lives. Those ixitxachitl that master the secrets of survival gain powers of regeneration and feed on the life force of other creatures."
+							],
+							"type": "entries"
+						},
 						{
 							"name": "All Consuming",
 							"type": "entries",
@@ -845,21 +821,18 @@
 		{
 			"name": "Ixitxachitl Cleric",
 			"source": "OotA",
-			"images": [
-				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "bestiary/OotA/Ixitachitl.jpg"
-					}
-				}
-			],
 			"entries": [
 				{
 					"type": "entries",
 					"entries": [
 						"Ixitxachitl (pronounced ick-zit-zah-chit-ul) are aquatic creatures resembling manta rays, with small, clawed hands at the ends of their \"wings\" and black eyes gleaming with sinister intelligence. Many creatures mistake ixitxachitl for common manta rays, but this can prove a deadly mistake. The ixitxachitl are as evil as they are cunning, leading to their common nickname \"demon rays.\" They inhabit bodies of fresh and salt water, but their violent nature means that little is known of them.",
-						"Struggle for Survival. Ixitxachitl emerge from eggs as tiny creatures little more than a hand span in width. From that time onward, they struggle to survive at all costs, growing throughout their lives. Those ixitxachitl that master the secrets of survival gain powers of regeneration and feed on the life force of other creatures.",
+						{
+							"name": "Struggle for Survival",
+							"entries": [
+								" Ixitxachitl emerge from eggs as tiny creatures little more than a hand span in width. From that time onward, they struggle to survive at all costs, growing throughout their lives. Those ixitxachitl that master the secrets of survival gain powers of regeneration and feed on the life force of other creatures."
+							],
+							"type": "entries"
+						},
 						{
 							"name": "All Consuming",
 							"type": "entries",
@@ -937,7 +910,7 @@
 								"Flaw (lasts until cured)"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -1021,7 +994,7 @@
 								"Flaw (lasts until cured)"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -1074,21 +1047,18 @@
 		{
 			"name": "Vampiric Ixitxachitl",
 			"source": "OotA",
-			"images": [
-				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "bestiary/OotA/Ixitachitl.jpg"
-					}
-				}
-			],
 			"entries": [
 				{
 					"type": "entries",
 					"entries": [
 						"Ixitxachitl (pronounced ick-zit-zah-chit-ul) are aquatic creatures resembling manta rays, with small, clawed hands at the ends of their \"wings\" and black eyes gleaming with sinister intelligence. Many creatures mistake ixitxachitl for common manta rays, but this can prove a deadly mistake. The ixitxachitl are as evil as they are cunning, leading to their common nickname \"demon rays.\" They inhabit bodies of fresh and salt water, but their violent nature means that little is known of them.",
-						"Struggle for Survival. Ixitxachitl emerge from eggs as tiny creatures little more than a hand span in width. From that time onward, they struggle to survive at all costs, growing throughout their lives. Those ixitxachitl that master the secrets of survival gain powers of regeneration and feed on the life force of other creatures.",
+						{
+							"name": "Struggle for Survival",
+							"entries": [
+								" Ixitxachitl emerge from eggs as tiny creatures little more than a hand span in width. From that time onward, they struggle to survive at all costs, growing throughout their lives. Those ixitxachitl that master the secrets of survival gain powers of regeneration and feed on the life force of other creatures."
+							],
+							"type": "entries"
+						},
 						{
 							"name": "All Consuming",
 							"type": "entries",
@@ -1128,21 +1098,18 @@
 		{
 			"name": "Vampiric Ixitxachitl Cleric",
 			"source": "OotA",
-			"images": [
-				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "bestiary/OotA/Ixitachitl.jpg"
-					}
-				}
-			],
 			"entries": [
 				{
 					"type": "entries",
 					"entries": [
 						"Ixitxachitl (pronounced ick-zit-zah-chit-ul) are aquatic creatures resembling manta rays, with small, clawed hands at the ends of their \"wings\" and black eyes gleaming with sinister intelligence. Many creatures mistake ixitxachitl for common manta rays, but this can prove a deadly mistake. The ixitxachitl are as evil as they are cunning, leading to their common nickname \"demon rays.\" They inhabit bodies of fresh and salt water, but their violent nature means that little is known of them.",
-						"Struggle for Survival. Ixitxachitl emerge from eggs as tiny creatures little more than a hand span in width. From that time onward, they struggle to survive at all costs, growing throughout their lives. Those ixitxachitl that master the secrets of survival gain powers of regeneration and feed on the life force of other creatures.",
+						{
+							"name": "Struggle for Survival",
+							"entries": [
+								" Ixitxachitl emerge from eggs as tiny creatures little more than a hand span in width. From that time onward, they struggle to survive at all costs, growing throughout their lives. Those ixitxachitl that master the secrets of survival gain powers of regeneration and feed on the life force of other creatures."
+							],
+							"type": "entries"
+						},
 						{
 							"name": "All Consuming",
 							"type": "entries",
@@ -1220,7 +1187,7 @@
 								"Flaw (lasts until cured)"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [
@@ -1258,7 +1225,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/OotA/Illithid Environment Appendix Art.jpg"
+						"path": "bestiary/OotA/Yestabrod.jpg"
 					}
 				}
 			]
@@ -1305,7 +1272,7 @@
 								"Flaw (lasts until cured)"
 							],
 							"colStyles": [
-								"col-2 text-align-center",
+								"col-2 text-center",
 								"col-10"
 							],
 							"rows": [

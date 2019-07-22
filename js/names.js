@@ -13,7 +13,7 @@ function makeContentsBlock (i, loc) {
 		const tableName = getTableName(loc, t);
 		out +=
 			`<li>
-				<a id="${i},${j}" href="#${UrlUtil.encodeForHash([loc.race, loc.source, t.option])}" title="${tableName}">${tableName}</a>
+				<a id="${i},${j}" href="#${UrlUtil.encodeForHash([loc.name, loc.source, t.option])}" title="${tableName}">${tableName}</a>
 			</li>`;
 	});
 
@@ -23,7 +23,7 @@ function makeContentsBlock (i, loc) {
 }
 
 function getTableName (loc, table) {
-	return `${loc.race} - ${table.option}`;
+	return `${loc.name} - ${table.option}`;
 }
 
 window.onload = function load () {
@@ -31,6 +31,7 @@ window.onload = function load () {
 	DataUtil.loadJSON(JSON_URL).then(onJsonLoad);
 };
 
+let list;
 function onJsonLoad (data) {
 	nameList = data.name;
 
@@ -41,18 +42,18 @@ function onJsonLoad (data) {
 
 		tempString +=
 			`<li>
-				<span class="name" onclick="showHideList(this)" title="Source: ${Parser.sourceJsonToFull(loc.source)}">${loc.race}</span>
+				<span class="name" onclick="showHideList(this)" title="Source: ${Parser.sourceJsonToFull(loc.source)}">${loc.name}</span>
 				${makeContentsBlock(i, loc)}
 			</li>`;
 	}
 	namesList.append(tempString);
 
-	const list = ListUtil.search({
+	list = ListUtil.search({
 		valueNames: ["name"],
 		listClass: "names"
 	});
 
-	History.init(true);
+	Hist.init(true);
 }
 
 function showHideList (ele) {
@@ -60,7 +61,7 @@ function showHideList (ele) {
 	$ele.next(`ul`).toggle();
 }
 
-function loadhash (id) {
+function loadHash (id) {
 	renderer.setFirstSection(true);
 
 	const [iLoad, jLoad] = id.split(",").map(n => Number(n));
@@ -76,7 +77,7 @@ function loadhash (id) {
 					<caption>${tableName}</caption>
 					<thead>
 						<tr>
-							<th class="col-2 text-align-center">
+							<th class="col-2 text-center">
 								<span class="roller" onclick="rollAgainstTable('${iLoad}', '${jLoad}')">d${diceType}</span>
 							</th>
 							<th class="col-10">Name</th>
@@ -85,7 +86,7 @@ function loadhash (id) {
 
 	for (let i = 0; i < table.length; i++) {
 		const range = table[i].min === table[i].max ? pad(table[i].min) : `${pad(table[i].min)}-${pad(table[i].max)}`;
-		htmlText += `<tr><td class="text-align-center">${range}</td><td>${getRenderedText(table[i].enc)}</td></tr>`;
+		htmlText += `<tr><td class="text-center">${range}</td><td>${getRenderedText(table[i].result)}</td></tr>`;
 	}
 
 	htmlText += `
@@ -93,6 +94,11 @@ function loadhash (id) {
 			</td>
 		</tr>`;
 	$("#pagecontent").html(htmlText);
+
+	// update list highlights
+	$(list.list).find(`.list-multi-selected`).removeClass("list-multi-selected");
+	const $listEle = Hist.getSelectedListElement().parent();
+	$($listEle).addClass("list-multi-selected");
 }
 
 function pad (number) {
@@ -125,7 +131,7 @@ function rollAgainstTable (iLoad, jLoad) {
 		const trueMin = row.max != null && row.max < row.min ? row.max : row.min;
 		const trueMax = row.max != null && row.max > row.min ? row.max : row.min;
 		if (roll >= trueMin && roll <= trueMax) {
-			result = getRenderedText(row.enc);
+			result = getRenderedText(row.result);
 			break;
 		}
 	}
@@ -136,7 +142,7 @@ function rollAgainstTable (iLoad, jLoad) {
 		return `<span class="roller" onmousedown="event.preventDefault()" onclick="reroll(this)">${match}</span> (<span class="result">${r}</span>)`
 	});
 
-	Renderer.dice.addRoll({name: `${race.race} - ${table.option}`}, `<span><strong>${pad(roll)}</strong> ${result}</span>`);
+	Renderer.dice.addRoll({name: `${race.name} - ${table.option}`}, `<span><strong>${pad(roll)}</strong> ${result}</span>`);
 }
 
 function reroll (ele) {

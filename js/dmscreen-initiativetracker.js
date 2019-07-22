@@ -26,7 +26,7 @@ class InitiativeTracker {
 			statsCols: state.c || []
 		};
 
-		const $wrpTracker = $(`<div class="dm-init dms__data_anchor"/>`);
+		const $wrpTracker = $(`<div class="dm-init dm__data-anchor"/>`);
 
 		// Unused; to be considered for other applications
 		const handleResize = () => {
@@ -64,12 +64,12 @@ class InitiativeTracker {
 		};
 
 		const makeImportSettingsModal = () => {
-			const $modalInner = UiUtil.getShow$Modal("Import Settings", () => doUpdateExternalStates());
-			UiUtil.addModal$Sep($modalInner);
-			UiUtil.getAddModal$RowCb($modalInner, "Roll creature hit points", cfg, "isRollHp");
-			UiUtil.getAddModal$RowCb($modalInner, "Roll groups of creatures together", cfg, "importIsRollGroups");
-			UiUtil.getAddModal$RowCb($modalInner, "Add players", cfg, "importIsAddPlayers");
-			UiUtil.getAddModal$RowCb($modalInner, "Add to existing tracker state", cfg, "importIsAppend");
+			const {$modalInner} = UiUtil.getShowModal({title: "Import Settings", cbClose: () => doUpdateExternalStates()});
+			UiUtil.addModalSep($modalInner);
+			UiUtil.$getAddModalRowCb($modalInner, "Roll creature hit points", cfg, "isRollHp");
+			UiUtil.$getAddModalRowCb($modalInner, "Roll groups of creatures together", cfg, "importIsRollGroups");
+			UiUtil.$getAddModalRowCb($modalInner, "Add players", cfg, "importIsAddPlayers");
+			UiUtil.$getAddModalRowCb($modalInner, "Add to existing tracker state", cfg, "importIsAppend");
 		};
 
 		// initialise "upload" context menu
@@ -77,7 +77,7 @@ class InitiativeTracker {
 		ContextUtil.doInitContextMenu(contextId, async (evt, ele, $invokedOn, $selectedMenu) => {
 			switch (Number($selectedMenu.data("ctx-id"))) {
 				case 0:
-					EncounterUtil.pGetSavedState().then(savedState => {
+					EncounterUtil.pGetInitialState().then(savedState => {
 						if (savedState) convertAndLoadBestiaryList(savedState.data);
 						else {
 							JqueryUtil.doToast({
@@ -88,11 +88,12 @@ class InitiativeTracker {
 					});
 					break;
 				case 1: {
-					const allSaves = Object.values(await EncounterUtil.pGetAllSaves());
+					const allSaves = Object.values((await EncounterUtil.pGetSavedState()).savedEncounters || {});
+					if (!allSaves.length) return JqueryUtil.doToast({type: "warning", content: "No saved encounters were found! Go to the Bestiary and create some first."});
 					const selected = await InputUiUtil.pGetUserEnum({
 						values: allSaves.map(it => it.name),
 						placeholder: "Select a save",
-						title: "Whatever"
+						title: "Select Saved Encounter"
 					});
 					if (selected != null) convertAndLoadBestiaryList(allSaves[selected]);
 					break;
@@ -112,7 +113,7 @@ class InitiativeTracker {
 		const $wrpHeader = $(`
 			<div class="dm-init-wrp-header">
 				<div class="dm-init-row-lhs dm-init-header">
-					<div class="full-width">Creature/Status</div>
+					<div class="w-100">Creature/Status</div>
 				</div>
 
 				<div class="dm-init-row-mid"/>
@@ -158,7 +159,7 @@ class InitiativeTracker {
 		$(`<button class="btn btn-primary btn-xs mr-2" title="Player Window"><span class="glyphicon glyphicon-user"/></button>`)
 			.appendTo($wrpUtils)
 			.click(() => {
-				const $modalInner = UiUtil.getShow$Modal({
+				const {$modalInner} = UiUtil.getShowModal({
 					title: "Configure Player View",
 					fullWidth: true,
 					fullHeight: true,
@@ -167,16 +168,16 @@ class InitiativeTracker {
 					}
 				});
 
-				const $wrpHelp = UiUtil._getAdd$Row($modalInner, "div");
+				const $wrpHelp = UiUtil.$getAddModalRow($modalInner, "div");
 				const $btnAltGenAll = $(`<button class="btn btn-primary btn-text-insert">Generate All</button>`).click(() => $btnGenServerTokens.click());
 				const $btnAltCopyAll = $(`<button class="btn btn-primary btn-text-insert">Copy Server Tokens</button>`).click(() => $btnCopyServers.click());
-				$(`<div class="row full-width">
+				$$`<div class="row w-100">
 					<div class="col-12">
 						<p>
 						The Player View is part of a peer-to-peer (i.e., serverless) system to allow players to connect to a DM's initiative tracker. Players should use the <a href="inittrackerplayerview.html">Initiative Tracker Player View</a> page to connect to the DM's instance. As a DM, the usage is as follows:
 						<ol>
 								<li>Add the required number of players, and input (preferably unique) player names.</li>
-								<li>Click "<div data-r="$btnAltGenAll"/>," which will generate a "server token" per player. You can click "<div data-r="$btnAltCopyAll"/>" to copy them all as a single block of text, or click on the "Server Token" values to copy them individually. Distribute these tokens to your players (via a messaging service of your choice; we recommend <a href="https://discordapp.com/">Discord</a>). Each player should paste their token into the <a href="inittrackerplayerview.html">Initiative Tracker Player View</a>, following the instructions provided therein.</li>
+								<li>Click "${$btnAltGenAll}," which will generate a "server token" per player. You can click "${$btnAltCopyAll}" to copy them all as a single block of text, or click on the "Server Token" values to copy them individually. Distribute these tokens to your players (via a messaging service of your choice; we recommend <a href="https://discordapp.com/">Discord</a>). Each player should paste their token into the <a href="inittrackerplayerview.html">Initiative Tracker Player View</a>, following the instructions provided therein.</li>
 								<li>
 									Get a resulting "client token" from each player via a messaging service of your choice. Then, either:
 									<ol type="a">
@@ -188,11 +189,11 @@ class InitiativeTracker {
 						</p>
 						<p>Once a player's client has been "accepted," it will receive updates from the DM's tracker. <i>Please note that this system is highly experimental. Your experience may vary.</i></p>
 					</div>
-				</div>`).swap({$btnAltGenAll, $btnAltCopyAll}).appendTo($wrpHelp);
+				</div>`.appendTo($wrpHelp);
 
-				UiUtil.addModal$Sep($modalInner);
+				UiUtil.addModalSep($modalInner);
 
-				const $wrpTop = UiUtil._getAdd$Row($modalInner, "div");
+				const $wrpTop = UiUtil.$getAddModalRow($modalInner, "div");
 
 				const $btnAddClient = $(`<button class="btn btn-xs btn-primary" title="Add Client">Add Player</button>`).click(() => addClientRow());
 
@@ -212,12 +213,12 @@ class InitiativeTracker {
 
 				const $btnAcceptClients = $(`<button class="btn btn-xs btn-primary" title="Open a prompt into which text containing client tokens can be pasted">Accept Multiple Clients</button>`)
 					.click(() => {
-						const $modalInnerAccept = UiUtil.getShow$Modal({title: "Accept Multiple Clients"});
+						const {$modalInner, doClose} = UiUtil.getShowModal({title: "Accept Multiple Clients"});
 
 						const $iptText = $(`<textarea class="form-control dm_init__pl_textarea block mb-2"/>`)
 							.keydown(() => $iptText.removeClass("error-background"));
 
-						const $btnAccept = $(`<button class="btn btn-xs btn-primary block text-align-center" title="Add Client">Accept Multiple Clients</button>`)
+						const $btnAccept = $(`<button class="btn btn-xs btn-primary block text-center" title="Add Client">Accept Multiple Clients</button>`)
 							.click(async () => {
 								$iptText.removeClass("error-background");
 								const txt = $iptText.val();
@@ -231,62 +232,67 @@ class InitiativeTracker {
 										serverInfo.rowMeta.$btnAcceptClientToken.attr("disabled", true);
 										delete serverInfo._tempTokenToDisplay;
 									});
-									$modalInnerAccept.data("close")();
+									doClose();
 									sendStateToClientsDebounced();
 								}
 							});
 
-						$(`<div>
+						$$`<div>
 							<p>Paste text containing one or more client tokens, and click "Accept Multiple Clients"</p>
-							<div data-r="$iptText"/>
-							<div class="flex-vh-center"><div data-r="$btnAccept"/></div>
-						</div>`).swap({$iptText, $btnAccept}).appendTo($modalInnerAccept)
+							${$iptText}
+							<div class="flex-vh-center">${$btnAccept}</div>
+						</div>`.appendTo($modalInner)
 					});
 
-				$(`
-					<div class="row full-width">
+				$$`
+					<div class="row w-100">
 						<div class="col-12">
 							<div class="flex-inline-v-center mr-2">
 								<span class="mr-1">Add a player (client):</span>
-								<div data-r="$btnAddClient"/>
+								${$btnAddClient}
 							</div>
 							<div class="flex-inline-v-center mr-2">
 								<span class="mr-1">Copy all un-paired server tokens:</span>
-								<div data-r="$btnCopyServers"/>
+								${$btnCopyServers}
 							</div>
 							<div class="flex-inline-v-center mr-2">
 								<span class="mr-1">Mass-accept clients:</span>
-								<div data-r="$btnAcceptClients"/>
+								${$btnAcceptClients}
 							</div>
 						</div>
 					</div>
-				`).swap({$btnAddClient, $btnCopyServers, $btnAcceptClients}).appendTo($wrpTop);
+				`.appendTo($wrpTop);
 
-				UiUtil.addModal$Sep($modalInner);
+				UiUtil.addModalSep($modalInner);
 
 				const $btnGenServerTokens = $(`<button class="btn btn-primary btn-xs">Generate All</button>`)
 					.click(() => pGetServerTokens(p2pMeta.rows));
 
-				UiUtil._getAdd$Row($modalInner, "div")
-					.append(`
-					<div class="row full-width">
+				UiUtil.$getAddModalRow($modalInner, "div")
+					.append($$`
+					<div class="row w-100">
 						<div class="col-2 bold">Player Name</div>
 						<div class="col-3-5 bold">Server Token</div>
-						<div class="col-1 text-align-center"><div data-r="$btnGenServerTokens"/></div>
+						<div class="col-1 text-center">${$btnGenServerTokens}</div>
 						<div class="col-3-5 bold">Client Token</div>
 					</div>
-				`).swap({$btnGenServerTokens});
-
-				const _get$rowTemplate = () => $(`
-					<div class="row full-width mb-2 flex">
-						<div class="col-2"><div data-r="$iptName"/></div>
-						<div class="col-3-5"><div data-r="$iptTokenServer"/></div>
-						<div class="col-1 flex-vh-center"><div data-r="$btnGenServerToken"/></div>
-						<div class="col-3-5"><div data-r="$iptTokenClient"/></div>
-						<div class="col-1-5 flex-vh-center"><div data-r="$btnAcceptClientToken"/></div>
-						<div class="col-0-5 flex-vh-center"><div data-r="$btnDeleteClient"/></div>
-					</div>
 				`);
+
+				const _get$rowTemplate = (
+					$iptName,
+					$iptTokenServer,
+					$btnGenServerToken,
+					$iptTokenClient,
+					$btnAcceptClientToken,
+					$btnDeleteClient
+				) => $$`<div class="row w-100 mb-2 flex">
+					<div class="col-2">${$iptName}</div>
+					<div class="col-3-5">${$iptTokenServer}</div>
+					<div class="col-1 flex-vh-center">${$btnGenServerToken}</div>
+					<div class="col-3-5">${$iptTokenClient}</div>
+					<div class="col-1-5 flex-vh-center">${$btnAcceptClientToken}</div>
+					<div class="col-0-5 flex-vh-center">${$btnDeleteClient}</div>
+				</div>`;
 
 				const addClientRow = () => {
 					const rowMeta = {id: CryptUtil.uid()};
@@ -344,14 +350,14 @@ class InitiativeTracker {
 							if (!$wrpRowsInner.find(`.row`).length) addClientRow();
 						});
 
-					rowMeta.$row = _get$rowTemplate().swap({
+					rowMeta.$row = _get$rowTemplate(
 						$iptName,
 						$iptTokenServer,
 						$btnGenServerToken,
 						$iptTokenClient,
 						$btnAcceptClientToken,
 						$btnDeleteClient
-					}).appendTo($wrpRowsInner);
+					).appendTo($wrpRowsInner);
 
 					rowMeta.$iptName = $iptName;
 					rowMeta.$iptTokenServer = $iptTokenServer;
@@ -363,8 +369,8 @@ class InitiativeTracker {
 					return rowMeta;
 				};
 
-				const $wrpRows = UiUtil._getAdd$Row($modalInner, "div");
-				const $wrpRowsInner = $(`<div class="full-width"/>`).appendTo($wrpRows);
+				const $wrpRows = UiUtil.$getAddModalRow($modalInner, "div");
+				const $wrpRowsInner = $(`<div class="w-100"/>`).appendTo($wrpRows);
 
 				if (p2pMeta.rows.length) p2pMeta.rows.forEach(row => row.$row.appendTo($wrpRowsInner));
 				else addClientRow();
@@ -434,7 +440,7 @@ class InitiativeTracker {
 					return serverInfo[i].textifiedSdp;
 				});
 			} else {
-				p2pMeta.serverInfo = new Promise(async resolve => {
+				p2pMeta.serverInfo = (async () => {
 					p2pMeta.serverInfo = await PeerUtil.pInitialiseServers(names, _DM_MESSAGE_RECEIVER, _DM_ERROR_HANDLER, {shortTokens: !!cfg.playerInitShortTokens});
 
 					targetRows.forEach((r, i) => {
@@ -447,9 +453,7 @@ class InitiativeTracker {
 						r.$iptTokenClient.attr("disabled", false);
 						r.$btnAcceptClientToken.attr("disabled", false);
 					});
-
-					resolve();
-				});
+				})();
 
 				await p2pMeta.serverInfo;
 				return targetRows.map(r => r.serverInfo.textifiedSdp);
@@ -485,13 +489,13 @@ class InitiativeTracker {
 		const $btnLock = $(`<button class="btn btn-danger btn-xs" title="Lock Tracker"><span class="glyphicon glyphicon-lock"></span></button>`).appendTo($wrpLockSettings);
 		$btnLock.on("click", () => {
 			if (cfg.isLocked) {
-				$btnLock.removeClass("btn-success").addClass("btn-danger");
-				$(".dm-init-lockable").toggleClass("disabled");
-				$("input.dm-init-lockable").prop('disabled', false);
+				$btnLock.removeClass("btn-success").addClass("btn-danger").attr("title", "Lock Tracker");
+				$(".dm-init-lockable").removeClass("disabled");
+				$("input.dm-init-lockable").prop("disabled", false);
 			} else {
-				$btnLock.removeClass("btn-danger").addClass("btn-success");
-				$(".dm-init-lockable").toggleClass("disabled");
-				$("input.dm-init-lockable").prop('disabled', true);
+				$btnLock.removeClass("btn-danger").addClass("btn-success").attr("title", "Unlock Tracker");
+				$(".dm-init-lockable").addClass("disabled");
+				$("input.dm-init-lockable").prop("disabled", true);
 			}
 			cfg.isLocked = !cfg.isLocked;
 			handleStatColsChange();
@@ -500,24 +504,24 @@ class InitiativeTracker {
 		$(`<button class="btn btn-default btn-xs mr-2"><span class="glyphicon glyphicon-cog"></span></button>`)
 			.appendTo($wrpLockSettings)
 			.click(() => {
-				const $modalInner = UiUtil.getShow$Modal(
-					"Settings",
-					() => {
+				const {$modalInner} = UiUtil.getShowModal({
+					title: "Settings",
+					cbClose: () => {
 						handleStatColsChange();
 						doUpdateExternalStates();
 					}
-				);
-				UiUtil.addModal$Sep($modalInner);
-				UiUtil.getAddModal$RowCb($modalInner, "Roll hit points", cfg, "isRollHp");
-				UiUtil.addModal$Sep($modalInner);
-				UiUtil.getAddModal$RowCb($modalInner, "Player View: Show exact HP", cfg, "playerInitShowExactHp");
-				UiUtil.getAddModal$RowCb($modalInner, "Player View: Auto-hide new monsters", cfg, "playerInitHideNewMonster");
-				UiUtil.getAddModal$RowCb($modalInner, "Player View: Show ordinals", cfg, "playerInitShowOrdinals", "For example, if you add two Goblins, one will be Goblin (1) and the other Goblin (2), rather than having identical names.");
-				UiUtil.getAddModal$RowCb($modalInner, "Player View: Shorten server tokens", cfg, "playerInitShortTokens", "Server tokens will be roughly half as many characters, but will contain non-standard characters.");
-				UiUtil.addModal$Sep($modalInner);
+				});
+				UiUtil.addModalSep($modalInner);
+				UiUtil.$getAddModalRowCb($modalInner, "Roll hit points", cfg, "isRollHp");
+				UiUtil.addModalSep($modalInner);
+				UiUtil.$getAddModalRowCb($modalInner, "Player View: Show exact HP", cfg, "playerInitShowExactHp");
+				UiUtil.$getAddModalRowCb($modalInner, "Player View: Auto-hide new monsters", cfg, "playerInitHideNewMonster");
+				UiUtil.$getAddModalRowCb($modalInner, "Player View: Show ordinals", cfg, "playerInitShowOrdinals", "For example, if you add two Goblins, one will be Goblin (1) and the other Goblin (2), rather than having identical names.");
+				UiUtil.$getAddModalRowCb($modalInner, "Player View: Shorten server tokens", cfg, "playerInitShortTokens", "Server tokens will be roughly half as many characters, but will contain non-standard characters.");
+				UiUtil.addModalSep($modalInner);
 
-				const $cbStats = UiUtil.getAddModal$RowCb($modalInner, "Additional Columns", cfg, "statsAddColumns");
-				const $wrpTblStatsHead = UiUtil._getAdd$Row($modalInner, "div")
+				const $cbStats = UiUtil.$getAddModalRowCb($modalInner, "Additional Columns", cfg, "statsAddColumns");
+				const $wrpTblStatsHead = UiUtil.$getAddModalRow($modalInner, "div")
 					.addClass("ui-modal__row--stats-header")
 					// intentional difference in column widths compared to the rows, to position the long header
 					//  ("Editable?") correctly
@@ -526,20 +530,20 @@ class InitiativeTracker {
 							<div class="col-1-3"/>
 							<div class="col-4-9">Contains...</div>
 							<div class="col-2-5">Abbreviation</div>
-							<div class="col-1-7 text-align-center help" title="Only affects creatures. Players are always editable.">Editable?</div>
+							<div class="col-1-7 text-center help" title="Only affects creatures. Players are always editable.">Editable?</div>
 						</div>
 					`);
-				const $wrpTblStats = UiUtil._getAdd$Row($modalInner, "div").addClass("ui-modal__row--stats");
+				const $wrpTblStats = UiUtil.$getAddModalRow($modalInner, "div").addClass("ui-modal__row--stats");
 
 				(() => {
 					const $wrpStatsRows = $(`<div class="dm_init__stats_rows mb-2"/>`).appendTo($wrpTblStats);
-					const $wrpBtn = $(`<div class="text-align-center"/>`).appendTo($wrpTblStats);
+					const $wrpBtn = $(`<div class="text-center"/>`).appendTo($wrpTblStats);
 
 					const addRow = (thisCfg) => {
 						if (!thisCfg) { // if new row
 							thisCfg = {
 								id: CryptUtil.uid(),
-								v: false, // is player-visible
+								v: 0, // is player-visible (0 = none, 1 = all, 2 = player units only)
 								o: cfg.statsCols.filter(it => !it.isDeleted).length + 1, // order
 								e: true, // editable
 
@@ -580,9 +584,9 @@ class InitiativeTracker {
 						});
 
 						const $btnVisible = InitiativeTracker.get$btnPlayerVisible(thisCfg.v, () => {
-							thisCfg.v = $btnVisible.hasClass("btn-primary");
+							thisCfg.v = $btnVisible.hasClass("btn-primary--half") ? 2 : $btnVisible.hasClass("btn-primary") ? 1 : 0;
 							doUpdateExternalStates();
-						});
+						}, true);
 
 						const $btnDel = $(`<button class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-trash"/></button>`).click(() => {
 							$row.remove();
@@ -624,14 +628,14 @@ class InitiativeTracker {
 
 						const $row = $$`
 							<div class="row dm_init__stats_row dm_init__stats_row--item" data-id="${thisCfg.id}">
-								<div class="col-1-3 btn-group text-align-center dm_init__stats_up_down">${$btnUp}${$btnDown}</div>
+								<div class="col-1-3 btn-group text-center dm_init__stats_up_down">${$btnUp}${$btnDown}</div>
 								<div class="col-1-3 dm_init__stats_up_down--spacer"></div>
 
 								<div class="col-4-9">${$selPre}</div>
 								<div class="col-2-8">${$iptAbv}</div>
-								<div class="col-1 text-align-center">${$cbEditable}</div>
-								<div class="col-1 text-align-center">${$btnVisible}</div>
-								<div class="col-1 text-align-center dm_init__stats_del">${$btnDel}</div>
+								<div class="col-1 text-center">${$cbEditable}</div>
+								<div class="col-1 text-center">${$btnVisible}</div>
+								<div class="col-1 text-center dm_init__stats_del">${$btnDel}</div>
 							</div>
 						`.appendTo($wrpStatsRows);
 					};
@@ -678,12 +682,8 @@ class InitiativeTracker {
 				isWait: false
 			};
 
-			const $modal = $(`<div class="ui-modal__overlay">`);
-			const $modalInner = $(`<div class="ui-modal__inner dropdown-menu">`).appendTo($modal);
-			const doClose = () => $modal.remove();
-			$modal.on("click", doClose);
-			$modalInner.on("click", (e) => e.stopPropagation());
-			$(`body`).append($modal);
+			const {$modalInner, doClose} = UiUtil.getShowModal();
+			$modalInner.addClass("flex-col");
 
 			const $controls = $(`<div class="split" style="flex-shrink: 0"/>`).appendTo($modalInner);
 			const $srch = $(`<input class="ui-search__ipt-search search form-control" autocomplete="off" placeholder="Search...">`).appendTo($controls);
@@ -708,8 +708,8 @@ class InitiativeTracker {
 				return Number(val);
 			};
 
-			const $wrpCbRoll = $(`<label class="ui-search__ipt-search-sub-wrp"> Roll HP</label>`).appendTo($controls);
-			const $cbRoll = $(`<input type="checkbox">`).prop("checked", cfg.isRollHp).on("change", () => cfg.isRollHp = $cbRoll.prop("checked")).prependTo($wrpCbRoll);
+			const $wrpCbRoll = $(`<label class="ui-search__ipt-search-sub-wrp flex-vh-center"> <span>Roll HP</span></label>`).appendTo($controls);
+			const $cbRoll = $(`<input class="mr-1" type="checkbox">`).prop("checked", cfg.isRollHp).on("change", () => cfg.isRollHp = $cbRoll.prop("checked")).prependTo($wrpCbRoll);
 			const $results = $(`<div class="ui-search__wrp-results"/>`).appendTo($modalInner);
 
 			const showMsgIpt = () => {
@@ -823,12 +823,13 @@ class InitiativeTracker {
 				const $row = $(e);
 				const $conds = $row.find(`.init__cond`);
 				const $iptDisplayName = $row.find(`input.displayName`);
+				const customName = $row.hasClass(`dm-init-row-rename`) ? $row.find(`.dm-init-row-link-name`).text() : null;
 				const n = $iptDisplayName.length ? {
 					n: $row.find(`input.name`).val(),
 					d: $iptDisplayName.val(),
 					s: $row.find(`input.scaledCr`).val() || ""
 				} : $row.find(`input.name`).val();
-				return {
+				const out = {
 					n,
 					k: getStatColsState($row),
 					h: $row.find(`input.hp`).val(),
@@ -838,7 +839,9 @@ class InitiativeTracker {
 					s: $row.find(`input.source`).val(),
 					c: $conds.length ? $conds.map((i, e) => $(e).data("getState")()).get() : [],
 					v: $row.find(`.dm_init__btn_eye`).hasClass(`btn-primary`)
-				}
+				};
+				if (customName) out.m = customName;
+				return out;
 			}).get();
 			return {
 				r: rows,
@@ -859,7 +862,7 @@ class InitiativeTracker {
 		}
 
 		function getPlayerFriendlyState () {
-			const visibleStatsCols = cfg.statsCols.filter(it => !it.isDeleted && it.v).map(({id, a, o}) => ({id, a, o})); // id, abbreviation, order
+			const visibleStatsCols = cfg.statsCols.filter(it => !it.isDeleted && it.v).map(({id, a, o, v}) => ({id, a, o, v})); // id, abbreviation, order, visibility mode (delete this later)
 
 			const rows = $wrpEntries.find(`.dm-init-row`).map((i, e) => {
 				const $row = $(e);
@@ -867,8 +870,16 @@ class InitiativeTracker {
 				// if the row is player-hidden
 				if (!$row.find(`.dm_init__btn_eye`).hasClass(`btn-primary`)) return false;
 
+				const isMonster = !!$row.find(`.init-wrp-creature`).length;
+
 				const statCols = getStatColsState($row);
-				const statsVals = statCols.filter(it => visibleStatsCols.find(sc => sc.id === it.id));
+				const statsVals = statCols.map(it => {
+					const mappedCol = visibleStatsCols.find(sc => sc.id === it.id);
+					if (mappedCol) {
+						if (mappedCol.v === 1 || !isMonster) return it;
+						else return {u: true}; // "unknown"
+					} else return null;
+				}).filter(Boolean);
 
 				const $conds = $row.find(`.init__cond`);
 
@@ -879,6 +890,8 @@ class InitiativeTracker {
 					c: $conds.length ? $conds.map((i, e) => $(e).data("getState")()).get() : [],
 					k: statsVals
 				};
+
+				if ($row.hasClass("dm-init-row-rename")) out.m = $row.find(`.dm-init-row-link-name`).text();
 
 				const hp = Number($row.find(`input.hp`).val());
 				const hpMax = Number($row.find(`input.hp-max`).val());
@@ -892,6 +905,7 @@ class InitiativeTracker {
 
 				return out;
 			}).get().filter(Boolean);
+			visibleStatsCols.forEach(it => delete it.v); // clean up any visibility mode flags
 			return {
 				r: rows,
 				c: visibleStatsCols,
@@ -957,22 +971,24 @@ class InitiativeTracker {
 		function makeRow (opts) {
 			let {
 				nameOrMeta,
+				customName,
 				hp,
 				hpMax,
 				init,
 				isActive,
 				source,
 				conditions,
-				rollHp,
+				isRollHp,
 				statsCols,
 				isVisible
 			} = Object.assign({
 				nameOrMeta: "",
+				customName: "",
 				hp: "",
 				hpMax: "",
 				init: "",
 				conditions: [],
-				rollHp: false,
+				isRollHp: false,
 				isVisible: !cfg.playerInitHideNewMonster
 			}, opts || {});
 
@@ -989,7 +1005,9 @@ class InitiativeTracker {
 			const $wrpRow = $(`<div class="dm-init-row ${isActive ? "dm-init-row-active" : ""}"/>`);
 
 			const $wrpLhs = $(`<div class="dm-init-row-lhs"/>`).appendTo($wrpRow);
-			const $iptName = $(`<input class="form-control input-sm name dm-init-name dm-init-lockable dm-init-row-input ${isMon ? "hidden" : ""}" placeholder="Name" value="${name}">`).appendTo($wrpLhs);
+			const $iptName = $(`<input class="form-control input-sm name dm-init-name dm-init-lockable dm-init-row-input ${isMon ? "hidden" : ""}" placeholder="Name">`)
+				.val(name)
+				.appendTo($wrpLhs);
 			$iptName.on("change", () => {
 				doSort(ALPHA);
 				doUpdateExternalStates();
@@ -1024,6 +1042,23 @@ class InitiativeTracker {
 						</span>
 					</div>
 				`).appendTo($wrpLhs);
+
+				const setCustomName = (name) => {
+					$monName.find(`a`).addClass("dm-init-row-link-name").text(name);
+					$wrpRow.addClass("dm-init-row-rename");
+				};
+
+				if (customName) setCustomName(customName);
+
+				const $wrpBtnsRhs = $(`<div/>`).appendTo($monName);
+				$(`<button class="btn btn-default btn-xs dm-init-lockable" title="Rename" tabindex="-1"><span class="glyphicon glyphicon-pencil"></span></button>`)
+					.click(async () => {
+						if (cfg.isLocked) return;
+						const nuName = await InputUiUtil.pGetUserString({title: "Enter Name"});
+						if (nuName == null || !nuName.trim()) return;
+						setCustomName(nuName);
+						doSort(cfg.sort);
+					}).appendTo($wrpBtnsRhs);
 				$(`<button class="btn btn-success btn-xs dm-init-lockable" title="Add Another (SHIFT for Roll New)" tabindex="-1"><span class="glyphicon glyphicon-plus"></span></button>`)
 					.click((evt) => {
 						if (cfg.isLocked) return;
@@ -1032,12 +1067,13 @@ class InitiativeTracker {
 							init: evt.shiftKey ? "" : $iptScore.val(),
 							isActive: $wrpRow.hasClass("dm-init-row-active"),
 							source,
-							rollHp: cfg.isRollHp,
+							isRollHp: cfg.isRollHp,
 							statsCols: evt.shiftKey ? null : getStatColsState($wrpRow),
 							isVisible: $wrpRow.find(`.dm_init__btn_eye`).hasClass("btn-primary")
 						});
 						doSort(cfg.sort);
-					}).appendTo($monName);
+					}).appendTo($wrpBtnsRhs);
+
 				$(`<input class="source hidden" value="${source}">`).appendTo($wrpLhs);
 
 				if (nameOrMeta instanceof Object && nameOrMeta.scaledTo) {
@@ -1061,10 +1097,7 @@ class InitiativeTracker {
 			$(`<button class="btn btn-warning btn-xs dm-init-row-btn dm-init-row-btn-flag" title="Add Condition" tabindex="-1"><span class="glyphicon glyphicon-flag"/></button>`)
 				.appendTo($wrpConds)
 				.on("click", () => {
-					const $modal = $(`<div class="ui-modal__inner dropdown-menu" style="height: initial"/>`);
-					const $wrpModal = $(`<div class="ui-modal__overlay">`).appendTo($(`body`)).click(() => $wrpModal.remove());
-					$modal.appendTo($wrpModal);
-					const $modalInner = $(`<div class="modal__inner"/>`).appendTo($modal).click((evt) => evt.stopPropagation());
+					const {$modalInner} = UiUtil.getShowModal({noMinHeight: true});
 
 					const $wrpRows = $(`<div class="dm-init-modal-wrp-rows"/>`).appendTo($modalInner);
 
@@ -1072,7 +1105,7 @@ class InitiativeTracker {
 					for (let i = 0; i < conds.length; i += 3) {
 						const $row = $(`<div class="row mb-2"/>`).appendTo($wrpRows);
 						const populateCol = (cond) => {
-							const $col = $(`<div class="col-4 text-align-center"/>`).appendTo($row);
+							const $col = $(`<div class="col-4 text-center"/>`).appendTo($row);
 							if (cond) {
 								$(`<button class="btn btn-default btn-xs btn-dm-init-cond" style="background-color: ${cond.color} !important;">${cond.name}</button>`).appendTo($col).click(() => {
 									$iptName.val(cond.name);
@@ -1087,11 +1120,11 @@ class InitiativeTracker {
 
 					$(`<div class="row mb-2">
 						<div class="col-5">Name (optional)</div>
-						<div class="col-2 text-align-center">Color</div>
+						<div class="col-2 text-center">Color</div>
 						<div class="col-5">Duration (optional)</div>
 					</div>`).appendTo($wrpRows);
 					const $controls = $(`<div class="row mb-2"/>`).appendTo($wrpRows);
-					const [$wrpName, $wrpColor, $wrpTurns] = [...new Array(3)].map((it, i) => $(`<div class="col-${i === 1 ? 2 : 5} text-align-center"/>`).appendTo($controls));
+					const [$wrpName, $wrpColor, $wrpTurns] = [...new Array(3)].map((it, i) => $(`<div class="col-${i === 1 ? 2 : 5} text-center"/>`).appendTo($controls));
 					const $iptName = $(`<input class="form-control">`)
 						.on("keydown", (e) => {
 							if (e.which === 13) $btnAdd.click();
@@ -1104,7 +1137,7 @@ class InitiativeTracker {
 						})
 						.appendTo($wrpTurns);
 					const $wrpAdd = $(`<div class="row">`).appendTo($wrpRows);
-					const $wrpAddInner = $(`<div class="col-12 text-align-center">`).appendTo($wrpAdd);
+					const $wrpAddInner = $(`<div class="col-12 text-center">`).appendTo($wrpAdd);
 					const $btnAdd = $(`<button class="btn btn-primary">Set Condition</button>`)
 						.click(() => {
 							addCondition($iptName.val().trim(), $iptColor.val(), $iptTurns.val());
@@ -1133,7 +1166,7 @@ class InitiativeTracker {
 				}
 			};
 
-			const $iptHp = $(`<input class="form-control input-sm hp dm-init-row-input text-align-right dm_init__hp dm_init__hp--current" value="${hpVals.curHp}">`)
+			const $iptHp = $(`<input class="form-control input-sm hp dm-init-row-input text-right dm_init__hp dm_init__hp--current" value="${hpVals.curHp}">`)
 				.change(() => {
 					handleMathInput($iptHp, "curHp");
 					doUpdateExternalStates();
@@ -1153,7 +1186,7 @@ class InitiativeTracker {
 
 			doUpdateHpColors();
 
-			const $iptScore = $(`<input class="form-control input-sm score dm-init-lockable dm-init-row-input text-align-center dm_init__ipt--rhs" type="number" value="${init}">`)
+			const $iptScore = $(`<input class="form-control input-sm score dm-init-lockable dm-init-row-input text-center dm_init__ipt--rhs" type="number" value="${init}">`)
 				.on("change", () => doSort(NUM))
 				.click(() => $iptScore.select())
 				.appendTo($wrpRhs);
@@ -1163,11 +1196,11 @@ class InitiativeTracker {
 					const m = Renderer.hover._getFromCache(UrlUtil.PG_BESTIARY, source, hash);
 
 					// set or roll HP
-					if (!rollHp && m.hp.average) {
+					if (!isRollHp && m.hp.average) {
 						hpVals.curHp = hpVals.maxHp = m.hp.average;
 						$iptHp.val(hpVals.curHp);
 						$iptHpMax.val(hpVals.maxHp);
-					} else if (rollHp && m.hp.formula) {
+					} else if (isRollHp && m.hp.formula) {
 						const roll = Renderer.dice.roll2(m.hp.formula, {
 							user: false,
 							name: getRollName(m),
@@ -1213,7 +1246,7 @@ class InitiativeTracker {
 				} else hpVals[prop] = nxt;
 			};
 
-			InitiativeTracker.get$btnPlayerVisible(isVisible, doUpdateExternalStates, "dm-init-row-btn", "dm_init__btn_eye")
+			InitiativeTracker.get$btnPlayerVisible(isVisible, doUpdateExternalStates, false, "dm-init-row-btn", "dm_init__btn_eye")
 				.appendTo($wrpRhs);
 
 			$(`<button class="btn btn-danger btn-xs dm-init-row-btn dm-init-lockable" title="Delete" tabindex="-1"><span class="glyphicon glyphicon-trash"/></button>`)
@@ -1252,6 +1285,10 @@ class InitiativeTracker {
 						const $e = $(e);
 						const id = $e.attr("data-id");
 						const $ipt = $e.find(`input`);
+
+						// avoid race conditions -- the input is still to be populated
+						if ($ipt.attr("populate-running") === "true") return;
+
 						const isCb = $ipt.attr("type") === "checkbox";
 						existing[id] = {
 							v: isCb ? $ipt.prop("checked") : $ipt.val(),
@@ -1287,16 +1324,18 @@ class InitiativeTracker {
 
 						return $cb;
 					} else {
-						const $ipt = $(`<input class="form-control input-sm dm_init__stat_ipt text-align-center" ${!cfg.isLocked && (c.e || !isMon) ? "" : "disabled"}>`)
+						const $ipt = $(`<input class="form-control input-sm dm_init__stat_ipt text-center" ${!cfg.isLocked && (c.e || !isMon) ? "" : "disabled"}>`)
 							.change(() => doUpdateExternalStates());
 
 						const populateFromBlock = () => {
+							$ipt.attr("populate-running", true);
 							const meta = InitiativeTracker.STAT_COLUMNS[c.p];
 							if (isMon && meta) {
 								const hash = UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_BESTIARY]({name: name, source: source});
 								const populateStats = async () => {
 									const mon = await Renderer.hover.pCacheAndGet(UrlUtil.PG_BESTIARY, source, hash);
 									$ipt.val(meta.get(mon));
+									$ipt.removeAttr("populate-running");
 									doUpdateExternalStates();
 								};
 								populateStats();
@@ -1332,9 +1371,7 @@ class InitiativeTracker {
 			}
 
 			const $rows = $wrpEntries.find(`.dm-init-row`);
-			$rows.each((i, e) => {
-				populateRowStatCols($(e));
-			});
+			$rows.each((i, e) => populateRowStatCols($(e)));
 			cfg.statsCols.forEach(c => c.po = null);
 		};
 
@@ -1362,8 +1399,16 @@ class InitiativeTracker {
 		function doSort (mode) {
 			if (cfg.sort !== mode) return;
 			const sorted = $wrpEntries.find(`.dm-init-row`).sort((a, b) => {
-				let aVal = $(a).find(`input.${cfg.sort === ALPHA ? "name" : "score"}`).val();
-				let bVal = $(b).find(`input.${cfg.sort === ALPHA ? "name" : "score"}`).val();
+				let aVal;
+				let bVal;
+
+				if (cfg.sort === ALPHA && $(a).hasClass("dm-init-row-rename")) {
+					aVal = $(a).find(".dm-init-row-link-name").text();
+				} else aVal = $(a).find(`input.${cfg.sort === ALPHA ? "name" : "score"}`).val();
+				if (cfg.sort === ALPHA && $(b).hasClass("dm-init-row-rename")) {
+					bVal = $(b).find(".dm-init-row-link-name").text();
+				} else bVal = $(b).find(`input.${cfg.sort === ALPHA ? "name" : "score"}`).val();
+
 				let first = 0;
 				let second = 0;
 				if (cfg.sort === NUM) {
@@ -1379,7 +1424,7 @@ class InitiativeTracker {
 					const $bNum = $(b).find(`span[data-number]`);
 					if ($bNum.length) bVal2 = $bNum.data("number");
 
-					first = cfg.dir === ASC ? SortUtil.ascSort(aVal, bVal) : SortUtil.ascSort(bVal, aVal);
+					first = cfg.dir === ASC ? SortUtil.ascSortLower(aVal, bVal) : SortUtil.ascSortLower(bVal, aVal);
 					second = cfg.dir === ASC ? SortUtil.ascSort(aVal2, bVal2) : SortUtil.ascSort(bVal2, aVal2);
 				}
 				return first || second;
@@ -1408,6 +1453,7 @@ class InitiativeTracker {
 			(state.r || []).forEach(r => {
 				makeRow({
 					nameOrMeta: r.n,
+					customName: r.m,
 					hp: r.h,
 					hpMax: r.g,
 					init: r.i,
@@ -1463,29 +1509,34 @@ class InitiativeTracker {
 				if (bestiaryList.a) { // advanced encounter builder
 					if (bestiaryList.d) {
 						const colNameIndex = {};
-						(bestiaryList.c || []).forEach((colName, i) => colNameIndex[i] = (colName || "").toLowerCase());
+						bestiaryList.c = bestiaryList.c || [];
+						if (bestiaryList.c.length) cfg.statsAddColumns = true;
+
+						bestiaryList.c.forEach((colName, i) => colNameIndex[i] = (colName || "").toLowerCase());
 
 						// mark all old stats cols for deletion
 						cfg.statsCols.forEach(col => col.isDeleted = true);
 
 						const colIndex = {};
 						let hpIndex = null;
-						(bestiaryList.c || []).forEach((colName, i) => {
-							if ((colName || "").toLowerCase() === "hp") {
+						bestiaryList.c.forEach((colName, i) => {
+							colName = colName || "";
+							if (colName.toLowerCase() === "hp") {
 								hpIndex = i;
 								return;
 							}
+							const populateEntry = Object.entries(InitiativeTracker.STAT_COLUMNS).find(([_, v]) => v.abv && v.abv.toLowerCase() === colName.toLowerCase());
 
 							const newCol = {
 								id: CryptUtil.uid(),
 								e: true, // editable
-								v: false, // player-visible
+								v: 2, // is player-visible (0 = none, 1 = all, 2 = player units only)
 								o: i, // order
 
 								// input data
-								p: "", // populate with...
+								p: populateEntry ? populateEntry[0] : "", // populate with...
 								po: null, // populate with... (previous value)
-								a: colName || "" // abbreviation
+								a: colName // abbreviation
 							};
 							colIndex[i] = newCol;
 							cfg.statsCols.push(newCol);
@@ -1589,13 +1640,13 @@ class InitiativeTracker {
 						});
 					});
 					loadState(toLoad, cfg.importIsAppend);
-					handleStatColsChange();
 				});
 			} else {
 				loadState(toLoad, cfg.importIsAppend);
-				handleStatColsChange();
 			}
 		}
+
+		$wrpTracker.data("doConvertAndLoadBestiaryList", (bestiaryList) => convertAndLoadBestiaryList(bestiaryList));
 
 		loadState(state);
 		doSort(cfg.sort);
@@ -1603,12 +1654,24 @@ class InitiativeTracker {
 		return $wrpTracker;
 	}
 
-	static get$btnPlayerVisible (isVisible, fnOnClick, ...additionalClasses) {
-		const $btnVisible = $(`<button class="btn ${isVisible ? `btn-primary` : `btn-default`} btn-xs ${additionalClasses.join(" ")}" title="${isVisible ? "Shown" : "Hidden"} in player view" tabindex="-1"><span class="glyphicon ${isVisible ? `glyphicon-eye-open` : `glyphicon-eye-close`}"/></button>`)
+	static get$btnPlayerVisible (isVisible, fnOnClick, isTriState, ...additionalClasses) {
+		let isVisNum = Number(isVisible || false);
+
+		const getTitle = () => isVisNum === 0 ? `Hidden in player view` : isVisNum === 1 ? `Shown in player view` : `Shown in player view on player characters, hidden in player view on monsters`;
+		const getClasses = () => `${isVisNum === 0 ? `btn-default` : isVisNum === 1 ? `btn-primary` : `btn-primary btn-primary--half`} btn btn-xs ${additionalClasses.join(" ")}`;
+		const getIconClasses = () => isVisNum === 0 ? `glyphicon glyphicon-eye-close` : `glyphicon glyphicon-eye-open`;
+
+		const $dispIcon = $(`<span class="glyphicon ${getIconClasses()}"/>`);
+		const $btnVisible = $$`<button class="${getClasses()}" title="${getTitle()}" tabindex="-1">${$dispIcon}</button>`
 			.on("click", () => {
-				$btnVisible.toggleClass("btn-primary").toggleClass("btn-default");
-				$btnVisible.find(`.glyphicon`).toggleClass("glyphicon-eye-open").toggleClass("glyphicon-eye-close");
-				$btnVisible.attr("title", $btnVisible.hasClass("btn-primary") ? "Shown in Player View" : "Hidden in Player View");
+				if (isVisNum === 0) isVisNum++;
+				else if (isVisNum === 1) isVisNum = isTriState ? 2 : 0;
+				else if (isVisNum === 2) isVisNum = 0;
+
+				$btnVisible.attr("title", getTitle());
+				$btnVisible.attr("class", getClasses());
+				$dispIcon.attr("class", getIconClasses());
+
 				fnOnClick();
 			});
 		return $btnVisible;

@@ -4,28 +4,6 @@ const od = require('../js/omnidexer.js');
 
 UtilSearchIndex = {};
 
-// store this here, as it should never be loaded by frontend code
-UtilSearchIndex._node_pGetBasicVariantItems = async function (rawVariants) {
-	if (!this.basicVariantItems) {
-		const rawBasics = require(`../data/basicitems.json`);
-
-		const basicItems = await Renderer.item._pGetAndProcBasicItems(rawBasics);
-		const [genericVariants, linkedLootTables] = await Renderer.item._pGetAndProcGenericVariants(rawVariants);
-		const genericAndSpecificVariants = Renderer.item._createSpecificVariants(basicItems, genericVariants, linkedLootTables);
-
-		const revNames = [];
-		genericAndSpecificVariants.forEach(item => {
-			const revName = Renderer.item.modifierPostToPre(MiscUtil.copy(item));
-			if (revName) revNames.push(revName);
-		});
-
-		genericAndSpecificVariants.push(...revNames);
-
-		this.basicVariantItems = genericAndSpecificVariants;
-	}
-	return this.basicVariantItems;
-};
-
 UtilSearchIndex.pGetIndex = async function (doLogging = true, noFilter = false) {
 	return UtilSearchIndex._pGetIndex({}, doLogging, noFilter);
 };
@@ -87,7 +65,7 @@ UtilSearchIndex.pGetIndexAdditionalItem = async function (baseIndex = 0, doLoggi
 		async function pAddData (j) {
 			if (ti.additionalIndexes && ti.additionalIndexes.item) {
 				if (doLogging) console.log(`indexing ${f}`);
-				const extra = await ti.additionalIndexes.item(j);
+				const extra = await ti.additionalIndexes.item(indexer, j);
 				extra.forEach(add => indexer.pushToIndex(add));
 			}
 		}

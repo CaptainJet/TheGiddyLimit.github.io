@@ -1,6 +1,6 @@
 {
-	"$schema": "http://json-schema.org/draft-06/schema#",
-	"version": "1.0.0",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"version": "1.1.1",
 	"type": "object",
 
 	"definitions": {
@@ -37,7 +37,7 @@
 					"type": "integer"
 				},
 				"capCargo": {
-					"type": "number"
+					"type": ["number", "string"]
 				},
 				"pace": {
 					"type": "integer"
@@ -63,13 +63,19 @@
 				"conditionImmune": {
 					"type": "array",
 					"items": {
-						"$ref": "/Entry#/definitions/dataCondImmune"
+						"$ref": "entry.json#/definitions/dataCondImmune"
 					}
 				},
 				"immune": {
 					"type": "array",
 					"items": {
-						"$ref": "/Entry#/definitions/dataDamImmune"
+						"$ref": "entry.json#/definitions/dataDamImmune"
+					}
+				},
+				"action": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
 					}
 				},
 				"hull": {
@@ -108,7 +114,7 @@
 							"entries": {
 								"type": "array",
 								"items": {
-									"$ref": "/Entry"
+									"$ref": "entry.json"
 								}
 							}
 						},
@@ -140,6 +146,7 @@
 								"type": "integer"
 							},
 							"locomotion": {
+								"description": "Legacy format, from the original UA release.",
 								"type": "array",
 								"items": {
 									"type": "object",
@@ -150,7 +157,26 @@
 										"entries": {
 											"type": "array",
 											"items": {
-												"$ref": "/Entry"
+												"$ref": "entry.json"
+											}
+										}
+									},
+									"required": ["mode", "entries"],
+									"additionalProperties": false
+								}
+							},
+							"speed": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"mode": {
+											"type": "string"
+										},
+										"entries": {
+											"type": "array",
+											"items": {
+												"$ref": "entry.json"
 											}
 										}
 									},
@@ -159,7 +185,7 @@
 								}
 							}
 						},
-						"required": ["ac", "hp", "locomotion"],
+						"required": ["ac", "hp"],
 						"additionalProperties": false
 					}
 				},
@@ -186,7 +212,7 @@
 							"entries": {
 								"type": "array",
 								"items": {
-									"$ref": "/Entry"
+									"$ref": "entry.json"
 								}
 							}
 						},
@@ -205,7 +231,7 @@
 							"entries": {
 								"type": "array",
 								"items": {
-									"$ref": "/Entry"
+									"$ref": "entry.json"
 								}
 							}
 						},

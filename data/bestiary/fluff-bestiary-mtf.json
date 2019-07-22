@@ -40,7 +40,7 @@
 										"Enhancement"
 									],
 									"colStyles": [
-										"col-2 text-align-center",
+										"col-2 text-center",
 										"col-10"
 									],
 									"rows": [
@@ -94,7 +94,7 @@
 										"Malfunction"
 									],
 									"colStyles": [
-										"col-2 text-align-center",
+										"col-2 text-center",
 										"col-10"
 									],
 									"rows": [
@@ -234,7 +234,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Adult-Oblex.jpg"
+						"path": "bestiary/MTF/Oblex.jpg"
 					}
 				}
 			],
@@ -292,7 +292,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Air-Myrmidon.jpg"
+						"path": "bestiary/MTF/Air Elemental Myrmidon.jpg"
 					}
 				}
 			],
@@ -409,7 +409,7 @@
 					"name": "Guarding the River Styx",
 					"type": "entries",
 					"entries": [
-						"Some amnizus perform the critical task of watching over the River Styx from fortresses along the river's blighted banks, where it flows through Dis and Stygia. Souls arriving in the form of {@creature lemure|mm|lemures} have no personalities or memories; they're driven only by the desire to commit evil. The amnizus that patrol here drill the rules of the Nine Hells into the new arrivals' pitiful brains and marshal the lemures into legions."
+						"Some amnizus perform the critical task of watching over the River Styx from fortresses along the river's blighted banks, where it flows through Dis and Stygia. Souls arriving in the form of {@creature lemure||lemures} have no personalities or memories; they're driven only by the desire to commit evil. The amnizus that patrol here drill the rules of the Nine Hells into the new arrivals' pitiful brains and marshal the lemures into legions."
 					]
 				}
 			]
@@ -458,7 +458,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Astral-Dreadnought.jpg"
+						"path": "bestiary/MTF/Astral Dreadnought.jpg"
 					}
 				}
 			],
@@ -521,7 +521,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Autumn-Eladrin.jpg"
+						"path": "bestiary/MTF/Autumn Eladrin.jpg"
 					}
 				}
 			],
@@ -580,7 +580,13 @@
 					"name": "Azer",
 					"entries": [
 						"Natives of the Elemental Plane of Fire, azers are master crafters, expert miners, and sworn foes of the efreet. In appearance and manner, an azer resembles a male dwarf, but this is a facade. Beneath its metallic looking skin, an azer is a being of fire, which outwardly manifests in its fiery hair and beard.",
-						"Made, Not Born. Azers don't reproduce. They are each crafted from bronze by another azer and imbued with a portion of the crafter's inner flame. Each azer is sculpted with unique features. This crafting process limits the growth of the azer population and is the primary reason that these creatures remain rare.",
+						{
+							"name": "Made, Not Born",
+							"entries": [
+								" Azers don't reproduce. They are each crafted from bronze by another azer and imbued with a portion of the crafter's inner flame. Each azer is sculpted with unique features. This crafting process limits the growth of the azer population and is the primary reason that these creatures remain rare."
+							],
+							"type": "entries"
+						},
 						{
 							"name": "Volcanic Dwellers",
 							"type": "entries",
@@ -638,7 +644,7 @@
 					"type": "entries",
 					"name": "Bael",
 					"entries": [
-						"With the Blood War raging for eons and no end in sight, opportunities abound for ambitious archdevils to win fame, glory, and power in the ongoing struggle against the demons. Duke Bael, one of Mammon's most important vassals, has won fame and acclaim for his victories. Charged with leading sixty-six companies of {@creature barbed devil|mm|barbed devils}, Bael has proven to be a tactical genius, earning esteem for himself and his master as a result of victory after victory over the abyssal host. Mammon relies on Bael, because of his battle acumen, to safeguard his holdings. Mammon has never been ousted during a time when so many other archdevils have lost their positions, which is a testament to Bael's skill on the battlefield.",
+						"With the Blood War raging for eons and no end in sight, opportunities abound for ambitious archdevils to win fame, glory, and power in the ongoing struggle against the demons. Duke Bael, one of Mammon's most important vassals, has won fame and acclaim for his victories. Charged with leading sixty-six companies of {@creature barbed devil||barbed devils}, Bael has proven to be a tactical genius, earning esteem for himself and his master as a result of victory after victory over the abyssal host. Mammon relies on Bael, because of his battle acumen, to safeguard his holdings. Mammon has never been ousted during a time when so many other archdevils have lost their positions, which is a testament to Bael's skill on the battlefield.",
 						"For his accomplishments, as well as for the hue of his skin, Baal has been granted the title of Bronze General. His accolades notwithstanding, Bael has had a difficult time navigating the quagmire of infernal politics. His critics call him naive, though never to his face. His primary interest has always been leading soldiers in battle, so he finds it frustrating to have his ambitions of ascending to a higher rank constantly stymied by politically shrewd rivals.",
 						"Bael prefers to make servants out of his adversaries, and mortals bound to his service earn their wretched place by falling victim to Bael's superior stratagems. Bael gladly spares the lives of those he defeats, but only if they pledge their souls and service to him. Although he is willing to corrupt almost any being in this way, he always destroys any demons he defeats.",
 						"Bael also welcomes mortals into his service if they can provide him with an advantage in his own politicking. He recruits savvy individuals and relies on them to represent his interests at Mammon's court, which leaves Bael free to pursue his battle lust.",
@@ -775,7 +781,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Black-Abishai.jpg"
+						"path": "bestiary/MTF/Black Abishai.jpg"
 					}
 				}
 			],
@@ -826,7 +832,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Blue-Abishai.jpg"
+						"path": "bestiary/MTF/Blue Abishai.jpg"
 					}
 				}
 			],
@@ -929,7 +935,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Bronze-Scout.jpg"
+						"path": "bestiary/MTF/Bronze Scout.jpg"
 					}
 				}
 			],
@@ -998,7 +1004,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Cadaver-Collector.jpg"
+						"path": "bestiary/MTF/Cadaver Collector.jpg"
 					}
 				}
 			],
@@ -1131,7 +1137,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Corpse-Flower.jpg"
+						"path": "bestiary/MTF/Corpse Flower.jpg"
 					}
 				}
 			],
@@ -1251,7 +1257,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Deathlock2.jpg"
+						"path": "bestiary/MTF/Deathlock Wight.jpg"
 					}
 				}
 			],
@@ -1373,7 +1379,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Derro-Savant.jpg"
+						"path": "bestiary/MTF/Derro Savant.jpg"
 					}
 				}
 			],
@@ -1462,7 +1468,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Dire-Troll.jpg"
+						"path": "bestiary/MTF/Dire Troll.jpg"
 					}
 				}
 			],
@@ -1512,7 +1518,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Arachnomancer.jpg"
+						"path": "bestiary/MTF/Drow Favored Consort.jpg"
 					}
 				}
 			],
@@ -1581,7 +1587,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Matron-Mother.jpg"
+						"path": "bestiary/MTF/Drow Matron Mother.jpg"
 					}
 				}
 			],
@@ -1682,7 +1688,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Mindmaster.jpg"
+						"path": "bestiary/MTF/Duergar Mind Master.jpg"
 					}
 				}
 			],
@@ -1748,7 +1754,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Stone-Guard.jpg"
+						"path": "bestiary/MTF/Duergar Stone Guard.jpg"
 					}
 				}
 			],
@@ -1949,7 +1955,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Earth-Myrmidon.jpg"
+						"path": "bestiary/MTF/Earth Elemental Myrmidon.jpg"
 					}
 				}
 			],
@@ -2012,7 +2018,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Adult-Oblex.jpg"
+						"path": "bestiary/MTF/Oblex.jpg"
 					}
 				}
 			],
@@ -2070,7 +2076,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Elder-Tempest.jpg"
+						"path": "bestiary/MTF/Elder Tempest.jpg"
 					}
 				}
 			],
@@ -2170,7 +2176,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Fire-Myrmidon.jpg"
+						"path": "bestiary/MTF/Fire Elemental Myrmidon.jpg"
 					}
 				}
 			],
@@ -2192,7 +2198,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/FrazUrbluu.jpg"
+						"path": "bestiary/MTF/Fraz-Urb'luu.jpg"
 					}
 				}
 			],
@@ -2217,7 +2223,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Frost-Salamander.jpg"
+						"path": "bestiary/MTF/Frost Salamander.jpg"
 					}
 				}
 			],
@@ -2242,7 +2248,7 @@
 					"entries": [
 						"Although frost salamanders can burrow their way through loose soil, they prefer to dig into the ice. They roll around in piles of broken chunks of ice, allowing it to scratch their backs as they grind it down. This habit leads them to create extensive networks of ice caves, becoming ever larger as they claw fresh chunks of ice from the walls of their lairs.",
 						"A frost salamander that dwells in a lair for a while carves out enough space to allow a small army to camp within. Inexperienced travelers who come across these caves see them as a welcome shelter, though they are anything but. Frost salamanders greedily devour any prey foolhardy enough to try sleeping in their lairs.",
-						"On rare occasions, {@creature frost giant|mm|frost giants} capture and tame these creatures, using them to burrow into the ice to help create outposts and fortresses."
+						"On rare occasions, {@creature frost giant||frost giants} capture and tame these creatures, using them to burrow into the ice to help create outposts and fortresses."
 					]
 				}
 			]
@@ -2439,7 +2445,13 @@
 							"type": "entries",
 							"entries": [
 								"In the uprising against the illithids, Gith sought allies. Her adviser Vlaakith appealed to Tiamat, the goddess of evil dragonkind, and Gith ventured into the Nine Hells to meet with her. Only Tiamat now knows what passed between them, but Gith returned to the Astral Plane with the Dragon Queen's red dragon consort Ephelomon, who proclaimed that his kind would forever act as allies to the githyanki. Not all red dragons honor the alliance kindled so long ago, but most at least don't consider the githyanki their enemies.",
-								"Outposts in the Mortal Realm. Since creatures that dwell on the Astral Plane don't age, the githyanki establish creches in remote areas of the Material Plane to raise their young. Doubling as military academies, these creches train young githyanki to harness their psychic and combat abilities. When a githyanki grows to adulthood and slays a mind flayer as part of a sacred rite of passage, it is permitted to rejoin its people on the Astral Plane."
+								{
+									"name": "Outposts in the Mortal Realm",
+									"entries": [
+										" Since creatures that dwell on the Astral Plane don't age, the githyanki establish creches in remote areas of the Material Plane to raise their young. Doubling as military academies, these creches train young githyanki to harness their psychic and combat abilities. When a githyanki grows to adulthood and slays a mind flayer as part of a sacred rite of passage, it is permitted to rejoin its people on the Astral Plane."
+									],
+									"type": "entries"
+								}
 							]
 						}
 					]
@@ -2523,7 +2535,13 @@
 							"type": "entries",
 							"entries": [
 								"In the uprising against the illithids, Gith sought allies. Her adviser Vlaakith appealed to Tiamat, the goddess of evil dragonkind, and Gith ventured into the Nine Hells to meet with her. Only Tiamat now knows what passed between them, but Gith returned to the Astral Plane with the Dragon Queen's red dragon consort Ephelomon, who proclaimed that his kind would forever act as allies to the githyanki. Not all red dragons honor the alliance kindled so long ago, but most at least don't consider the githyanki their enemies.",
-								"Outposts in the Mortal Realm. Since creatures that dwell on the Astral Plane don't age, the githyanki establish creches in remote areas of the Material Plane to raise their young. Doubling as military academies, these creches train young githyanki to harness their psychic and combat abilities. When a githyanki grows to adulthood and slays a mind flayer as part of a sacred rite of passage, it is permitted to rejoin its people on the Astral Plane."
+								{
+									"name": "Outposts in the Mortal Realm",
+									"entries": [
+										" Since creatures that dwell on the Astral Plane don't age, the githyanki establish creches in remote areas of the Material Plane to raise their young. Doubling as military academies, these creches train young githyanki to harness their psychic and combat abilities. When a githyanki grows to adulthood and slays a mind flayer as part of a sacred rite of passage, it is permitted to rejoin its people on the Astral Plane."
+									],
+									"type": "entries"
+								}
 							]
 						}
 					]
@@ -2548,7 +2566,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Anarch.jpg"
+						"path": "bestiary/MTF/Githzerai Anarch.jpg"
 					}
 				}
 			],
@@ -2591,7 +2609,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Enlightened.jpg"
+						"path": "bestiary/MTF/Githzerai Enlightened.jpg"
 					}
 				}
 			],
@@ -2634,7 +2652,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Gloom-Weaver.jpg"
+						"path": "bestiary/MTF/Gloom Weaver.jpg"
 					}
 				}
 			],
@@ -2677,7 +2695,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Gray-Render.jpg"
+						"path": "bestiary/MTF/Gray Render.jpg"
 					}
 				}
 			],
@@ -2722,7 +2740,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Grazzt.jpg"
+						"path": "bestiary/MTF/Graz'zt.jpg"
 					}
 				}
 			],
@@ -2747,7 +2765,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Green-Abishai.jpg"
+						"path": "bestiary/MTF/Green Abishai.jpg"
 					}
 				}
 			],
@@ -2835,7 +2853,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Hellfire-Engine.jpg"
+						"path": "bestiary/MTF/Hellfire Engine.jpg"
 					}
 				}
 			],
@@ -2983,7 +3001,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Iron-Cobra.jpg"
+						"path": "bestiary/MTF/Iron Cobra.jpg"
 					}
 				}
 			],
@@ -3257,7 +3275,7 @@
 					"type": "entries",
 					"name": "Maurezhi",
 					"entries": [
-						"When Doresain, the King of Ghouls, corrupted a society of elves, he created a new breed of demons to lead packs of {@creature ghoul|mm|ghouls} and {@creature ghast|mm|ghasts} in the material world."
+						"When Doresain, the King of Ghouls, corrupted a society of elves, he created a new breed of demons to lead packs of {@creature ghoul||ghouls} and {@creature ghast||ghasts} in the material world."
 					]
 				},
 				{
@@ -3563,7 +3581,13 @@
 					"name": "Narzugon",
 					"entries": [
 						"Paladins who make deals with devils and carry their twisted sense of honor into the afterlife are especially valuable to the archdukes of the Nine Hells, who want unquestioning champions to lead their legions in war. These narzugons, wielding lances of hellfire and riding nightmare steeds like horrific perversions of knights errant, roam across the infernal layers and other planes to carry out the will of their masters.",
-						"Death in Hellfire. A narzugon's lances are forged in hellfire. The soul of anyone killed by such a lance is shunted to the River Styx for rebirth as a lemure. Each lance is unique to its owner, bearing the marks of both the narzugon and its master."
+						{
+							"name": "Death in Hellfire",
+							"entries": [
+								" A narzugon's lances are forged in hellfire. The soul of anyone killed by such a lance is shunted to the River Styx for rebirth as a lemure. Each lance is unique to its owner, bearing the marks of both the narzugon and its master."
+							],
+							"type": "entries"
+						}
 					]
 				},
 				{
@@ -3677,7 +3701,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Oaken-Bolter.jpg"
+						"path": "bestiary/MTF/Oaken Bolter.jpg"
 					}
 				}
 			],
@@ -3710,7 +3734,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Oblex-Spawn.jpg"
+						"path": "bestiary/MTF/Oblex Spawn.jpg"
 					}
 				}
 			],
@@ -3767,7 +3791,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Ogre-Battering-Ram.jpg"
+						"path": "bestiary/MTF/Ogre Battering Ram.jpg"
 					}
 				}
 			],
@@ -3857,7 +3881,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Ogre-Howdah.jpg"
+						"path": "bestiary/MTF/Ogre Howdah.jpg"
 					}
 				}
 			],
@@ -4033,7 +4057,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Red-Abishai.jpg"
+						"path": "bestiary/MTF/Red Abishai.jpg"
 					}
 				}
 			],
@@ -4120,7 +4144,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Rot-Troll.jpg"
+						"path": "bestiary/MTF/Rot Troll.jpg"
 					}
 				}
 			],
@@ -4205,7 +4229,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Shadow-Dancer.jpg"
+						"path": "bestiary/MTF/Shadow Dancer.jpg"
 					}
 				}
 			],
@@ -4335,7 +4359,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Skull-Lord.jpg"
+						"path": "bestiary/MTF/Skull Lord.jpg"
 					}
 				}
 			],
@@ -4371,7 +4395,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Soul-Monger.jpg"
+						"path": "bestiary/MTF/Soul Monger.jpg"
 					}
 				}
 			],
@@ -4414,7 +4438,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Spirit-Troll.jpg"
+						"path": "bestiary/MTF/Spirit Troll.jpg"
 					}
 				}
 			],
@@ -4443,7 +4467,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Spring-Eladrin.jpg"
+						"path": "bestiary/MTF/Spring Eladrin.jpg"
 					}
 				}
 			],
@@ -4586,7 +4610,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Lava-Mage.jpg"
+						"path": "bestiary/MTF/Star Spawn Larva Mage.jpg"
 					}
 				}
 			],
@@ -4725,7 +4749,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Steel-Predator.jpg"
+						"path": "bestiary/MTF/Steel Predator.jpg"
 					}
 				}
 			],
@@ -4776,7 +4800,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Stone-Cursed.jpg"
+						"path": "bestiary/MTF/Stone Cursed.jpg"
 					}
 				}
 			],
@@ -4826,7 +4850,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Stone-Defender.jpg"
+						"path": "bestiary/MTF/Stone Defender.jpg"
 					}
 				}
 			],
@@ -4859,7 +4883,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Summer-Eladrin.jpg"
+						"path": "bestiary/MTF/Summer Eladrin.jpg"
 					}
 				}
 			],
@@ -4917,7 +4941,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Sword-Wraith.jpg"
+						"path": "bestiary/MTF/Sword Wraith.jpg"
 					}
 				}
 			],
@@ -4960,7 +4984,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Sword-Wraith.jpg"
+						"path": "bestiary/MTF/Sword Wraith.jpg"
 					}
 				}
 			],
@@ -5003,7 +5027,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/The-Angry.jpg"
+						"path": "bestiary/MTF/The Angry.jpg"
 					}
 				}
 			],
@@ -5039,7 +5063,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/The-Hungry.jpg"
+						"path": "bestiary/MTF/The Hungry.jpg"
 					}
 				}
 			],
@@ -5075,7 +5099,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/The-Lonely.jpg"
+						"path": "bestiary/MTF/The Lonely.jpg"
 					}
 				}
 			],
@@ -5111,7 +5135,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/The-Lost.jpg"
+						"path": "bestiary/MTF/The Lost.jpg"
 					}
 				}
 			],
@@ -5148,7 +5172,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/The-Wretched.jpg"
+						"path": "bestiary/MTF/The Wretched.jpg"
 					}
 				}
 			],
@@ -5290,7 +5314,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Vampiric-Mist.jpg"
+						"path": "bestiary/MTF/Vampiric Mist.jpg"
 					}
 				}
 			],
@@ -5340,7 +5364,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Venom-Troll.jpg"
+						"path": "bestiary/MTF/Venom Troll.jpg"
 					}
 				}
 			],
@@ -5400,7 +5424,7 @@
 					"type": "entries",
 					"entries": [
 						"Creatures that ingest water that has been corrupted by a wastrilith risk their very souls. Those who drink the poisonous liquid might wither away until they finally die, or remain alive only to become a thrall of chaos and evil.",
-						"To represent this defilement, you can use the optional rule on {@variantrule planar effects|dmg|abyssal corruption} in chapter 2 of the {@book Dungeon Master's Guide|dmg}, causing the poisoned creature to be corrupted."
+						"To represent this defilement, you can use the optional rule on {@variantrule planar effects||abyssal corruption} in chapter 2 of the {@book Dungeon Master's Guide|dmg}, causing the poisoned creature to be corrupted."
 					]
 				}
 			]
@@ -5413,7 +5437,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Water-Myrmidon.jpg"
+						"path": "bestiary/MTF/Water Elemental Myrmidon.jpg"
 					}
 				}
 			],
@@ -5435,7 +5459,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/White-Abishai.jpg"
+						"path": "bestiary/MTF/White Abishai.jpg"
 					}
 				}
 			],
@@ -5486,7 +5510,7 @@
 					"type": "image",
 					"href": {
 						"type": "internal",
-						"path": "bestiary/MTF/Winter-Eladrin.jpg"
+						"path": "bestiary/MTF/Winter Eladrin.jpg"
 					}
 				}
 			],

@@ -36,7 +36,9 @@ function Renderer () {
 	 * @param bool true to enable, false to disable.
 	 */
 	this.setLazyImages = function (bool) {
-		this._lazyImages = !!bool;
+		// hard-disable lazy loading if the Intersection API is unavailable (e.g. under iOS 12)
+		if (typeof IntersectionObserver === "undefined") this._lazyImages = false;
+		else this._lazyImages = !!bool;
 		return this;
 	};
 
@@ -202,6 +204,7 @@ function Renderer () {
 				case "insetReadaloud": this._renderInsetReadaloud(entry, textStack, meta, options); break;
 				case "variant": this._renderVariant(entry, textStack, meta, options); break;
 				case "variantSub": this._renderVariantSub(entry, textStack, meta, options); break;
+				case "spellcasting": this._renderSpellcasting(entry, textStack, meta, options); break;
 				case "quote": this._renderQuote(entry, textStack, meta, options); break;
 				case "optfeature": this._renderOptfeature(entry, textStack, meta, options); break;
 				case "patron": this._renderPatron(entry, textStack, meta, options); break;
@@ -229,6 +232,7 @@ function Renderer () {
 				// entire data records
 				case "dataCreature": this._renderDataCreature(entry, textStack, meta, options); break;
 				case "dataSpell": this._renderDataSpell(entry, textStack, meta, options); break;
+				case "dataTrapHazard": this._renderDataTrapHazard(entry, textStack, meta, options); break;
 
 				// images
 				case "image": this._renderImage(entry, textStack, meta, options); break;
@@ -279,6 +283,10 @@ function Renderer () {
 	};
 
 	this._renderImage = function (entry, textStack, meta, options) {
+		function getStylePart () {
+			return entry.maxWidth ? `style="max-width: ${entry.maxWidth}px"` : "";
+		}
+
 		if (entry.imageType === "map") textStack[0] += `<div class="rd__wrp-map">`;
 		this._renderPrefix(entry, textStack, meta, options);
 		textStack[0] += `<div class="${meta._typeStack.includes("gallery") ? "rd__wrp-gallery-image" : ""}">`;
@@ -292,8 +300,9 @@ function Renderer () {
 		const svg = this._lazyImages && entry.width != null && entry.height != null
 			? `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${entry.width}" height="${entry.height}"><rect width="100%" height="100%" fill="#ccc3"/></svg>`)}`
 			: null;
-		textStack[0] += `<div class="rd__wrp-image"><a href="${href}" target="_blank" rel="noopener" ${entry.title ? `title="${entry.title}"` : ""}><img class="rd__image" src="${svg || href}" ${entry.altText ? `alt="${entry.altText}"` : ""} ${svg ? `data-src="${href}"` : ""}></a></div>`;
+		textStack[0] += `<div class="rd__wrp-image"><a href="${href}" target="_blank" rel="noopener" ${entry.title ? `title="${entry.title}"` : ""}><img class="rd__image" src="${svg || href}" ${entry.altText ? `alt="${entry.altText}"` : ""} ${svg ? `data-src="${href}"` : ""} ${getStylePart()}></a></div>`;
 		if (entry.title) textStack[0] += `<div class="rd__image-title"><div class="rd__image-title-inner">${entry.title}</div></div>`;
+		else if (entry._galleryTitlePad) textStack[0] += `<div class="rd__image-title">&nbsp;</div>`;
 		textStack[0] += `</div>`;
 		this._renderSuffix(entry, textStack, meta, options);
 		if (entry.imageType === "map") textStack[0] += `</div>`;
@@ -322,70 +331,86 @@ function Renderer () {
 			}
 		}
 
-		textStack[0] += `<table class="${entry.style || "striped-odd"}">`;
-
-		if (entry.caption != null) {
-			textStack[0] += `<caption>${entry.caption}</caption>`;
-		}
-		textStack[0] += "<thead>";
-		textStack[0] += "<tr>";
+		textStack[0] += `<table class="${entry.style || ""} ${entry.isStriped === false ? "" : "striped-odd"}">`;
 
 		const autoMkRoller = Renderer.isRollableTable(entry);
-		if (entry.colLabels) {
-			const len = entry.colLabels.length;
-			for (let i = 0; i < len; ++i) {
-				const lbl = entry.colLabels[i];
-				textStack[0] += `<th ${this._renderTable_getTableThClassText(entry, i)}>`;
-				this._recursiveRender(autoMkRoller && i === 0 && !lbl.includes("@dice") ? `{@dice ${lbl}}` : lbl, textStack, meta);
-				textStack[0] += `</th>`;
-			}
-		}
 
-		textStack[0] += "</tr>";
-		textStack[0] += "</thead>";
-		textStack[0] += "<tbody>";
+		// caption
+		if (entry.caption != null) textStack[0] += `<caption>${entry.caption}</caption>`;
 
+		// body -- temporarily build this to own string; append after headers
+		const rollCols = [];
+		let bodyStack = [""];
+		bodyStack[0] += "<tbody>";
 		const len = entry.rows.length;
-		for (let i = 0; i < len; ++i) {
-			textStack[0] += "<tr>";
-			const r = entry.rows[i];
+		for (let ixRow = 0; ixRow < len; ++ixRow) {
+			bodyStack[0] += "<tr>";
+			const r = entry.rows[ixRow];
 			let roRender = r.type === "row" ? r.row : r;
+
 			const len = roRender.length;
-			for (let j = 0; j < len; ++j) {
+			for (let ixCell = 0; ixCell < len; ++ixCell) {
+				rollCols[ixCell] = rollCols[ixCell] || false;
+
 				// preconvert rollables
-				if (autoMkRoller && j === 0) roRender = Renderer.getRollableRow(roRender);
+				if (autoMkRoller && ixCell === 0) {
+					roRender = Renderer.getRollableRow(roRender);
+					rollCols[ixCell] = true;
+				}
 
 				let toRenderCell;
-				if (roRender[j].type === "cell") {
-					if (roRender[j].entry) {
-						toRenderCell = roRender[j].entry;
-					} else if (roRender[j].roll) {
-						if (roRender[j].roll.entry) {
-							toRenderCell = roRender[j].roll.entry;
-						} else if (roRender[j].roll.exact != null) {
-							toRenderCell = roRender[j].roll.pad ? StrUtil.padNumber(roRender[j].roll.exact, 2, "0") : roRender[j].roll.exact;
+				if (roRender[ixCell].type === "cell") {
+					if (roRender[ixCell].entry) {
+						toRenderCell = roRender[ixCell].entry;
+					} else if (roRender[ixCell].roll) {
+						if (roRender[ixCell].roll.entry) {
+							toRenderCell = roRender[ixCell].roll.entry;
+						} else if (roRender[ixCell].roll.exact != null) {
+							toRenderCell = roRender[ixCell].roll.pad ? StrUtil.padNumber(roRender[ixCell].roll.exact, 2, "0") : roRender[ixCell].roll.exact;
 						} else {
-							if (roRender[j].roll.max === Renderer.dice.POS_INFINITE) {
-								toRenderCell = roRender[j].roll.pad ? `${StrUtil.padNumber(roRender[j].roll.min, 2, "0")}+` : `${roRender[j].roll.min}+`;
+							if (roRender[ixCell].roll.max === Renderer.dice.POS_INFINITE) {
+								toRenderCell = roRender[ixCell].roll.pad
+									? `${StrUtil.padNumber(roRender[ixCell].roll.min, 2, "0")}+`
+									: `${roRender[ixCell].roll.min}+`;
 							} else {
-								toRenderCell = roRender[j].roll.pad ? `${StrUtil.padNumber(roRender[j].roll.min, 2, "0")}-${StrUtil.padNumber(roRender[j].roll.max, 2, "0")}` : `${roRender[j].roll.min}-${roRender[j].roll.max}`;
+								toRenderCell = roRender[ixCell].roll.pad
+									? `${StrUtil.padNumber(roRender[ixCell].roll.min, 2, "0")}-${StrUtil.padNumber(roRender[ixCell].roll.max, 2, "0")}`
+									: `${roRender[ixCell].roll.min}-${roRender[ixCell].roll.max}`;
 							}
 						}
 					}
 				} else {
-					toRenderCell = roRender[j];
+					toRenderCell = roRender[ixCell];
 				}
-				textStack[0] += `<td ${this._renderTable_makeTableTdClassText(entry, j)} ${this._renderTable_getCellDataStr(roRender[j])} ${roRender[j].width ? `colspan="${roRender[j].width}"` : ""}>`;
-				if (r.style === "row-indent-first" && j === 0) textStack[0] += `<div class="rd__tab-indent"/>`;
+				bodyStack[0] += `<td ${this._renderTable_makeTableTdClassText(entry, ixCell)} ${this._renderTable_getCellDataStr(roRender[ixCell])} ${roRender[ixCell].width ? `colspan="${roRender[ixCell].width}"` : ""}>`;
+				if (r.style === "row-indent-first" && ixCell === 0) bodyStack[0] += `<div class="rd__tab-indent"/>`;
 				const cacheDepth = this._adjustDepth(meta, 1);
-				this._recursiveRender(toRenderCell, textStack, meta);
+				this._recursiveRender(toRenderCell, bodyStack, meta);
 				meta.depth = cacheDepth;
-				textStack[0] += "</td>";
+				bodyStack[0] += "</td>";
 			}
-			textStack[0] += "</tr>";
+			bodyStack[0] += "</tr>";
 		}
+		bodyStack[0] += "</tbody>";
 
-		textStack[0] += "</tbody>";
+		// header
+		textStack[0] += "<thead>";
+		textStack[0] += "<tr>";
+		if (entry.colLabels) {
+			const len = entry.colLabels.length;
+			for (let i = 0; i < len; ++i) {
+				const lbl = entry.colLabels[i];
+				textStack[0] += `<th ${this._renderTable_getTableThClassText(entry, i)} data-isroller="${rollCols[i]}">`;
+				this._recursiveRender(autoMkRoller && i === 0 && !lbl.includes("@dice") ? `{@dice ${lbl}}` : lbl, textStack, meta);
+				textStack[0] += `</th>`;
+			}
+		}
+		textStack[0] += "</tr>";
+		textStack[0] += "</thead>";
+
+		textStack[0] += bodyStack[0];
+
+		// footer
 		if (entry.footnotes != null) {
 			textStack[0] += "<tfoot>";
 			const len = entry.footnotes.length;
@@ -436,7 +461,7 @@ function Renderer () {
 
 	this._renderEntriesSubtypes = function (entry, textStack, meta, options, incDepth) {
 		const isInlineTitle = meta.depth >= 2;
-		const pagePart = !isInlineTitle && entry.page ? ` <span class="rd__title-link">${entry.source ? `<span class="help--subtle" title="${Parser.sourceJsonToFull(entry.source)}">${Parser.sourceJsonToAbv(entry.source)}</span> ` : ""}p${entry.page}</span>` : "";
+		const pagePart = !isInlineTitle && entry.page > 0 ? ` <span class="rd__title-link">${entry.source ? `<span class="help--subtle" title="${Parser.sourceJsonToFull(entry.source)}">${Parser.sourceJsonToAbv(entry.source)}</span> ` : ""}p${entry.page}</span>` : "";
 		const nextDepth = incDepth && meta.depth < 2 ? meta.depth + 1 : meta.depth;
 		const styleString = this._renderEntriesSubtypes_getStyleString(entry, meta, isInlineTitle);
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
@@ -456,9 +481,11 @@ function Renderer () {
 			this._renderEntriesSubtypes_renderPreReqText(entry, textStack, meta);
 			if (entry.entries) {
 				const cacheDepth = meta.depth;
-				meta.depth = nextDepth;
 				const len = entry.entries.length;
-				for (let i = 0; i < len; ++i) this._recursiveRender(entry.entries[i], textStack, meta, {prefix: "<p>", suffix: "</p>"});
+				for (let i = 0; i < len; ++i) {
+					meta.depth = nextDepth;
+					this._recursiveRender(entry.entries[i], textStack, meta, {prefix: "<p>", suffix: "</p>"});
+				}
 				meta.depth = cacheDepth;
 			}
 			textStack[0] += `</${this.wrapperTag}>`;
@@ -579,6 +606,64 @@ function Renderer () {
 		this._subVariant = false;
 	};
 
+	this._renderSpellcasting = function (entry, textStack, meta, options) {
+		const hidden = new Set(entry.hidden || []);
+		const toRender = [{type: "entries", name: entry.name, entries: entry.headerEntries ? MiscUtil.copy(entry.headerEntries) : []}];
+
+		if (entry.constant || entry.will || entry.rest || entry.daily || entry.weekly) {
+			const tempList = {type: "list", "style": "list-hang-notitle", items: []};
+			if (entry.constant && !hidden.has("constant")) tempList.items.push({type: "itemSpell", name: `Constant:`, entry: entry.constant.join(", ")});
+			if (entry.will && !hidden.has("will")) tempList.items.push({type: "itemSpell", name: `At will:`, entry: entry.will.join(", ")});
+			if (entry.rest && !hidden.has("rest")) {
+				for (let lvl = 9; lvl > 0; lvl--) {
+					const rest = entry.rest;
+					if (rest[lvl]) tempList.items.push({type: "itemSpell", name: `${lvl}/rest:`, entry: rest[lvl].join(", ")});
+					const lvlEach = `${lvl}e`;
+					if (rest[lvlEach]) tempList.items.push({type: "itemSpell", name: `${lvl}/rest each:`, entry: rest[lvlEach].join(", ")});
+				}
+			}
+			if (entry.daily && !hidden.has("daily")) {
+				for (let lvl = 9; lvl > 0; lvl--) {
+					const daily = entry.daily;
+					if (daily[lvl]) tempList.items.push({type: "itemSpell", name: `${lvl}/day:`, entry: daily[lvl].join(", ")});
+					const lvlEach = `${lvl}e`;
+					if (daily[lvlEach]) tempList.items.push({type: "itemSpell", name: `${lvl}/day each:`, entry: daily[lvlEach].join(", ")});
+				}
+			}
+			if (entry.weekly && !hidden.has("weekly")) {
+				for (let lvl = 9; lvl > 0; lvl--) {
+					const weekly = entry.weekly;
+					if (weekly[lvl]) tempList.items.push({type: "itemSpell", name: `${lvl}/week:`, entry: weekly[lvl].join(", ")});
+					const lvlEach = `${lvl}e`;
+					if (weekly[lvlEach]) tempList.items.push({type: "itemSpell", name: `${lvl}/week each:`, entry: weekly[lvlEach].join(", ")});
+				}
+			}
+			if (tempList.items.length) toRender[0].entries.push(tempList);
+		}
+
+		if (entry.spells && !hidden.has("spells")) {
+			const tempList = {type: "list", "style": "list-hang-notitle", items: []};
+			for (let lvl = 0; lvl < 10; ++lvl) {
+				const spells = entry.spells[lvl];
+				if (spells) {
+					let levelCantrip = `${Parser.spLevelToFull(lvl)}${(lvl === 0 ? "s" : " level")}`;
+					let slotsAtWill = ` (at will)`;
+					const slots = spells.slots;
+					if (slots >= 0) slotsAtWill = slots > 0 ? ` (${slots} slot${slots > 1 ? "s" : ""})` : ``;
+					if (spells.lower && spells.lower !== lvl) {
+						levelCantrip = `${Parser.spLevelToFull(spells.lower)}-${levelCantrip}`;
+						if (slots >= 0) slotsAtWill = slots > 0 ? ` (${slots} ${Parser.spLevelToFull(lvl)}-level slot${slots > 1 ? "s" : ""})` : ``;
+					}
+					tempList.items.push({type: "itemSpell", name: `${levelCantrip} ${slotsAtWill}:`, entry: spells.spells.join(", ")})
+				}
+			}
+			toRender[0].entries.push(tempList);
+		}
+
+		if (entry.footerEntries) toRender.push({type: "entries", entries: entry.footerEntries});
+		this._recursiveRender({type: "entries", entries: toRender}, textStack, meta);
+	};
+
 	this._renderQuote = function (entry, textStack, meta, options) {
 		textStack[0] += `<p><i>`;
 		const len = entry.entries.length;
@@ -605,19 +690,19 @@ function Renderer () {
 
 	this._renderAbilityDc = function (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
-		textStack[0] += `<div class='text-align-center'><b>${entry.name} save DC</b> = 8 + your proficiency bonus + your ${Parser.attrChooseToFull(entry.attributes)}</div>`;
+		textStack[0] += `<div class='text-center'><b>${entry.name} save DC</b> = 8 + your proficiency bonus + your ${Parser.attrChooseToFull(entry.attributes)}</div>`;
 		this._renderSuffix(entry, textStack, meta, options);
 	};
 
 	this._renderAbilityAttackMod = function (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
-		textStack[0] += `<div class='text-align-center'><b>${entry.name} attack modifier</b> = your proficiency bonus + your ${Parser.attrChooseToFull(entry.attributes)}</div>`;
+		textStack[0] += `<div class='text-center'><b>${entry.name} attack modifier</b> = your proficiency bonus + your ${Parser.attrChooseToFull(entry.attributes)}</div>`;
 		this._renderSuffix(entry, textStack, meta, options);
 	};
 
 	this._renderAbilityGeneric = function (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
-		textStack[0] += `<div class='text-align-center'>${entry.name ? `<b>${entry.name}</b>  = ` : ""}${entry.text}${entry.attributes ? ` ${Parser.attrChooseToFull(entry.attributes)}` : ""}</div>`;
+		textStack[0] += `<div class='text-center'>${entry.name ? `<b>${entry.name}</b>  = ` : ""}${entry.text}${entry.attributes ? ` ${Parser.attrChooseToFull(entry.attributes)}` : ""}</div>`;
 		this._renderSuffix(entry, textStack, meta, options);
 	};
 
@@ -694,35 +779,48 @@ function Renderer () {
 
 	this._renderDataCreature = function (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
-		textStack[0] += `<table class="rd__b-data">`;
-		textStack[0] += `<thead><tr><th class="rd__data-embed-header" colspan="6" onclick="((ele) => {
-						$(ele).find('.rd__data-embed-name').toggle(); 
-						$(ele).find('.rd__data-embed-toggle').text($(ele).text().includes('+') ? '[\u2013]' : '[+]'); 
-						$(ele).closest('table').find('tbody').toggle()
-					})(this)"><span style="display: none;" class="rd__data-embed-name">${entry.dataCreature.name}</span><span class="rd__data-embed-toggle">[\u2013]</span></th></tr></thead><tbody>`;
+		this._renderDataHeader(textStack, entry.dataCreature.name);
 		textStack[0] += Renderer.monster.getCompactRenderedString(entry.dataCreature, this);
-		textStack[0] += `</tbody></table>`;
+		this._renderDataFooter(textStack);
 		this._renderSuffix(entry, textStack, meta, options);
 	};
 
 	this._renderDataSpell = function (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
+		this._renderDataHeader(textStack, entry.dataSpell.name);
+		textStack[0] += Renderer.spell.getCompactRenderedString(entry.dataSpell);
+		this._renderDataFooter(textStack);
+		this._renderSuffix(entry, textStack, meta, options);
+	};
+
+	this._renderDataTrapHazard = function (entry, textStack, meta, options) {
+		this._renderPrefix(entry, textStack, meta, options);
+		this._renderDataHeader(textStack, entry.dataTrapHazard.name);
+		textStack[0] += Renderer.traphazard.getCompactRenderedString(entry.dataTrapHazard);
+		this._renderDataFooter(textStack);
+		this._renderSuffix(entry, textStack, meta, options);
+	};
+
+	this._renderDataHeader = function (textStack, name) {
 		textStack[0] += `<table class="rd__b-data">`;
 		textStack[0] += `<thead><tr><th class="rd__data-embed-header" colspan="6" onclick="((ele) => {
 						$(ele).find('.rd__data-embed-name').toggle(); 
 						$(ele).find('.rd__data-embed-toggle').text($(ele).text().includes('+') ? '[\u2013]' : '[+]'); 
 						$(ele).closest('table').find('tbody').toggle()
-					})(this)"><span style="display: none;" class="rd__data-embed-name">${entry.dataSpell.name}</span><span class="rd__data-embed-toggle">[\u2013]</span></th></tr></thead><tbody>`;
-		textStack[0] += Renderer.spell.getCompactRenderedString(entry.dataSpell, this);
+					})(this)"><span style="display: none;" class="rd__data-embed-name">${name}</span><span class="rd__data-embed-toggle">[\u2013]</span></th></tr></thead><tbody>`;
+	};
+
+	this._renderDataFooter = function (textStack) {
 		textStack[0] += `</tbody></table>`;
-		this._renderSuffix(entry, textStack, meta, options);
 	};
 
 	this._renderGallery = function (entry, textStack, meta, options) {
 		textStack[0] += `<div class="rd__wrp-gallery">`;
 		const len = entry.images.length;
+		const anyNamed = entry.images.find(it => it.title);
 		for (let i = 0; i < len; ++i) {
 			const img = MiscUtil.copy(entry.images[i]);
+			if (anyNamed && !img.title) img._galleryTitlePad = true; // force un-title images to pad to match their siblings
 			delete img.imageType;
 			this._recursiveRender(img, textStack, meta);
 		}
@@ -817,6 +915,21 @@ function Renderer () {
 					case "@h":
 						textStack[0] += `<i>Hit:</i> `;
 						break;
+					case "@color": {
+						const parts = text.split("|");
+						const [toDisplay, color] = text.split("|");
+						const scrubbedColor = color.replace(/[^a-fA-F0-9]/g, "").slice(0, 8);
+						textStack[0] += `<span style="color: #${scrubbedColor}">`;
+						textStack[0] += toDisplay;
+						textStack[0] += `</span>`;
+						break;
+					}
+
+					// DCs /////////////////////////////////////////////////////////////////////////////////////////////
+					case "@dc": {
+						textStack[0] += `DC <span class="rd__dc">${text}</span>`;
+						break;
+					}
 
 					// DICE ////////////////////////////////////////////////////////////////////////////////////////////
 					case "@dice":
@@ -942,16 +1055,44 @@ function Renderer () {
 								type: "internal",
 								path: `${page}.html`,
 								hash: HASH_BLANK,
+								hashPreEncoded: true,
 								subhashes: filters.map(f => {
 									const [fname, fvals, fopts] = f.split("=").map(s => s.trim()).filter(s => s);
+									const key = fname.startsWith("fb") ? fname : `flst${UrlUtil.encodeForHash(fname)}`;
+
+									let value;
+									if (fvals.startsWith("[") && fvals.endsWith("]")) { // range
+										const [min, max] = fvals.substring(1, fvals.length - 1).split(";").map(it => it.trim());
+										if (max == null) { // shorthand version, with only one value, becomes min _and_ max
+											value = [
+												`min=${min}`,
+												`max=${min}`
+											].join(HASH_SUB_LIST_SEP);
+										} else {
+											value = [
+												min ? `min=${min}` : "",
+												max ? `max=${max}` : ""
+											].filter(Boolean).join(HASH_SUB_LIST_SEP);
+										}
+									} else {
+										value = fvals.split(";").map(s => s.trim()).filter(s => s).map(s => {
+											const spl = s.split("!");
+											if (spl.length === 2) return `${UrlUtil.encodeForHash(spl[1])}=2`
+											return `${UrlUtil.encodeForHash(s)}=1`
+										}).join(HASH_SUB_LIST_SEP);
+									}
+
 									const out = {
-										key: `filter${fname}`,
-										value: fvals.split(";").map(s => s.trim()).filter(s => s).join(HASH_SUB_LIST_SEP)
+										key,
+										value,
+										preEncoded: true
 									};
-									if (fopts && fopts === "&") {
+
+									if (fopts) {
 										return [out, {
-											key: `flmeta${fname}`,
-											value: `and${HASH_SUB_LIST_SEP}or`
+											key: `flmt${UrlUtil.encodeForHash(fname)}`,
+											value: fopts,
+											preEncoded: true
 										}];
 									}
 									return out;
@@ -1102,6 +1243,14 @@ function Renderer () {
 						};
 						this._recursiveRender(fauxEntry, textStack, meta);
 
+						break;
+					}
+
+					// HOMEBREW LOADING ////////////////////////////////////////////////////////////////////////////////
+					case "@loader": {
+						const [name, file] = text.split("|");
+						const path = /^.*?:\/\//.test(file) ? file : `https://raw.githubusercontent.com/TheGiddyLimit/homebrew/master/${file}`;
+						textStack[0] += `<span onclick="BrewUtil.handleLoadbrewClick(this, '${path.escapeQuotes()}', '${name.escapeQuotes()}')" class="rd__wrp-loadbrew--ready" title="Click to install homebrew">${name}<span class="glyphicon glyphicon-download-alt rd__loadbrew-icon rd__loadbrew-icon"/></span>`;
 						break;
 					}
 
@@ -1289,13 +1438,12 @@ function Renderer () {
 								};
 								this._recursiveRender(fauxEntry, textStack, meta);
 								break;
-							case "@ship":
-								fauxEntry.href.path = UrlUtil.PG_SHIPS;
-								// enable this if/when there's a printed source with ships
-								// if (!source) fauxEntry.href.hash += HASH_LIST_SEP + SRC_DMG;
+							case "@vehicle":
+								fauxEntry.href.path = UrlUtil.PG_VEHICLES;
+								if (!source) fauxEntry.href.hash += HASH_LIST_SEP + SRC_GoS;
 								fauxEntry.href.hover = {
-									page: UrlUtil.PG_SHIPS,
-									source: source || "NONE" // || SRC_DMG // this too
+									page: UrlUtil.PG_VEHICLES,
+									source: source || SRC_GoS
 								};
 								this._recursiveRender(fauxEntry, textStack, meta);
 								break;
@@ -1319,9 +1467,11 @@ function Renderer () {
 			if (entry.href.subhashes != null) {
 				for (let i = 0; i < entry.href.subhashes.length; ++i) {
 					const subHash = entry.href.subhashes[i];
-					href += `${HASH_PART_SEP}${UrlUtil.encodeForHash(subHash.key)}${HASH_SUB_KV_SEP}`;
+					if (subHash.preEncoded) href += `${HASH_PART_SEP}${subHash.key}${HASH_SUB_KV_SEP}`;
+					else href += `${HASH_PART_SEP}${UrlUtil.encodeForHash(subHash.key)}${HASH_SUB_KV_SEP}`;
 					if (subHash.value != null) {
-						href += UrlUtil.encodeForHash(subHash.value);
+						if (subHash.preEncoded) href += subHash.value;
+						else href += UrlUtil.encodeForHash(subHash.value);
 					} else {
 						// TODO allow list of values
 						href += subHash.values.map(v => UrlUtil.encodeForHash(v)).join(HASH_SUB_LIST_SEP);
@@ -1406,7 +1556,7 @@ Renderer.applyProperties._leadingAn = new Set(["a", "e", "i", "o", "u"]);
 
 Renderer.attackTagToFull = function (tagStr) {
 	function renderTag (tags) {
-		return `${tags.includes("m") ? "Melee " : tags.includes("r") ? "Ranged " : tags.includes("a") ? "Area " : ""}${tags.includes("w") ? "Weapon " : tags.includes("s") ? "Spell " : ""}`;
+		return `${tags.includes("m") ? "Melee " : tags.includes("r") ? "Ranged " : tags.includes("g") ? "Magical " : tags.includes("a") ? "Area " : ""}${tags.includes("w") ? "Weapon " : tags.includes("s") ? "Spell " : ""}`;
 	}
 
 	const tagGroups = tagStr.toLowerCase().split(",").map(it => it.trim()).filter(it => it).map(it => it.split(""));
@@ -1432,14 +1582,16 @@ Renderer.HOVER_TAG_TO_PAGE = {
 	"background": UrlUtil.PG_BACKGROUNDS,
 	"race": UrlUtil.PG_RACES,
 	"optfeature": UrlUtil.PG_OPT_FEATURES,
-	"feat": UrlUtil.PG_FEATS,
 	"reward": UrlUtil.PG_REWARDS,
+	"feat": UrlUtil.PG_FEATS,
 	"psionic": UrlUtil.PG_PSIONICS,
 	"object": UrlUtil.PG_OBJECTS,
 	"cult": UrlUtil.PG_CULTS_BOONS,
 	"boon": UrlUtil.PG_CULTS_BOONS,
 	"trap": UrlUtil.PG_TRAPS_HAZARDS,
-	"hazard": UrlUtil.PG_TRAPS_HAZARDS
+	"hazard": UrlUtil.PG_TRAPS_HAZARDS,
+	"deity": UrlUtil.PG_DEITIES,
+	"variantrule": UrlUtil.PG_VARIATNRULES
 };
 
 Renderer.splitFirstSpace = function (string) {
@@ -1528,6 +1680,135 @@ Renderer.getEntryDice = function (entry, name) {
 	} else return toDisplay;
 };
 
+Renderer.getAbilityData = function (abObj) {
+	const mainAbs = [];
+	const asCollection = [];
+	const areNegative = [];
+	const toConvertToText = [];
+	const toConvertToShortText = [];
+	if (abObj != null) {
+		handleAllAbilities(abObj);
+		handleAbilitiesChoose();
+		return new Renderer._AbilityData(toConvertToText.join("; "), toConvertToShortText.join("; "), asCollection, areNegative);
+	}
+	return new Renderer._AbilityData("", "", [], []);
+
+	function handleAllAbilities (abObj, targetList) {
+		MiscUtil.copy(Parser.ABIL_ABVS)
+			.sort((a, b) => SortUtil.ascSort(abObj[b] || 0, abObj[a] || 0))
+			.forEach(shortLabel => handleAbility(abObj, shortLabel, targetList));
+	}
+
+	function handleAbility (abObj, shortLabel, optToConvertToTextStorage) {
+		if (abObj[shortLabel] != null) {
+			const isNegMod = abObj[shortLabel] < 0;
+			const toAdd = `${shortLabel.uppercaseFirst()} ${(isNegMod ? "" : "+")}${abObj[shortLabel]}`;
+
+			if (optToConvertToTextStorage) {
+				optToConvertToTextStorage.push(toAdd);
+			} else {
+				toConvertToText.push(toAdd);
+				toConvertToShortText.push(toAdd);
+			}
+
+			mainAbs.push(shortLabel.uppercaseFirst());
+			asCollection.push(shortLabel);
+			if (isNegMod) areNegative.push(shortLabel);
+		}
+	}
+
+	function handleAbilitiesChoose () {
+		if (abObj.choose != null) {
+			for (let i = 0; i < abObj.choose.length; ++i) {
+				const item = abObj.choose[i];
+				let outStack = "";
+				if (item.predefined != null) {
+					for (let j = 0; j < item.predefined.length; ++j) {
+						const subAbs = [];
+						handleAllAbilities(item.predefined[j], subAbs);
+						outStack += subAbs.join(", ") + (j === item.predefined.length - 1 ? "" : " or ");
+					}
+				} else if (item.weighted) {
+					const w = item.weighted;
+					const areIncreaseShort = [];
+					const areIncrease = w.weights.filter(it => it >= 0).sort(SortUtil.ascSort).reverse().map(it => {
+						areIncreaseShort.push(`+${it}`);
+						return `one ability to increase by ${it}`;
+					});
+					const areReduceShort = [];
+					const areReduce = w.weights.filter(it => it < 0).map(it => -it).sort(SortUtil.ascSort).map(it => {
+						areReduceShort.push(`-${it}`);
+						return `one ability to decrease by ${it}`;
+					});
+					const froms = w.from.map(it => it.uppercaseFirst());
+					const startText = froms.length === 6
+						? `Choose `
+						: `From ${froms.joinConjunct(", ", " and ")} choose `;
+					toConvertToText.push(`${startText}${areIncrease.concat(areReduce).joinConjunct(", ", " and ")}`);
+					toConvertToShortText.push(`${froms.length === 6 ? "Any combination " : ""}${areIncreaseShort.concat(areReduceShort).join("/")}${froms.length === 6 ? "" : ` from ${froms.join("/")}`}`);
+					continue;
+				} else {
+					const allAbilities = item.from.length === 6;
+					const allAbilitiesWithParent = isAllAbilitiesWithParent(item);
+					let amount = item.amount === undefined ? 1 : item.amount;
+					amount = (amount < 0 ? "" : "+") + amount;
+					if (allAbilities) {
+						outStack += "any ";
+					} else if (allAbilitiesWithParent) {
+						outStack += "any other ";
+					}
+					if (item.count != null && item.count > 1) {
+						outStack += Parser.numberToText(item.count) + " ";
+					}
+					if (allAbilities || allAbilitiesWithParent) {
+						outStack += `${item.count > 1 ? "unique " : ""}${amount}`;
+					} else {
+						for (let j = 0; j < item.from.length; ++j) {
+							let suffix = "";
+							if (item.from.length > 1) {
+								if (j === item.from.length - 2) {
+									suffix = " or ";
+								} else if (j < item.from.length - 2) {
+									suffix = ", ";
+								}
+							}
+							let thsAmount = " " + amount;
+							if (item.from.length > 1) {
+								if (j !== item.from.length - 1) {
+									thsAmount = "";
+								}
+							}
+							outStack += item.from[j].uppercaseFirst() + thsAmount + suffix;
+						}
+					}
+				}
+				toConvertToText.push("Choose " + outStack);
+				toConvertToShortText.push(outStack.uppercaseFirst());
+			}
+		}
+	}
+
+	function isAllAbilitiesWithParent (chooseAbs) {
+		const tempAbilities = [];
+		for (let i = 0; i < mainAbs.length; ++i) {
+			tempAbilities.push(mainAbs[i].toLowerCase());
+		}
+		for (let i = 0; i < chooseAbs.from.length; ++i) {
+			const ab = chooseAbs.from[i].toLowerCase();
+			if (!tempAbilities.includes(ab)) tempAbilities.push(ab);
+			if (!asCollection.includes(ab.toLowerCase)) asCollection.push(ab.toLowerCase());
+		}
+		return tempAbilities.length === 6;
+	}
+};
+
+Renderer._AbilityData = function (asText, asTextShort, asCollection, areNegative) {
+	this.asText = asText;
+	this.asTextShort = asTextShort;
+	this.asCollection = asCollection;
+	this.areNegative = areNegative;
+};
+
 Renderer.utils = {
 	getBorderTr: (optText) => {
 		return `<tr><th class="border" colspan="6">${optText || ""}</th></tr>`;
@@ -1541,17 +1822,29 @@ Renderer.utils = {
 		return it.sourceSub ? ` \u2014 ${it.sourceSub}` : "";
 	},
 
-	getNameTr: (it, addPageNum, prefix, suffix) => {
+	/**
+	 * @param it Entity to render the name row for.
+	 * @param [opts] Options object.
+	 * @param [opts.isAddPageNum] True if the name row should include the page number.
+	 * @param [opts.prefix] Prefix to display before the name.
+	 * @param [opts.suffix] Suffix to display after the name.
+	 * @param [opts.pronouncePart] Suffix to display after the name.
+	 */
+	getNameTr: (it, opts) => {
+		opts = opts || {};
 		return `<tr>
-					<th class="rnd-name name" colspan="6">
-						<div class="name-inner">
-							<span class="stats-name copyable" onmousedown="event.preventDefault()" onclick="Renderer.utils._pHandleNameClick(this, '${it.source.escapeQuotes()}')">${prefix || ""}${it._displayName || it.name}${suffix || ""}</span>
-							<span class="stats-source source${it.source}" title="${Parser.sourceJsonToFull(it.source)}${Renderer.utils.getSourceSubText(it)}">
-								${Parser.sourceJsonToAbv(it.source)}${addPageNum && it.page ? ` p${it.page}` : ""}
-							</span>
-						</div>
-					</th>
-				</tr>`;
+			<th class="rnd-name name" colspan="6">
+				<div class="name-inner">
+					<div class="flex-v-center">
+						<span class="stats-name copyable" onmousedown="event.preventDefault()" onclick="Renderer.utils._pHandleNameClick(this, '${it.source.escapeQuotes()}')">${opts.prefix || ""}${it._displayName || it.name}${opts.suffix || ""}</span>
+						${opts.pronouncePart || ""}
+					</div>
+					<span class="stats-source ${Parser.sourceJsonToColor(it.source)}" title="${Parser.sourceJsonToFull(it.source)}${Renderer.utils.getSourceSubText(it)}" ${BrewUtil.sourceJsonToStyle(it.source)}>
+						${Parser.sourceJsonToAbv(it.source)}${opts.isAddPageNum && it.page > 0 ? ` p${it.page}` : ""}
+					</span>
+				</div>
+			</th>
+		</tr>`;
 	},
 
 	async _pHandleNameClick (ele) {
@@ -1570,13 +1863,13 @@ Renderer.utils = {
 					if (as.entry) {
 						return Renderer.get().render(as.entry);
 					} else {
-						return `<i title="${Parser.sourceJsonToFull(as.source)}">${Parser.sourceJsonToAbv(as.source)}</i>${as.page ? `, page ${as.page}` : ""}`;
+						return `<i title="${Parser.sourceJsonToFull(as.source)}">${Parser.sourceJsonToAbv(as.source)}</i>${as.page > 0 ? `, page ${as.page}` : ""}`;
 					}
 				}).join("; ")}`
 			} else return "";
 		}
 		const sourceSub = Renderer.utils.getSourceSubText(it);
-		const baseText = it.page ? `<b>Source: </b> <i title="${Parser.sourceJsonToFull(it.source)}${sourceSub}">${Parser.sourceJsonToAbv(it.source)}${sourceSub}</i>, page ${it.page}` : "";
+		const baseText = it.page > 0 ? `<b>Source: </b> <i title="${Parser.sourceJsonToFull(it.source)}${sourceSub}">${Parser.sourceJsonToAbv(it.source)}${sourceSub}</i>, page ${it.page}` : "";
 		const addSourceText = getAltSourceText("additionalSources", "Additional information from");
 		const otherSourceText = getAltSourceText("otherSources", "Also found in");
 		const externalSourceText = getAltSourceText("externalSources", "External sources:");
@@ -1719,7 +2012,7 @@ Renderer.utils = {
 			const fluff = fnFluffBuilder(data);
 
 			if (!fluff) {
-				$td.empty().append(HTML_NO_INFO);
+				$td.empty().append(isImageTab ? HTML_NO_IMAGES : HTML_NO_INFO);
 				return;
 			}
 
@@ -1891,8 +2184,9 @@ Renderer.feat = {
 		const renderStack = [];
 
 		const prerequisite = Renderer.feat.getPrerequisiteText(feat.prerequisite);
+		Renderer.feat.mergeAbilityIncrease(feat);
 		renderStack.push(`
-			${Renderer.utils.getNameTr(feat, true)}
+			${Renderer.utils.getNameTr(feat, {isAddPageNum: true})}
 			<tr class='text'><td colspan='6' class='text'>
 			${prerequisite ? `<p><i>Prerequisite: ${prerequisite}</i></p>` : ""}
 		`);
@@ -1914,7 +2208,7 @@ Renderer.spell = {
 		const renderStack = [];
 
 		renderStack.push(`
-			${Renderer.utils.getNameTr(spell, true)}
+			${Renderer.utils.getNameTr(spell, {isAddPageNum: true})}
 			<tr><td colspan="6">
 				<table class="summary striped-even">
 					<tr>
@@ -1934,7 +2228,7 @@ Renderer.spell = {
 						<th colspan="2">Duration</th>
 					</tr>	
 					<tr>
-						<td colspan="4">${Parser.spComponentsToFull(spell.components)}</td>
+						<td colspan="4">${Parser.spComponentsToFull(spell)}</td>
 						<td colspan="2">${Parser.spDurationToFull(spell.duration)}</td>
 					</tr>
 				</table>
@@ -1954,7 +2248,7 @@ Renderer.spell = {
 		return renderStack.join("");
 	},
 
-	getRenderedString: (spell, renderer) => {
+	getRenderedString: (spell, renderer, subclassLookup) => {
 		const renderStack = [];
 
 		renderStack.push(`
@@ -1963,7 +2257,7 @@ Renderer.spell = {
 			<tr><td class="levelschoolritual" colspan="6"><span>${Parser.spLevelSchoolMetaToFull(spell.level, spell.school, spell.meta, spell.subschools)}</span></td></tr>
 			<tr><td class="castingtime" colspan="6"><span class="bold">Casting Time: </span>${Parser.spTimeListToFull(spell.time)}</td></tr>
 			<tr><td class="range" colspan="6"><span class="bold">Range: </span>${Parser.spRangeToFull(spell.range)}</td></tr>
-			<tr><td class="components" colspan="6"><span class="bold">Components: </span>${Parser.spComponentsToFull(spell.components)}</td></tr>
+			<tr><td class="components" colspan="6"><span class="bold">Components: </span>${Parser.spComponentsToFull(spell)}</td></tr>
 			<tr><td class="range" colspan="6"><span class="bold">Duration: </span>${Parser.spDurationToFull(spell.duration)}</td></tr>
 			${Renderer.utils.getDividerTr()}
 		`);
@@ -1980,7 +2274,7 @@ Renderer.spell = {
 		renderStack.push(`<tr class="text"><td class="classes" colspan="6"><span class="bold">Classes: </span>${Parser.spMainClassesToFull(spell.classes)}</td></tr>`);
 
 		if (spell.classes.fromSubclass) {
-			const currentAndLegacy = Parser.spSubclassesToCurrentAndLegacyFull(spell.classes);
+			const currentAndLegacy = Parser.spSubclassesToCurrentAndLegacyFull(spell.classes, subclassLookup);
 			renderStack.push(`<tr class="text"><td colspan="6"><span class="bold">Subclasses: </span>${currentAndLegacy[0]}</td></tr>`);
 			if (currentAndLegacy[1]) {
 				renderStack.push(`<tr class="text"><td colspan="6"><section class="text-muted"><span class="bold">Subclasses (legacy): </span>${currentAndLegacy[1]}</section></td></tr>`);
@@ -2016,7 +2310,7 @@ Renderer.condition = {
 		const renderStack = [];
 
 		renderStack.push(`
-			${Renderer.utils.getNameTr(cond, true)}
+			${Renderer.utils.getNameTr(cond, {isAddPageNum: true})}
 			<tr class="text"><td colspan="6">
 		`);
 		renderer.recursiveRender({entries: cond.entries}, renderStack);
@@ -2029,7 +2323,7 @@ Renderer.condition = {
 Renderer.background = {
 	getCompactRenderedString (bg) {
 		return `
-		${Renderer.utils.getNameTr(bg, true)}
+		${Renderer.utils.getNameTr(bg, {isAddPageNum: true})}
 		<tr class="text"><td colspan="6">
 		${Renderer.get().render({type: "entries", entries: bg.entries})}
 		</td></tr>
@@ -2098,31 +2392,38 @@ Renderer.optionalfeature = {
 		if (!prerequisites) return listMode ? "\u2014" : STR_NONE;
 
 		prerequisites.sort((a, b) => {
-			if (a.type === b.type) return SortUtil.ascSortLower(a.name, b.name);
+			if (a.type === b.type) {
+				if (a.name && b.name) return SortUtil.ascSortLower(a.name, b.name);
+				if (a.entries && b.entries && a.entries.length && b.entries.length && typeof a.entries[0] === "string" && typeof b.entries[0] === "string") return SortUtil.ascSortLower(a.entries[0], b.entries[0]);
+				return 0;
+			}
 			return Renderer.optionalfeature._prereqWeights[a.type] - Renderer.optionalfeature._prereqWeights[b.type]
 		});
 
 		const outList = prerequisites.map(it => {
 			switch (it.type) {
 				case "prereqLevel":
-					return listMode ? false : `${Parser.levelToFull(it.level)} level`;
+					return listMode ? false : `${Parser.getOrdinalForm(it.level)} level`;
 				case "prereqPact":
 					return Parser.prereqPactToFull(it.entry);
 				case "prereqPatron":
 					return listMode ? `${Parser.prereqPatronToShort(it.entry)} patron` : `${it.entry} patron`;
 				case "prereqSpell":
-					return listMode ? it.entries.map(x => x.toTitleCase()).join("; ") : it.entries.map(sp => Parser.prereqSpellToFull(sp)).joinConjunct(", ", " or ");
+					return listMode
+						? it.entries.map(x => x.split("#")[0].split("|")[0].toTitleCase()).join("/")
+						: it.entries.map(sp => Parser.prereqSpellToFull(sp)).joinConjunct(", ", " or ");
 				case "prereqFeature":
-					return listMode ? it.entries.map(x => x.toTitleCase()).join("; ") : it.entries.joinConjunct(", ", " or ");
+					return listMode ? it.entries.map(x => x.toTitleCase()).join("/") : it.entries.joinConjunct(", ", " or ");
 				case "prereqItem":
-					return listMode ? it.entries.map(x => x.toTitleCase()).join("; ") : it.entries.joinConjunct(", ", " or ");
+					return listMode ? it.entries.map(x => x.toTitleCase()).join("/") : it.entries.joinConjunct(", ", " or ");
 				case "prereqSpecial":
-					return listMode ? (it.entrySummary || it.entry) : it.entry;
+					return listMode ? (it.entrySummary || Renderer.stripTags(it.entry)) : Renderer.get().render(it.entry);
 				default: // string
 					return it;
 			}
 		});
 
+		if (!outList.filter(Boolean).length) return listMode ? "\u2014" : STR_NONE;
 		return listMode ? outList.filter(Boolean).join(", ") : `Prerequisites: ${outList.join(", ")}`;
 	},
 
@@ -2140,7 +2441,7 @@ Renderer.optionalfeature = {
 		const renderStack = [];
 
 		renderStack.push(`
-			${Renderer.utils.getNameTr(it, true)}
+			${Renderer.utils.getNameTr(it, {isAddPageNum: true})}
 			<tr class="text"><td colspan="6">
 			${it.prerequisite ? `<p><i>${Renderer.optionalfeature.getPrerequisiteText(it.prerequisite)}</i></p>` : ""}
 		`);
@@ -2162,7 +2463,7 @@ Renderer.reward = {
 
 	getCompactRenderedString: (reward) => {
 		return `
-			${Renderer.utils.getNameTr(reward, true)}
+			${Renderer.utils.getNameTr(reward, {isAddPageNum: true})}
 			${Renderer.reward.getRenderedString(reward)}
 		`;
 	}
@@ -2173,20 +2474,20 @@ Renderer.race = {
 		const renderer = Renderer.get();
 		const renderStack = [];
 
-		const ability = utils_getAbilityData(race.ability);
+		const ability = Renderer.getAbilityData(race.ability);
 		renderStack.push(`
-			${Renderer.utils.getNameTr(race, true)}
+			${Renderer.utils.getNameTr(race, {isAddPageNum: true})}
 			<tr><td colspan="6">
 				<table class="summary striped-even">
 					<tr>
-						<th class="col-4 text-align-center">Ability Scores</th>
-						<th class="col-4 text-align-center">Size</th>
-						<th class="col-4 text-align-center">Speed</th>
+						<th class="col-4 text-center">Ability Scores</th>
+						<th class="col-4 text-center">Size</th>
+						<th class="col-4 text-center">Speed</th>
 					</tr>
 					<tr>
-						<td class="text-align-center">${ability.asText}</td>
-						<td class="text-align-center">${Parser.sizeAbvToFull(race.size)}</td>
-						<td class="text-align-center">${Parser.getSpeedString(race)}</td>
+						<td class="text-center">${ability.asText}</td>
+						<td class="text-center">${Parser.sizeAbvToFull(race.size)}</td>
+						<td class="text-center">${Parser.getSpeedString(race)}</td>
 					</tr>
 				</table>
 			</td></tr>
@@ -2306,7 +2607,7 @@ Renderer.deity = {
 	getCompactRenderedString: (deity) => {
 		const renderer = Renderer.get();
 		return `
-			${Renderer.utils.getNameTr(deity, true, "", deity.title ? `, ${deity.title.toTitleCase()}` : "")}
+			${Renderer.utils.getNameTr(deity, {isAddPageNum: true, suffix: deity.title ? `, ${deity.title.toTitleCase()}` : ""})}
 			<tr><td colspan="6">
 				<div class="rd__compact-stat">${Renderer.deity.getOrderedParts(deity, `<p>`, `</p>`)}</div>
 			</td>
@@ -2320,29 +2621,29 @@ Renderer.object = {
 		const renderer = Renderer.get();
 		const row2Width = 12 / ((!!obj.resist + !!obj.vulnerable) || 1);
 		return `
-			${Renderer.utils.getNameTr(obj, true)}
+			${Renderer.utils.getNameTr(obj, {isAddPageNum: true})}
 			<tr><td colspan="6">
 				<table class="summary striped-even">
 					<tr>
-						<th colspan="3" class="text-align-center">Type</th>
-						<th colspan="2" class="text-align-center">AC</th>
-						<th colspan="2" class="text-align-center">HP</th>
-						<th colspan="5" class="text-align-center">Damage Imm.</th>
+						<th colspan="3" class="text-center">Type</th>
+						<th colspan="2" class="text-center">AC</th>
+						<th colspan="2" class="text-center">HP</th>
+						<th colspan="5" class="text-center">Damage Imm.</th>
 					</tr>
 					<tr>
-						<td colspan="3" class="text-align-center">${Parser.sizeAbvToFull(obj.size)} object</td>					
-						<td colspan="2" class="text-align-center">${obj.ac}</td>
-						<td colspan="2" class="text-align-center">${obj.hp}</td>
-						<td colspan="5" class="text-align-center">${obj.immune}</td>
+						<td colspan="3" class="text-center">${Parser.sizeAbvToFull(obj.size)} object</td>					
+						<td colspan="2" class="text-center">${obj.ac}</td>
+						<td colspan="2" class="text-center">${obj.hp}</td>
+						<td colspan="5" class="text-center">${obj.immune}</td>
 					</tr>
 					${obj.resist || obj.vulnerable ? `
 					<tr>
-						${obj.resist ? `<th colspan="${row2Width}" class="text-align-center">Damage Res.</th>` : ""}
-						${obj.vulnerable ? `<th colspan="${row2Width}" class="text-align-center">Damage Vuln.</th>` : ""}
+						${obj.resist ? `<th colspan="${row2Width}" class="text-center">Damage Res.</th>` : ""}
+						${obj.vulnerable ? `<th colspan="${row2Width}" class="text-center">Damage Vuln.</th>` : ""}
 					</tr>
 					<tr>
-						${obj.resist ? `<td colspan="${row2Width}" class="text-align-center">${obj.resist}</td>` : ""}
-						${obj.vulnerable ? `<td colspan="${row2Width}" class="text-align-center">${obj.vulnerable}</td>` : ""}
+						${obj.resist ? `<td colspan="${row2Width}" class="text-center">${obj.resist}</td>` : ""}
+						${obj.vulnerable ? `<td colspan="${row2Width}" class="text-center">${obj.vulnerable}</td>` : ""}
 					</tr>
 					` : ""}
 				</table>			
@@ -2438,7 +2739,7 @@ Renderer.traphazard = {
 		const renderer = Renderer.get();
 		const subtitle = Renderer.traphazard.getSubtitle(it);
 		return `
-			${Renderer.utils.getNameTr(it, true)}
+			${Renderer.utils.getNameTr(it, {isAddPageNum: true})}
 			${subtitle ? `<tr class="text"><td colspan="6"><i>${subtitle}</i>${Renderer.traphazard.getSimplePart(renderer, it)}${Renderer.traphazard.getComplexPart(renderer, it)}</td>` : ""}
 			<tr class="text"><td colspan="6">${renderer.render({entries: it.entries}, 2)}</td></tr>
 		`;
@@ -2506,13 +2807,13 @@ Renderer.cultboon = {
 		if (it._type === "c") {
 			Renderer.cultboon.doRenderCultParts(it, renderer, renderStack);
 			renderer.recursiveRender({entries: it.entries}, renderStack, {depth: 2});
-			return `${Renderer.utils.getNameTr(it, true)}
+			return `${Renderer.utils.getNameTr(it, {isAddPageNum: true})}
 				<tr id="text"><td class="divider" colspan="6"><div></div></td></tr>
 				<tr class='text'><td colspan='6' class='text'>${renderStack.join("")}</td></tr>`;
 		} else if (it._type === "b") {
 			Renderer.cultboon.doRenderBoonParts(it, renderer, renderStack);
 			renderer.recursiveRender({entries: it.entries}, renderStack, {depth: 1});
-			return `${Renderer.utils.getNameTr(it, true)}
+			return `${Renderer.utils.getNameTr(it, {isAddPageNum: true})}
 			<tr class='text'><td colspan='6'>${renderStack.join("")}</td></tr>`;
 		}
 	}
@@ -2523,7 +2824,11 @@ Renderer.monster = {
 		legendaryGroup: true,
 		environment: true,
 		soundClip: true,
-		page: true
+		page: true,
+		altArt: true,
+		otherSources: true,
+		variant: true,
+		dragonCastingColor: true
 	},
 	_mergeCache: null,
 	async pMergeCopy (monList, mon, options) {
@@ -2536,13 +2841,10 @@ Renderer.monster = {
 
 		if (mon._copy) {
 			const hash = UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_BESTIARY](mon._copy);
-			if (!Renderer.monster._mergeCache) {
-				Renderer.monster._mergeCache = {};
-				return Renderer.monster._pApplyCopy(search(), mon, options);
-			} else {
-				if (Renderer.monster._mergeCache[hash]) return Renderer.monster._pApplyCopy(MiscUtil.copy(Renderer.monster._mergeCache[hash]), mon, options);
-				else return Renderer.monster._pApplyCopy(search(), mon, options);
-			}
+			Renderer.monster._mergeCache = Renderer.monster._mergeCache || {};
+			const it = Renderer.monster._mergeCache[hash] || search();
+			if (!it) return;
+			return Renderer.monster._pApplyCopy(MiscUtil.copy(it), mon, options);
 		}
 	},
 
@@ -2561,25 +2863,22 @@ Renderer.monster = {
 		if (copyMeta._mod) normaliseMods(copyMeta);
 
 		// fetch and apply any external traits -- append them to existing copy mods where available
+		let racials = null;
 		if (copyMeta._trait) {
 			const traitData = await DataUtil.loadJSON("data/bestiary/traits.json");
-			const traits = traitData.trait.find(t => t.name.toLowerCase() === copyMeta._trait.name.toLowerCase() && t.source.toLowerCase() === copyMeta._trait.source.toLowerCase());
-			if (!traits) throw new Error(`Could not find traits to apply with name "${copyMeta._trait.name}" and source "${copyMeta._trait.source}"`);
+			racials = traitData.trait.find(t => t.name.toLowerCase() === copyMeta._trait.name.toLowerCase() && t.source.toLowerCase() === copyMeta._trait.source.toLowerCase());
+			if (!racials) throw new Error(`Could not find traits to apply with name "${copyMeta._trait.name}" and source "${copyMeta._trait.source}"`);
+			racials = MiscUtil.copy(racials);
 
-			const toApply = MiscUtil.copy(traits.apply);
-			if (toApply) {
-				if (toApply._root) Object.entries(toApply._root).forEach(([k, v]) => copyTo[k] = v);
+			if (racials.apply._mod) {
+				normaliseMods(racials.apply);
 
-				if (toApply._mod) {
-					normaliseMods(toApply);
-
-					if (copyMeta._mod) {
-						Object.entries(toApply._mod).forEach(([k, v]) => {
-							if (copyMeta._mod[k]) copyMeta._mod[k] = copyMeta._mod[k].concat(v);
-							else copyMeta._mod[k] = v;
-						});
-					} else copyMeta._mod = toApply._mod;
-				}
+				if (copyMeta._mod) {
+					Object.entries(racials.apply._mod).forEach(([k, v]) => {
+						if (copyMeta._mod[k]) copyMeta._mod[k] = copyMeta._mod[k].concat(v);
+						else copyMeta._mod[k] = v;
+					});
+				} else copyMeta._mod = racials.apply._mod;
 			}
 
 			delete copyMeta._trait;
@@ -2594,6 +2893,9 @@ Renderer.monster = {
 				} else copyTo[k] = copyFrom[k];
 			}
 		});
+
+		// apply any root racial properties after doing base copy
+		if (racials && racials.apply._root) Object.entries(racials.apply._root).forEach(([k, v]) => copyTo[k] = v);
 
 		// mod helpers /////////////////
 		function doEnsureArray (obj, prop) {
@@ -2611,7 +2913,7 @@ Renderer.monster = {
 				copyTo[prop].forEach(it => {
 					if (it.entries) it.entries = JSON.parse(JSON.stringify(it.entries).replace(re, modInfo.with));
 					if (it.headerEntries) it.headerEntries = JSON.parse(JSON.stringify(it.headerEntries).replace(re, modInfo.with));
-				})
+				});
 			}
 		}
 
@@ -2625,21 +2927,50 @@ Renderer.monster = {
 			copyTo[prop] = copyTo[prop] ? copyTo[prop].concat(modInfo.items) : modInfo.items
 		}
 
-		function doMod_replaceArr (modInfo, prop) {
-			doEnsureArray(modInfo, "with");
-			const ixOld = copyTo[prop].findIndex(it => it.name === modInfo.replace);
+		function doMod_replaceArr (modInfo, prop, isThrow = true) {
+			doEnsureArray(modInfo, "items");
+
+			if (!copyTo[prop]) {
+				if (isThrow) throw new Error(`Could not find "${prop}" array`);
+				return false;
+			}
+
+			let ixOld;
+			if (modInfo.replace.regex) {
+				const re = new RegExp(modInfo.replace.regex, modInfo.replace.flags || "");
+				ixOld = copyTo[prop].findIndex(it => it.name ? re.test(it.name) : typeof it === "string" ? re.test(it) : false);
+			} else {
+				ixOld = copyTo[prop].findIndex(it => it.name ? it.name === modInfo.replace : it === modInfo.replace);
+			}
+
 			if (~ixOld) {
-				copyTo[prop].splice(ixOld, 1, ...modInfo.with);
-			} else throw new Error(`Could not find "${prop}" item with name "${modInfo.replace}" to replace`);
+				copyTo[prop].splice(ixOld, 1, ...modInfo.items);
+				return true;
+			} else if (isThrow) throw new Error(`Could not find "${prop}" item with name "${modInfo.replace}" to replace`);
+			return false;
+		}
+
+		function doMod_replaceOrAppendArr (modInfo, prop) {
+			const didReplace = doMod_replaceArr(modInfo, prop, false);
+			if (!didReplace) doMod_appendArr(modInfo, prop);
 		}
 
 		function doMod_removeArr (modInfo, prop) {
-			doEnsureArray(modInfo, "names");
-			modInfo.names.forEach(nameToRemove => {
-				const ixOld = copyTo[prop].findIndex(it => it.name === nameToRemove);
-				if (~ixOld) copyTo[prop].splice(ixOld, 1);
-				else throw new Error(`Could not find "${prop}" item with name "${nameToRemove}" to remove`);
-			});
+			if (modInfo.names) {
+				doEnsureArray(modInfo, "names");
+				modInfo.names.forEach(nameToRemove => {
+					const ixOld = copyTo[prop].findIndex(it => it.name === nameToRemove);
+					if (~ixOld) copyTo[prop].splice(ixOld, 1);
+					else throw new Error(`Could not find "${prop}" item with name "${nameToRemove}" to remove`);
+				});
+			} else if (modInfo.items) {
+				doEnsureArray(modInfo, "items");
+				modInfo.items.forEach(itemToRemove => {
+					const ixOld = copyTo[prop].findIndex(it => it === itemToRemove);
+					if (~ixOld) copyTo[prop].splice(ixOld, 1);
+					else throw new Error(`Could not find "${prop}" item "${itemToRemove}" to remove`);
+				});
+			} else throw new Error(`One of "names" or "items" must be provided!`)
 		}
 
 		function doMod_calculateProp (modInfo, prop) {
@@ -2655,8 +2986,157 @@ Renderer.monster = {
 			copyTo[prop][modInfo.prop] = eval(toExec);
 		}
 
+		function doMod_scalarAddProp (modInfo, prop) {
+			function applyTo (k) {
+				const out = Number(copyTo[prop][k]) + modInfo.scalar;
+				const isString = typeof copyTo[prop][k] === "string";
+				copyTo[prop][k] = isString ? `${out >= 0 ? "+" : ""}${out}` : out;
+			}
+
+			if (!copyTo[prop]) return;
+			if (modInfo.prop === "*") Object.keys(copyTo[prop]).forEach(k => applyTo(k));
+			else applyTo(modInfo.prop);
+		}
+
+		function doMod_scalarMultProp (modInfo, prop) {
+			function applyTo (k) {
+				let out = Number(copyTo[prop][k]) * modInfo.scalar;
+				if (modInfo.floor) out = Math.floor(out);
+				const isString = typeof copyTo[prop][k] === "string";
+				copyTo[prop][k] = isString ? `${out >= 0 ? "+" : ""}${out}` : out;
+			}
+
+			if (!copyTo[prop]) return;
+			if (modInfo.prop === "*") Object.keys(copyTo[prop]).forEach(k => applyTo(k));
+			else applyTo(modInfo.prop);
+		}
+
+		function doMod_addSenses (modInfo) {
+			doEnsureArray(modInfo, "senses");
+			copyTo.senses = copyTo.senses || [];
+			modInfo.senses.forEach(sense => {
+				let found = false;
+				for (let i = 0; i < copyTo.senses.length; ++i) {
+					const m = new RegExp(`${sense.type} (\\d+)`, "i").exec(copyTo.senses[i]);
+					if (m) {
+						found = true;
+						// if the creature already has a greater sense of this type, do nothing
+						if (Number(m[1]) < sense.type) {
+							copyTo.senses[i] = `${sense.type} ${sense.range} ft.`;
+						}
+						break;
+					}
+				}
+
+				if (!found) copyTo.senses.push(`${sense.type} ${sense.range} ft.`);
+			});
+		}
+
+		function doMod_addSkills (modInfo) {
+			copyTo.skill = copyTo.skill || [];
+			Object.entries(modInfo.skills).forEach(([skill, mode]) => {
+				// mode: 1 = proficient; 2 = expert
+				const total = mode * Parser.crToPb(copyTo.cr) + Parser.getAbilityModNumber(copyTo[Parser.skillToAbilityAbv(skill)]);
+				const asText = total >= 0 ? `+${total}` : `-${total}`;
+				if (copyTo.skill && copyTo.skill[skill]) {
+					// update only if ours is larger (prevent reduction in skill score)
+					if (Number(copyTo.skill[skill]) < total) copyTo.skill[skill] = asText;
+				} else copyTo.skill[skill] = asText;
+			});
+		}
+
+		function doMod_addSpells (modInfo) {
+			if (!copyTo.spellcasting) throw new Error(`Creature did not have a spellcasting property!`);
+
+			// TODO should be rewritten to handle non-slot-based spellcasters
+			// TODO could accept a "position" or "name" parameter should spells need to be added to other spellcasting traits
+			const trait0 = copyTo.spellcasting[0].spells;
+			Object.keys(modInfo.spells).forEach(k => {
+				if (!trait0[k]) trait0[k] = modInfo.spells[k];
+				else {
+					// merge the objects
+					const spellCategoryNu = modInfo.spells[k];
+					const spellCategoryOld = trait0[k];
+					Object.keys(spellCategoryNu).forEach(kk => {
+						if (!spellCategoryOld[kk]) spellCategoryOld[kk] = spellCategoryNu[kk];
+						else {
+							if (typeof spellCategoryOld[kk] === "object") {
+								if (spellCategoryOld[kk] instanceof Array) spellCategoryOld[kk] = spellCategoryOld[kk].concat(spellCategoryNu[kk]).sort(SortUtil.ascSortLower);
+								else throw new Error(`Object at key ${kk} not an array!`);
+							} else spellCategoryOld[kk] = spellCategoryNu[kk];
+						}
+					});
+				}
+			});
+		}
+
+		function doMod_replaceSpells (modInfo) {
+			if (!copyTo.spellcasting) throw new Error(`Creature did not have a spellcasting property!`);
+
+			// TODO should be rewritten to handle non-slot-based spellcasters
+			// TODO could accept a "position" or "name" parameter should spells need to be added to other spellcasting traits
+			const trait0 = copyTo.spellcasting[0].spells;
+			Object.keys(modInfo.spells).forEach(k => {
+				if (trait0[k]) {
+					const spellCategoryNu = modInfo.spells[k];
+					const spellCategoryOld = trait0[k];
+					Object.keys(spellCategoryNu).forEach(kk => {
+						doEnsureArray(spellCategoryNu[kk], "with");
+
+						if (spellCategoryOld[kk]) {
+							if (typeof spellCategoryOld[kk] === "object") {
+								if (spellCategoryOld[kk] instanceof Array) {
+									const ix = spellCategoryOld[kk].indexOf(spellCategoryNu[kk].replace);
+									if (~ix) {
+										spellCategoryOld[kk].splice(ix, 1, ...spellCategoryNu[kk].with);
+										spellCategoryOld[kk].sort(SortUtil.ascSortLower);
+									}
+								} else throw new Error(`Object at key ${kk} not an array!`);
+							} else {
+								if (spellCategoryNu[kk].replace === spellCategoryOld[kk]) {
+									spellCategoryOld[kk] = spellCategoryNu[kk].with;
+								}
+							}
+						}
+					});
+				}
+			});
+		}
+
+		function doMod_scalarAddHit (modInfo, prop) {
+			if (!copyTo[prop]) return;
+			copyTo[prop] = JSON.parse(JSON.stringify(copyTo[prop]).replace(/{@hit ([-+]?\d+)}/g, (m0, m1) => `{@hit ${Number(m1) + modInfo.scalar}}`))
+		}
+
+		function doMod_scalarAddDc (modInfo, prop) {
+			if (!copyTo[prop]) return;
+			copyTo[prop] = JSON.parse(JSON.stringify(copyTo[prop]).replace(/{@dc (\d+)}/g, (m0, m1) => `{@dc ${Number(m1) + modInfo.scalar}}`));
+		}
+
+		function doMod_maxSize (modInfo) {
+			const ixCur = Parser.SIZE_ABVS.indexOf(copyTo.size);
+			const ixMax = Parser.SIZE_ABVS.indexOf(modInfo.max);
+			if (ixCur < 0 || ixMax < 0) throw new Error(`Unhandled size!`);
+			copyTo.size = Parser.SIZE_ABVS[Math.min(ixCur, ixMax)]
+		}
+
+		function doMod_scalarMultXp (modInfo) {
+			function getOutput (input) {
+				let out = input * modInfo.scalar;
+				if (modInfo.floor) out = Math.floor(out);
+				return out;
+			}
+
+			if (copyTo.cr.xp) copyTo.cr.xp = getOutput(copyTo.cr.xp);
+			else {
+				const curXp = Parser.crToXpNumber(copyTo.cr);
+				if (!copyTo.cr.cr) copyTo.cr = {cr: copyTo.cr};
+				copyTo.cr.xp = getOutput(curXp);
+			}
+		}
+
 		function doMod (modInfos, ...properties) {
-			properties.forEach(prop => {
+			function handleProp (prop) {
 				modInfos.forEach(modInfo => {
 					if (typeof modInfo === "string") {
 						switch (modInfo) {
@@ -2670,22 +3150,81 @@ Renderer.monster = {
 							case "prependArr": return doMod_prependArr(modInfo, prop);
 							case "appendArr": return doMod_appendArr(modInfo, prop);
 							case "replaceArr": return doMod_replaceArr(modInfo, prop);
+							case "replaceOrAppendArr": return doMod_replaceOrAppendArr(modInfo, prop);
 							case "removeArr": return doMod_removeArr(modInfo, prop);
 							case "calculateProp": return doMod_calculateProp(modInfo, prop);
+							case "scalarAddProp": return doMod_scalarAddProp(modInfo, prop);
+							case "scalarMultProp": return doMod_scalarMultProp(modInfo, prop);
+							// bestiary specific
+							case "addSenses": return doMod_addSenses(modInfo);
+							case "addSkills": return doMod_addSkills(modInfo);
+							case "addSpells": return doMod_addSpells(modInfo);
+							case "replaceSpells": return doMod_replaceSpells(modInfo);
+							case "scalarAddHit": return doMod_scalarAddHit(modInfo, prop);
+							case "scalarAddDc": return doMod_scalarAddDc(modInfo, prop);
+							case "maxSize": return doMod_maxSize(modInfo);
+							case "scalarMultXp": return doMod_scalarMultXp(modInfo);
 							default: throw new Error(`Unhandled mode: ${modInfo.mode}`);
 						}
 					}
 				});
-			});
+			}
+
+			properties.forEach(prop => handleProp(prop));
+			// special case for "no property" modifications, i.e. underscore-key'd
+			if (!properties.length) handleProp();
 		}
 
 		// apply mods
 		if (copyMeta._mod) {
+			// pre-convert any dynamic text
+			Object.entries(copyMeta._mod).forEach(([k, v]) => {
+				copyMeta._mod[k] = JSON.parse(
+					JSON.stringify(v)
+						.replace(/<\$([^$]+)\$>/g, (...m) => {
+							const parts = m[1].split("__");
+
+							switch (parts[0]) {
+								case "name": return copyTo.name;
+								case "short_name":
+								case "title_name": {
+									return copyTo.isNpc ? copyTo.name.split(" ")[0] : `${parts[0] === "title_name" ? "The " : "the "}${copyTo.name.toLowerCase()}`;
+								}
+								case "spell_dc": {
+									if (!Parser.ABIL_ABVS.includes(parts[1])) throw new Error(`Unknown ability score "${parts[1]}"`);
+									return 8 + Parser.getAbilityModNumber(Number(copyTo[parts[1]])) + Parser.crToPb(copyTo.cr);
+								}
+								case "to_hit": {
+									if (!Parser.ABIL_ABVS.includes(parts[1])) throw new Error(`Unknown ability score "${parts[1]}"`);
+									const total = Parser.crToPb(copyTo.cr) + Parser.getAbilityModNumber(Number(copyTo[parts[1]]));
+									return total >= 0 ? `+${total}` : total;
+								}
+								case "damage_mod": {
+									if (!Parser.ABIL_ABVS.includes(parts[1])) throw new Error(`Unknown ability score "${parts[1]}"`);
+									const total = Parser.getAbilityModNumber(Number(copyTo[parts[1]]));
+									return total === 0 ? "" : total > 0 ? ` +${total}` : ` ${total}`;
+								}
+								case "damage_avg": {
+									const replaced = parts[1].replace(/(str|dex|con|int|wis|cha)/gi, (...m2) => Parser.getAbilityModNumber(Number(copyTo[m2[0]])))
+									const clean = replaced.replace(/[^-+/*0-9.,]+/g, "");
+									// eslint-disable-next-line no-eval
+									return Math.floor(eval(clean));
+								}
+								default: return m[0];
+							}
+						})
+				);
+			});
+
 			Object.entries(copyMeta._mod).forEach(([prop, modInfos]) => {
 				if (prop === "*") doMod(modInfos, "action", "reaction", "trait", "legendary", "variant", "spellcasting");
+				else if (prop === "_") doMod(modInfos);
 				else doMod(modInfos, prop);
 			});
 		}
+
+		// add filter tag
+		copyTo._isCopy = true;
 
 		// cleanup
 		delete copyTo._copy;
@@ -2693,6 +3232,7 @@ Renderer.monster = {
 
 	getLegendaryActionIntro: (mon) => {
 		function getCleanName () {
+			if (mon.shortName) return mon.shortName;
 			const base = mon.name.split(",")[0];
 			const cleanDragons = base
 				.replace(/(?:adult|ancient|young) \w+ (dragon|dracolich)/gi, "$1");
@@ -2842,10 +3382,11 @@ Renderer.monster = {
 		renderer = renderer || Renderer.get();
 
 		const renderStack = [];
+		const isCrHidden = Parser.crToNumber(mon.cr) === 100;
 
 		renderStack.push(`
-			${Renderer.utils.getNameTr(mon, true)}
-			<tr><td colspan="6"><i>${Parser.sizeAbvToFull(mon.size)}, ${Parser.monTypeToFullObj(mon.type).asText}, ${Parser.alignmentListToFull(mon.alignment).toLowerCase()}</i></td></tr>
+			${Renderer.utils.getNameTr(mon, {isAddPageNum: true})}
+			<tr><td colspan="6"><i>${mon.level ? `${Parser.getOrdinalForm(mon.level)}-level ` : ""}${Parser.sizeAbvToFull(mon.size)} ${Parser.monTypeToFullObj(mon.type).asText}${mon.alignment ? `, ${Parser.alignmentListToFull(mon.alignment).toLowerCase()}` : ""}</i></td></tr>
 			<tr><td colspan="6"><div class="border"></div></td></tr>
 			<tr><td colspan="6">
 				<table class="summary-noback" style="position: relative;">
@@ -2853,15 +3394,16 @@ Renderer.monster = {
 						<th>Armor Class</th>
 						<th>Hit Points</th>
 						<th>Speed</th>
-						<th>Challenge Rating</th>
+						${isCrHidden ? "" : "<th>Challenge Rating</th>"}
 					</tr>
 					<tr>
 						<td>${Parser.acToFull(mon.ac)}</td>					
 						<td>${Renderer.monster.getRenderedHp(mon.hp)}</td>					
-						<td>${Parser.getSpeedString(mon)}</td>					
+						<td>${Parser.getSpeedString(mon)}</td>	
+						${isCrHidden ? "" : `
 						<td>
 							${Parser.monCrToFull(mon.cr)}
-							${options.showScaler && Parser.isValidCr(mon.cr.cr || mon.cr) ? `
+							${options.showScaler && Parser.isValidCr(mon.cr ? (mon.cr.cr || mon.cr) : null) ? `
 							<button title="Scale Creature By CR (Highly Experimental)" class="mon__btn-scale-cr btn btn-xs btn-default">
 								<span class="glyphicon glyphicon-signal"></span>
 							</button>
@@ -2871,7 +3413,8 @@ Renderer.monster = {
 								<span class="glyphicon glyphicon-refresh"></span>
 							</button>
 							` : ""}
-						</td>					
+						</td>
+						`}					
 					</tr>
 				</table>			
 			</td></tr>
@@ -2879,30 +3422,30 @@ Renderer.monster = {
 			<tr><td colspan="6">
 				<table class="summary striped-even">
 					<tr>
-						<th class="col-2 text-align-center">STR</th>
-						<th class="col-2 text-align-center">DEX</th>
-						<th class="col-2 text-align-center">CON</th>
-						<th class="col-2 text-align-center">INT</th>
-						<th class="col-2 text-align-center">WIS</th>
-						<th class="col-2 text-align-center">CHA</th>
+						<th class="col-2 text-center">STR</th>
+						<th class="col-2 text-center">DEX</th>
+						<th class="col-2 text-center">CON</th>
+						<th class="col-2 text-center">INT</th>
+						<th class="col-2 text-center">WIS</th>
+						<th class="col-2 text-center">CHA</th>
 					</tr>	
 					<tr>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(mon, "str")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(mon, "dex")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(mon, "con")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(mon, "int")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(mon, "wis")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(mon, "cha")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(mon, "str")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(mon, "dex")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(mon, "con")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(mon, "int")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(mon, "wis")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(mon, "cha")}</td>
 					</tr>
 				</table>
 			</td></tr>
 			<tr><td colspan="6"><div class="border"></div></td></tr>
 			<tr><td colspan="6">
 				<div class="rd__compact-stat">
-					${mon.save ? `<p><b>Saving Throws:</b> ${Object.keys(mon.save).map(s => Renderer.monster.getSave(renderer, s, mon.save[s])).join(", ")}</p>` : ""}
+					${mon.save ? `<p><b>Saving Throws:</b> ${Object.keys(mon.save).sort(SortUtil.ascSortAtts).map(s => Renderer.monster.getSave(renderer, s, mon.save[s])).join(", ")}</p>` : ""}
 					${mon.skill ? `<p><b>Skills:</b> ${Renderer.monster.getSkillsString(renderer, mon)}</p>` : ""}
 					<p><b>Senses:</b> ${mon.senses ? `${Renderer.monster.getRenderedSenses(mon.senses)}, ` : ""}passive Perception ${mon.passive}</p>
-					<p><b>Languages:</b> ${mon.languages ? mon.languages : `\u2014`}</p>
+					<p><b>Languages:</b> ${Renderer.monster.getRenderedLanguages(mon.languages)}</p>
 					${mon.vulnerable ? `<p><b>Damage Vuln.:</b> ${Parser.monImmResToFull(mon.vulnerable)}</p>` : ""}
 					${mon.resist ? `<p><b>Damage Res.:</b> ${Parser.monImmResToFull(mon.resist)}</p>` : ""}
 					${mon.immune ? `<p><b>Damage Imm.:</b> ${Parser.monImmResToFull(mon.immune)}</p>` : ""}
@@ -2948,65 +3491,12 @@ Renderer.monster = {
 
 	getSpellcastingRenderedTraits: (mon, renderer) => {
 		const out = [];
-		const spellcasting = mon.spellcasting;
-		for (let i = 0; i < spellcasting.length; ++i) {
+		mon.spellcasting.forEach(entry => {
+			entry.type = entry.type || "spellcasting";
 			const renderStack = [];
-			let spellList = spellcasting[i];
-			const hidden = new Set(spellList.hidden || []);
-			const toRender = [{type: "entries", name: spellList.name, entries: spellList.headerEntries ? JSON.parse(JSON.stringify(spellList.headerEntries)) : []}];
-			if (spellList.constant || spellList.will || spellList.rest || spellList.daily || spellList.weekly) {
-				const tempList = {type: "list", "style": "list-hang-notitle", items: []};
-				if (spellList.constant && !hidden.has("constant")) tempList.items.push({type: "itemSpell", name: `Constant:`, entry: spellList.constant.join(", ")});
-				if (spellList.will && !hidden.has("will")) tempList.items.push({type: "itemSpell", name: `At will:`, entry: spellList.will.join(", ")});
-				if (spellList.rest && !hidden.has("rest")) {
-					for (let j = 9; j > 0; j--) {
-						let rest = spellList.rest;
-						if (rest[j]) tempList.items.push({type: "itemSpell", name: `${j}/rest:`, entry: rest[j].join(", ")});
-						const jEach = `${j}e`;
-						if (rest[jEach]) tempList.items.push({type: "itemSpell", name: `${j}/rest each:`, entry: rest[jEach].join(", ")});
-					}
-				}
-				if (spellList.daily && !hidden.has("daily")) {
-					for (let j = 9; j > 0; j--) {
-						let daily = spellList.daily;
-						if (daily[j]) tempList.items.push({type: "itemSpell", name: `${j}/day:`, entry: daily[j].join(", ")});
-						const jEach = `${j}e`;
-						if (daily[jEach]) tempList.items.push({type: "itemSpell", name: `${j}/day each:`, entry: daily[jEach].join(", ")});
-					}
-				}
-				if (spellList.weekly && !hidden.has("weekly")) {
-					for (let j = 9; j > 0; j--) {
-						let weekly = spellList.weekly;
-						if (weekly[j]) tempList.items.push({type: "itemSpell", name: `${j}/week:`, entry: weekly[j].join(", ")});
-						const jEach = `${j}e`;
-						if (weekly[jEach]) tempList.items.push({type: "itemSpell", name: `${j}/week each:`, entry: weekly[jEach].join(", ")});
-					}
-				}
-				if (tempList.items.length) toRender[0].entries.push(tempList);
-			}
-			if (spellList.spells && !hidden.has("spells")) {
-				const tempList = {type: "list", "style": "list-hang-notitle", items: []};
-				for (let j = 0; j < 10; ++j) {
-					let spells = spellList.spells[j];
-					if (spells) {
-						let lower = spells.lower;
-						let levelCantrip = `${Parser.spLevelToFull(j)}${(j === 0 ? "s" : " level")}`;
-						let slotsAtWill = ` (at will)`;
-						let slots = spells.slots;
-						if (slots >= 0) slotsAtWill = slots > 0 ? ` (${slots} slot${slots > 1 ? "s" : ""})` : ``;
-						if (lower) {
-							levelCantrip = `${Parser.spLevelToFull(lower)}-${levelCantrip}`;
-							if (slots >= 0) slotsAtWill = slots > 0 ? ` (${slots} ${Parser.spLevelToFull(j)}-level slot${slots > 1 ? "s" : ""})` : ``;
-						}
-						tempList.items.push({type: "itemSpell", name: `${levelCantrip} ${slotsAtWill}:`, entry: spells.spells.join(", ")})
-					}
-				}
-				toRender[0].entries.push(tempList);
-			}
-			if (spellList.footerEntries) toRender.push({type: "entries", entries: spellList.footerEntries});
-			renderer.recursiveRender({type: "entries", entries: toRender}, renderStack, {depth: 2});
-			out.push({name: spellList.name, rendered: renderStack.join("")});
-		}
+			renderer.recursiveRender(entry, renderStack, {depth: 2});
+			out.push({name: entry.name, rendered: renderStack.join("")});
+		});
 		return out;
 	},
 
@@ -3030,20 +3520,21 @@ Renderer.monster = {
 			return joinWithOr ? toJoin.joinConjunct(", ", " or ") : toJoin.join(", ")
 		}
 
-		const skills = doSortMapJoinSkillKeys(mon.skill, Object.keys(mon.skill).filter(k => k !== "other"));
-		if (mon.skill.other) {
-			const others = mon.skill.other.map(it => {
+		const skills = doSortMapJoinSkillKeys(mon.skill, Object.keys(mon.skill).filter(k => k !== "other" && k !== "special"));
+		if (mon.skill.other || mon.skill.special) {
+			const others = mon.skill.other && mon.skill.other.map(it => {
 				if (it.oneOf) {
 					return `plus one of the following: ${doSortMapJoinSkillKeys(it.oneOf, Object.keys(it.oneOf), true)}`
 				}
 				throw new Error(`Unhandled monster "other" skill properties!`)
 			});
-			return `${skills}, ${others.join(", ")}`
+			const special = mon.skill.special && Renderer.get().render(mon.skill.special);
+			return [skills, others, special].filter(Boolean).join(", ");
 		} else return skills;
 	},
 
 	getTokenUrl (mon) {
-		return mon.tokenUrl || UrlUtil.link(`img/${Parser.sourceJsonToAbv(mon.source)}/${mon.name.replace(/"/g, "")}.png`);
+		return mon.tokenUrl || UrlUtil.link(`img/${Parser.sourceJsonToAbv(mon.source)}/${Parser.nameToTokenName(mon.name)}.png`);
 	},
 
 	getFluff (mon, legendaryMeta, fluffJson) {
@@ -3148,11 +3639,22 @@ Renderer.monster = {
 	},
 
 	getRenderedSenses (senses) {
-		return Renderer.get().render(senses.replace(/(^| )(tremorsense|blindsight|truesight|darkvision)( |$)/gi, (...m) => `${m[1]}{@sense ${m[2]}}${m[3]}`));
+		if (typeof senses === "string") senses = [senses]; // handle legacy format
+		const senseStr = senses.join(", ").replace(/(^| )(tremorsense|blindsight|truesight|darkvision)( |$)/gi, (...m) => `${m[1]}{@sense ${m[2]}}${m[3]}`);
+		return Renderer.get().render(senseStr);
+	},
+
+	getRenderedLanguages (languages) {
+		if (typeof languages === "string") languages = [languages]; // handle legacy format
+		return languages ? languages.join(", ") : "\u2014";
 	}
 };
 
 Renderer.item = {
+	// avoid circular references by deciding a global link direction for specific <-> general
+	// default is general -> specific
+	LINK_SPECIFIC_TO_GENERIC_DIRECTION: 1,
+
 	getDamageAndPropertiesText: function (item) {
 		const type = item.type || "";
 		let damage = "";
@@ -3164,7 +3666,7 @@ Renderer.item = {
 			damage = "AC " + item.ac + (type === "LA" ? " + Dex" : type === "MA" ? " + Dex (max 2)" : "");
 		} else if (type === "S") {
 			damage = "AC +" + item.ac;
-		} else if (type === "MNT" || type === "VEH" || type === "SHP") {
+		} else if (type === "MNT" || type === "VEH" || type === "SHP" || type === "AIR") {
 			const speed = item.speed;
 			const capacity = item.carryingcapacity;
 			if (speed) damage += "Speed: " + speed;
@@ -3173,7 +3675,7 @@ Renderer.item = {
 				damage += "Carrying Capacity: " + capacity;
 				if (capacity.indexOf("ton") === -1 && capacity.indexOf("passenger") === -1) damage += Number(capacity) === 1 ? " lb." : " lbs.";
 			}
-			if (type === "SHP") {
+			if (type === "SHP" || type === "AIR") {
 				damage += `<br>Crew ${item.crew}, AC ${item.vehAc}, HP ${item.vehHp}${item.vehDmgThresh ? `, Damage Threshold ${item.vehDmgThresh}` : ""}`;
 			}
 		}
@@ -3194,6 +3696,10 @@ Renderer.item = {
 				a = (i > 0 ? ", " : item.dmg1 ? "- " : "") + a;
 				propertiesTxt += a;
 			}
+		} else {
+			const parts = [];
+			if (item.range) parts.push(`range ${item.range} ft.`);
+			propertiesTxt += `${item.dmg1 ? " - " : ""}${parts.join(", ")}`;
 		}
 		return [damage, damageType, propertiesTxt];
 	},
@@ -3211,12 +3717,15 @@ Renderer.item = {
 
 		const renderStack = [];
 
-		renderStack.push(Renderer.utils.getNameTr(item, true));
+		renderStack.push(Renderer.utils.getNameTr(item, {isAddPageNum: true}));
 
 		renderStack.push(`<tr><td class="typerarityattunement" colspan="6">${Renderer.item.getTypeRarityAndAttunementText(item)}</td>`);
 
 		const [damage, damageType, propertiesTxt] = Renderer.item.getDamageAndPropertiesText(item);
-		renderStack.push(`<tr><td colspan="2">${item.value ? item.value + (item.weight ? ", " : "") : ""}${Parser.itemWeightToFull(item)}</td><td class="damageproperties" colspan="4">${damage} ${damageType} ${propertiesTxt}</tr>`);
+		renderStack.push(`<tr>
+			<td colspan="2">${[Parser.itemValueToFull(item), Parser.itemWeightToFull(item)].filter(Boolean).join(", ").uppercaseFirst()}</td>
+			<td class="text-right" colspan="4">${damage} ${damageType} ${propertiesTxt}</td>
+		</tr>`);
 
 		if (item.entries && item.entries.length) {
 			renderStack.push(Renderer.utils.getDividerTr());
@@ -3238,7 +3747,7 @@ Renderer.item = {
 		return !Renderer.item._hiddenRarity.has(rarity);
 	},
 
-	_builtList: null,
+	_builtLists: {},
 	_propertyMap: {},
 	_typeMap: {},
 	_additionalEntriesMap: {},
@@ -3271,39 +3780,54 @@ Renderer.item = {
 				.catch(BrewUtil.pPurgeBrew);
 		});
 	},
-	_addBasicPropertiesAndTypes (basicItemData) {
+	_addBasePropertiesAndTypes (baseItemData) {
 		// Convert the property and type list JSONs into look-ups, i.e. use the abbreviation as a JSON property name
-		basicItemData.itemProperty.forEach(p => Renderer.item._addProperty(p));
-		basicItemData.itemType.forEach(t => Renderer.item._addType(t));
-		basicItemData.itemTypeAdditionalEntries.forEach(e => Renderer.item._addAdditionalEntries(e));
+		baseItemData.itemProperty.forEach(p => Renderer.item._addProperty(p));
+		baseItemData.itemType.forEach(t => {
+			// air/water vehicles share a type
+			if (t.abbreviation === "SHP") {
+				const cpy = MiscUtil.copy(t);
+				cpy.abbreviation = "AIR";
+				Renderer.item._addType(cpy);
+			}
+			Renderer.item._addType(t);
+		});
+		baseItemData.itemTypeAdditionalEntries.forEach(e => Renderer.item._addAdditionalEntries(e));
 	},
 	/**
 	 * Runs callback with itemList as argument
-	 * @param callback Run with args: allItems.
-	 * @param urls optional overrides for default URLs
-	 * @param addGroups whether item groups should be included
+	 * @param opts.fnCallback Run with args: allItems.
+	 * @param opts Options object.
+	 * @param opts.urls Overrides for default URLs.
+	 * @param opts.isAddGroups Whether item groups should be included.
+	 * @param opts.isBlacklistVariants Whether the blacklist should be respected when applying magic variants.
 	 */
-	async buildList (callback, urls, addGroups) {
-		addGroups = !!addGroups;
-		if (Renderer.item._builtList) {
-			if (callback) return callback(addGroups ? Renderer.item._builtList : Renderer.item._builtList.filter(it => !it._isItemGroup));
-			return addGroups ? Renderer.item._builtList : Renderer.item._builtList.filter(it => !it._isItemGroup);
+	async pBuildList (opts) {
+		opts = opts || {};
+		opts.isAddGroups = !!opts.isAddGroups;
+		opts.urls = opts.urls || {};
+
+		const kBlacklist = opts.isBlacklistVariants ? "withBlacklist" : "withoutBlacklist";
+		if (Renderer.item._builtLists[kBlacklist]) {
+			const cached = opts.isAddGroups ? Renderer.item._builtLists[kBlacklist] : Renderer.item._builtLists[kBlacklist].filter(it => !it._isItemGroup);
+
+			if (opts.fnCallback) return opts.fnCallback(cached);
+			return cached;
 		}
-		if (!urls) urls = {};
 
 		// allows URLs to be overridden (used by roll20 script)
-		const itemUrl = urls.items || `${Renderer.get().baseUrl}data/items.json`;
-		const basicItemUrl = urls.basicitems || `${Renderer.get().baseUrl}data/basicitems.json`;
-		const magicVariantUrl = urls.magicvariants || `${Renderer.get().baseUrl}data/magicvariants.json`;
+		const itemUrl = opts.urls.items || `${Renderer.get().baseUrl}data/items.json`;
+		const baseItemUrl = opts.urls.baseitems || `${Renderer.get().baseUrl}data/items-base.json`;
+		const magicVariantUrl = opts.urls.magicvariants || `${Renderer.get().baseUrl}data/magicvariants.json`;
 
 		const itemList = await pLoadItems();
-		const basicItems = await Renderer.item._pGetAndProcBasicItems(await DataUtil.loadJSON(basicItemUrl));
-		const [genericVariants, linkedLootTables] = await Renderer.item._pGetAndProcGenericVariants(await DataUtil.loadJSON(magicVariantUrl));
-		const genericAndSpecificVariants = Renderer.item._createSpecificVariants(basicItems, genericVariants, linkedLootTables);
-		const allItems = itemList.concat(basicItems).concat(genericAndSpecificVariants);
+		const baseItems = await Renderer.item._pGetAndProcBaseItems(await DataUtil.loadJSON(baseItemUrl));
+		const [genericVariants, linkedLootTables] = await Renderer.item._pGetAndProcGenericVariants(await DataUtil.loadJSON(magicVariantUrl), true);
+		const genericAndSpecificVariants = Renderer.item._createSpecificVariants(baseItems, genericVariants, linkedLootTables);
+		const allItems = itemList.concat(baseItems).concat(genericAndSpecificVariants);
 		Renderer.item._enhanceItems(allItems);
-		Renderer.item._builtList = allItems;
-		if (callback) return callback(allItems);
+		Renderer.item._builtLists[kBlacklist] = allItems;
+		if (opts.fnCallback) return opts.fnCallback(allItems);
 		return allItems;
 
 		async function pLoadItems () {
@@ -3314,18 +3838,24 @@ Renderer.item = {
 		}
 	},
 
-	async _pGetAndProcBasicItems (basicItemData) {
-		Renderer.item._addBasicPropertiesAndTypes(basicItemData);
+	async _pGetAndProcBaseItems (baseItemData) {
+		Renderer.item._addBasePropertiesAndTypes(baseItemData);
 		await Renderer.item._pAddBrewPropertiesAndTypes();
-		return basicItemData.basicitem;
+		return baseItemData.baseitem;
 	},
 
-	async _pGetAndProcGenericVariants (variantData) {
+	async _pGetAndProcGenericVariants (variantData, isRespectBlacklist) {
 		variantData.variant.forEach(Renderer.item._genericVariants_addInheritedPropertiesToSelf);
+		if (isRespectBlacklist) {
+			return [
+				variantData.variant.filter(it => !ExcludeUtil.isExcluded(it.name, "variant", it.source)),
+				variantData.linkedLootTables
+			]
+		}
 		return [variantData.variant, variantData.linkedLootTables];
 	},
 
-	_createSpecificVariants (basicItems, genericVariants, linkedLootTables) {
+	_createSpecificVariants (baseItems, genericVariants, linkedLootTables) {
 		function isMissingRequiredProperty (baseItem, genericVariant) {
 			return !~genericVariant.requires.findIndex(req => !~Object.keys(req).findIndex(reqK => baseItem[reqK] !== req[reqK]));
 		}
@@ -3365,8 +3895,13 @@ Renderer.item = {
 
 			// track the specific variant on the parent generic, to later render as part of the stats
 			// TAG ITEM_VARIANTS
-			genericVariant.variants = genericVariant.variants || [];
-			genericVariant.variants.push({base: baseItem, specificVariant});
+			if (~Renderer.item.LINK_SPECIFIC_TO_GENERIC_DIRECTION) {
+				genericVariant.variants = genericVariant.variants || [];
+				genericVariant.variants.push({base: baseItem, specificVariant});
+			}
+
+			// add reverse link to get generic from specific--primarily used for indexing
+			if (!~Renderer.item.LINK_SPECIFIC_TO_GENERIC_DIRECTION) specificVariant.genericVariant = genericVariant;
 
 			// add linked loot tables
 			if (linkedLootTables && linkedLootTables[specificVariant.source] && linkedLootTables[specificVariant.source][specificVariant.name]) {
@@ -3377,7 +3912,7 @@ Renderer.item = {
 		}
 
 		const genericAndSpecificVariants = [...genericVariants];
-		basicItems.forEach((curBaseItem) => {
+		baseItems.forEach((curBaseItem) => {
 			curBaseItem.category = "Basic";
 			if (curBaseItem.entries == null) curBaseItem.entries = [];
 
@@ -3398,15 +3933,16 @@ Renderer.item = {
 		return allItems;
 	},
 
-	async pGetGenericAndSpecificVariants (variants, basicItemsUrl) {
-		basicItemsUrl = basicItemsUrl || `${Renderer.get().baseUrl}data/basicitems.json`;
+	async pGetGenericAndSpecificVariants (variants, opts) {
+		opts = opts || {};
+		opts.baseItemsUrl = opts.baseItemsUrl || `${Renderer.get().baseUrl}data/items-base.json`;
 
-		const basicItemData = await DataUtil.loadJSON(basicItemsUrl);
-		const basicItems = basicItemData.basicitem;
-		Renderer.item._addBasicPropertiesAndTypes(basicItemData);
+		const baseItemData = await DataUtil.loadJSON(opts.baseItemsUrl);
+		const baseItems = baseItemData.baseitem.concat(opts.additionalBaseItems || []);
+		Renderer.item._addBasePropertiesAndTypes(baseItemData);
 		await Renderer.item._pAddBrewPropertiesAndTypes();
 		variants.forEach(Renderer.item._genericVariants_addInheritedPropertiesToSelf);
-		const genericAndSpecificVariants = Renderer.item._createSpecificVariants(basicItems, variants);
+		const genericAndSpecificVariants = Renderer.item._createSpecificVariants(baseItems, variants);
 		return Renderer.item._enhanceItems(genericAndSpecificVariants);
 	},
 
@@ -3492,10 +4028,15 @@ Renderer.item = {
 			filterType.push("Wondrous Item");
 			typeListText.push("Wondrous Item");
 		}
-		if (item.technology) {
-			type.push(item.technology);
-			filterType.push(item.technology);
-			typeListText.push(item.technology);
+		if (item.staff) {
+			type.push("Staff");
+			filterType.push("Staff");
+			typeListText.push("Staff");
+		}
+		if (item.firearm) {
+			type.push("Firearm");
+			filterType.push("Firearm");
+			typeListText.push("Firearm");
 		}
 		if (item.age) {
 			type.push(item.age);
@@ -3595,9 +4136,13 @@ Renderer.item = {
 	async getItemsFromHomebrew (homebrew) {
 		(homebrew.itemProperty || []).forEach(p => Renderer.item._addProperty(p));
 		(homebrew.itemType || []).forEach(t => Renderer.item._addType(t));
-		let items = homebrew.item || [];
+		let items = (homebrew.baseitem || []).concat(homebrew.item || []);
+		Renderer.item._enhanceItems(items);
 		if (homebrew.variant && homebrew.variant.length) {
-			const variants = await Renderer.item.pGetGenericAndSpecificVariants(homebrew.variant);
+			const variants = await Renderer.item.pGetGenericAndSpecificVariants(
+				homebrew.variant,
+				{additionalBaseItems: homebrew.baseitem || []}
+			);
 			items = items.concat(variants);
 		}
 		return items;
@@ -3610,17 +4155,11 @@ Renderer.item = {
 		else return null
 	},
 
-	promiseData: (urls, addGroups) => {
-		return new Promise((resolve) => {
-			Renderer.item.buildList((data) => resolve({item: data}), urls, addGroups);
-		});
-	},
-
 	_isRefPopulated: false,
 	populatePropertyAndTypeReference: () => {
 		if (Renderer.item._isRefPopulated) return Promise.resolve();
 		return new Promise((resolve, reject) => {
-			DataUtil.loadJSON(`${Renderer.get().baseUrl}data/basicitems.json`)
+			DataUtil.loadJSON(`${Renderer.get().baseUrl}data/items-base.json`)
 				.then(data => {
 					if (Renderer.item._isRefPopulated) {
 						resolve();
@@ -3640,6 +4179,26 @@ Renderer.item = {
 					}
 				});
 		});
+	},
+
+	// fetch every possible indexable item from official data
+	async getAllIndexableItems (rawVariants, rawBaseItems) {
+		Renderer.item.LINK_SPECIFIC_TO_GENERIC_DIRECTION = -1;
+
+		const basicItems = await Renderer.item._pGetAndProcBaseItems(rawBaseItems);
+		const [genericVariants, linkedLootTables] = await Renderer.item._pGetAndProcGenericVariants(rawVariants);
+		const genericAndSpecificVariants = Renderer.item._createSpecificVariants(basicItems, genericVariants, linkedLootTables);
+
+		const revNames = [];
+		genericAndSpecificVariants.forEach(item => {
+			if (item.variants) delete item.variants; // prevent circular references
+			const revName = Renderer.item.modifierPostToPre(MiscUtil.copy(item));
+			if (revName) revNames.push(revName);
+		});
+
+		genericAndSpecificVariants.push(...revNames);
+
+		return genericAndSpecificVariants;
 	}
 };
 
@@ -3700,7 +4259,7 @@ Renderer.psionic = {
 			modeStringArray.push(Renderer.psionic.getModeString(psionic, renderer, i));
 		}
 
-		return `${Renderer.psionic.getDescriptionString(psionic, renderer)}${Renderer.psionic.getFocusString(psionic, renderer)}${modeStringArray.join(STR_EMPTY)}`;
+		return `${Renderer.psionic.getDescriptionString(psionic, renderer)}${Renderer.psionic.getFocusString(psionic, renderer)}${modeStringArray.join("")}`;
 	},
 
 	getDescriptionString: (psionic, renderer) => {
@@ -3751,7 +4310,7 @@ Renderer.psionic = {
 		const bodyStr = psionic.type === "T" ? Renderer.psionic.getTalentText(psionic, renderer) : Renderer.psionic.getDisciplineText(psionic, renderer);
 
 		return `
-			${Renderer.utils.getNameTr(psionic, true)}
+			${Renderer.utils.getNameTr(psionic, {isAddPageNum: true})}
 			<tr class="text"><td colspan="6">
 			<p><i>${typeOrderStr}</i></p>
 			${bodyStr}
@@ -3791,17 +4350,20 @@ Renderer.table = {
 	}
 };
 
-Renderer.ship = {
-	getCompactRenderedString (ship) {
-		// TODO improve this if/when ships are added to a finalised product
-		return Renderer.ship.getRenderedString(ship);
+Renderer.vehicle = {
+	getCompactRenderedString (veh) {
+		return Renderer.vehicle.getRenderedString(veh);
 	},
 
-	getRenderedString (ship) {
+	getRenderedString (veh) {
 		const renderer = Renderer.get();
 
 		function getSectionTitle (title) {
 			return `<tr class="mon__stat-header-underline"><td colspan="6"><span>${title}</span></td></tr>`
+		}
+
+		function getActionPart () {
+			return renderer.render({entries: veh.action});
 		}
 
 		function getSectionHpPart (sect, each) {
@@ -3840,11 +4402,27 @@ Renderer.ship = {
 				return `<div>${renderer.render(asList)}</div>`;
 			}
 
+			function getSpeedSection (spd) {
+				const asList = {
+					type: "list",
+					style: "list-hang-notitle",
+					items: [
+						{
+							type: "item",
+							name: `Speed (${spd.mode})`,
+							entries: spd.entries
+						}
+					]
+				};
+				return `<div>${renderer.render(asList)}</div>`;
+			}
+
 			return `
 				<tr class="mon__stat-header-underline"><td colspan="6"><span>${move.isControl ? `Control and ` : ""}Movement: ${move.name}</span></td></tr>
 				<tr><td colspan="6">
 				${getSectionHpPart(move)}
-				${move.locomotion.map(getLocomotionSection)}
+				${(move.locomotion || []).map(getLocomotionSection)}
+				${(move.speed || []).map(getSpeedSection)}
 				</td></tr>
 			`;
 		}
@@ -3871,46 +4449,48 @@ Renderer.ship = {
 
 		return `
 			${Renderer.utils.getBorderTr()}
-			${Renderer.utils.getNameTr(ship)}
-			<tr class="text"><td colspan="6"><i>${Parser.sizeAbvToFull(ship.size)} vehicle${ship.dimensions ? `, (${ship.dimensions.join(" by ")})` : ""}</i><br></td></tr>
+			${Renderer.utils.getNameTr(veh)}
+			<tr class="text"><td colspan="6"><i>${Parser.sizeAbvToFull(veh.size)} vehicle${veh.dimensions ? `, (${veh.dimensions.join(" by ")})` : ""}</i><br></td></tr>
 			<tr class="text"><td colspan="6">
-				<div><b>Creature Capacity</b> ${ship.capCrew} crew${ship.capPassenger ? `, ${ship.capPassenger} passengers` : ""}</div>
-				${ship.capCargo ? `<div><b>Cargo Capacity</b> ${ship.capCargo} ton${ship.capCargo === 1 ? "" : "s"}</div>` : ""}
-				<div><b>Travel Pace</b> ${ship.pace} miles per hour (${ship.pace * 24} miles per day)</div>
+				<div><b>Creature Capacity</b> ${veh.capCrew} crew${veh.capPassenger ? `, ${veh.capPassenger} passengers` : ""}</div>
+				${veh.capCargo ? `<div><b>Cargo Capacity</b> ${typeof veh.capCargo === "string" ? veh.capCargo : `${veh.capCargo} ton${veh.capCargo === 1 ? "" : "s"}`}</div>` : ""}
+				<div><b>Travel Pace</b> ${veh.pace} miles per hour (${veh.pace * 24} miles per day)</div>
 			</td></tr>
 			<tr><td colspan="6">
 				<table class="summary striped-even">
 					<tr>
-						<th class="col-2 text-align-center">STR</th>
-						<th class="col-2 text-align-center">DEX</th>
-						<th class="col-2 text-align-center">CON</th>
-						<th class="col-2 text-align-center">INT</th>
-						<th class="col-2 text-align-center">WIS</th>
-						<th class="col-2 text-align-center">CHA</th>
-					</tr>	
+						<th class="col-2 text-center">STR</th>
+						<th class="col-2 text-center">DEX</th>
+						<th class="col-2 text-center">CON</th>
+						<th class="col-2 text-center">INT</th>
+						<th class="col-2 text-center">WIS</th>
+						<th class="col-2 text-center">CHA</th>
+					</tr>
 					<tr>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(ship, "str")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(ship, "dex")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(ship, "con")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(ship, "int")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(ship, "wis")}</td>
-						<td class="text-align-center">${Renderer.utils.getAbilityRoller(ship, "cha")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(veh, "str")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(veh, "dex")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(veh, "con")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(veh, "int")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(veh, "wis")}</td>
+						<td class="text-center">${Renderer.utils.getAbilityRoller(veh, "cha")}</td>
 					</tr>
 				</table>
 			</td></tr>
 			<tr class="text"><td colspan="6">
-				${ship.immune ? `<div><b>Damage Immunities</b> ${Parser.monImmResToFull(ship.immune)}</div>` : ""}
-				${ship.conditionImmune ? `<div><b>Condition Immunities</b> ${Parser.monCondImmToFull(ship.conditionImmune)}</div>` : ""}
+				${veh.immune ? `<div><b>Damage Immunities</b> ${Parser.monImmResToFull(veh.immune)}</div>` : ""}
+				${veh.conditionImmune ? `<div><b>Condition Immunities</b> ${Parser.monCondImmToFull(veh.conditionImmune)}</div>` : ""}
 			</td></tr>
+			${veh.action ? getSectionTitle("Actions") : ""}
+			${veh.action ? `<tr><td colspan="6">${getActionPart()}</td></tr>` : ""}
 			${getSectionTitle("Hull")}
 			<tr><td colspan="6">
-			${getSectionHpPart(ship.hull)}
+			${getSectionHpPart(veh.hull)}
 			</td></tr>
-			${(ship.control || []).map(getControlSection).join("")}
-			${(ship.movement || []).map(getMovementSection).join("")}
-			${(ship.weapon || []).map(getWeaponSection).join("")}
-			${(ship.other || []).map(getOtherSection).join("")}
-			${Renderer.utils.getPageTr(ship)}
+			${(veh.control || []).map(getControlSection).join("")}
+			${(veh.movement || []).map(getMovementSection).join("")}
+			${(veh.weapon || []).map(getWeaponSection).join("")}
+			${(veh.other || []).map(getOtherSection).join("")}
+			${Renderer.utils.getPageTr(veh)}
 			${Renderer.utils.getBorderTr()}
 		`;
 	}
@@ -4050,13 +4630,9 @@ Renderer.hover = {
 									populate(data, listProp);
 									callbackFn();
 								});
-						} else {
-							callbackFn(); // source to load is 3rd party, which was already handled
-						}
+						} else callbackFn(); // source to load is 3rd party, which was already handled
 					});
-			} else {
-				callbackFn();
-			}
+			} else callbackFn();
 		}
 
 		function _pLoadSingleBrew (listProps, itemModifier) {
@@ -4095,74 +4671,68 @@ Renderer.hover = {
 			} else callbackFn();
 		}
 
+		function _classes_indexFeatures (cls) {
+			// de-nest sources in case modified by classes page
+			UrlUtil.class.getIndexedEntries(cls).forEach(it => Renderer.hover._addToCache(UrlUtil.PG_CLASSES, it.source.source || it.source, it.hash, it.entry));
+		}
+
 		switch (page) {
-			case "hover": {
-				callbackFn();
+			case "generic":
+			case "hover": callbackFn(); break;
+			case UrlUtil.PG_CLASSES: {
+				if (!Renderer.hover._isCached(page, source, hash)) {
+					(async () => {
+						try {
+							const brewData = await BrewUtil.pAddBrewData();
+							(brewData.class || []).forEach(cc => _classes_indexFeatures(cc));
+						} catch (e) { BrewUtil.pPurgeBrew(e); }
+						const data = await DataUtil.class.loadJSON();
+						data.class.forEach(cc => _classes_indexFeatures(cc));
+						callbackFn();
+					})();
+				} else callbackFn();
 				break;
 			}
-
-			case UrlUtil.PG_SPELLS: {
-				loadMultiSource(page, `data/spells/`, "spell");
-				break;
-			}
-
-			case UrlUtil.PG_BESTIARY: {
-				loadMultiSource(page, `data/bestiary/`, "monster");
-				break;
-			}
-
+			case UrlUtil.PG_SPELLS: loadMultiSource(page, `data/spells/`, "spell"); break;
+			case UrlUtil.PG_BESTIARY: loadMultiSource(page, `data/bestiary/`, "monster"); break;
 			case UrlUtil.PG_ITEMS: {
 				if (!Renderer.hover._isCached(page, source, hash)) {
-					Renderer.item.buildList((allItems) => {
-						// populate brew once the main item properties have been loaded
-						BrewUtil.pAddBrewData()
-							.then((data) => {
-								if (!data.item) return;
-								data.item.forEach(it => {
-									Renderer.item.enhanceItem(it);
-									const itHash = UrlUtil.URL_TO_HASH_BUILDER[page](it);
-									Renderer.hover._addToCache(page, it.source, itHash, it);
-									const revName = Renderer.item.modifierPostToPre(it);
-									if (revName) Renderer.hover._addToCache(page, it.source, UrlUtil.URL_TO_HASH_BUILDER[page](revName), it);
+					Renderer.item.pBuildList({
+						fnCallback: (allItems) => {
+							// populate brew once the main item properties have been loaded
+							BrewUtil.pAddBrewData()
+								.then(async (data) => {
+									const itemList = await Renderer.item.getItemsFromHomebrew(data);
+									if (!itemList.length) return;
+									itemList.forEach(it => {
+										const itHash = UrlUtil.URL_TO_HASH_BUILDER[page](it);
+										Renderer.hover._addToCache(page, it.source, itHash, it);
+										const revName = Renderer.item.modifierPostToPre(it);
+										if (revName) Renderer.hover._addToCache(page, it.source, UrlUtil.URL_TO_HASH_BUILDER[page](revName), it);
+									});
+								})
+								.catch(BrewUtil.pPurgeBrew)
+								.then(() => {
+									allItems.forEach(item => {
+										const itemHash = UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS](item);
+										Renderer.hover._addToCache(page, item.source, itemHash, item);
+										const revName = Renderer.item.modifierPostToPre(item);
+										if (revName) Renderer.hover._addToCache(page, item.source, UrlUtil.URL_TO_HASH_BUILDER[page](revName), item);
+									});
+									callbackFn();
 								});
-							})
-							.catch(BrewUtil.pPurgeBrew)
-							.then(() => {
-								allItems.forEach(item => {
-									const itemHash = UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS](item);
-									Renderer.hover._addToCache(page, item.source, itemHash, item);
-									const revName = Renderer.item.modifierPostToPre(item);
-									if (revName) Renderer.hover._addToCache(page, item.source, UrlUtil.URL_TO_HASH_BUILDER[page](revName), item);
-								});
-								callbackFn();
-							});
-					}, {}, true);
-				} else {
-					callbackFn();
-				}
+						},
+						isAddGroups: true,
+						isBlacklistVariants: true
+					});
+				} else callbackFn();
 				break;
 			}
-
-			case UrlUtil.PG_BACKGROUNDS: {
-				loadSimple(page, "backgrounds.json", "background");
-				break;
-			}
-			case UrlUtil.PG_FEATS: {
-				loadSimple(page, "feats.json", "feat");
-				break;
-			}
-			case UrlUtil.PG_OPT_FEATURES: {
-				loadSimple(page, "optionalfeatures.json", "optionalfeature");
-				break;
-			}
-			case UrlUtil.PG_PSIONICS: {
-				loadSimple(page, "psionics.json", "psionic");
-				break;
-			}
-			case UrlUtil.PG_REWARDS: {
-				loadSimple(page, "rewards.json", "reward");
-				break;
-			}
+			case UrlUtil.PG_BACKGROUNDS: loadSimple(page, "backgrounds.json", "background"); break;
+			case UrlUtil.PG_FEATS: loadSimple(page, "feats.json", "feat"); break;
+			case UrlUtil.PG_OPT_FEATURES: loadSimple(page, "optionalfeatures.json", "optionalfeature"); break;
+			case UrlUtil.PG_PSIONICS: loadSimple(page, "psionics.json", "psionic"); break;
+			case UrlUtil.PG_REWARDS: loadSimple(page, "rewards.json", "reward"); break;
 			case UrlUtil.PG_RACES: {
 				if (!Renderer.hover._isCached(page, source, hash)) {
 					BrewUtil.pAddBrewData()
@@ -4186,22 +4756,10 @@ Renderer.hover = {
 				}
 				break;
 			}
-			case UrlUtil.PG_DEITIES: {
-				loadCustom(page, "deities.json", "deity", null, "deity");
-				break;
-			}
-			case UrlUtil.PG_OBJECTS: {
-				loadSimple(page, "objects.json", "object");
-				break;
-			}
-			case UrlUtil.PG_TRAPS_HAZARDS: {
-				loadSimple(page, "trapshazards.json", ["trap", "hazard"]);
-				break;
-			}
-			case UrlUtil.PG_VARIATNRULES: {
-				loadSimple(page, "variantrules.json", "variantrule");
-				break;
-			}
+			case UrlUtil.PG_DEITIES: loadCustom(page, "deities.json", "deity", null, "deity"); break;
+			case UrlUtil.PG_OBJECTS: loadSimple(page, "objects.json", "object"); break;
+			case UrlUtil.PG_TRAPS_HAZARDS: loadSimple(page, "trapshazards.json", ["trap", "hazard"]); break;
+			case UrlUtil.PG_VARIATNRULES: loadSimple(page, "variantrules.json", "variantrule"); break;
 			case UrlUtil.PG_CULTS_BOONS: {
 				loadSimple(page, "cultsboons.json", ["cult", "boon"], (listProp, item) => item._type = listProp === "cult" ? "c" : "b");
 				break;
@@ -4214,12 +4772,8 @@ Renderer.hover = {
 				loadSimple(page, "generated/gendata-tables.json", ["table", "tableGroup"], (listProp, item) => item._type = listProp === "table" ? "t" : "g");
 				break;
 			}
-			case UrlUtil.PG_SHIPS: {
-				loadSimple(page, "ships.json", "ship");
-				break;
-			}
-			default:
-				throw new Error(`No load function defined for page ${page}`);
+			case UrlUtil.PG_VEHICLES: loadSimple(page, "vehicles.json", "vehicle"); break;
+			default: throw new Error(`No load function defined for page ${page}`);
 		}
 	},
 
@@ -4291,8 +4845,10 @@ Renderer.hover = {
 			}
 		});
 
-		const $hovTitle = $(`<span class="window-title">${toRender._displayName || toRender.name}</span>`);
-		const $stats = $(`<table class="stats ${isBookContent ? "stats-book--hover" : ""}"/>`);
+		const windowTitle = page === "generic" ? (preLoaded.data || {}).hoverTitle || "" : toRender._displayName || toRender.name;
+
+		const $hovTitle = $(`<span class="window-title">${windowTitle}</span>`);
+		const $stats = $(`<table class="stats ${isBookContent ? "stats--book stats--book-hover" : ""}"/>`);
 		$stats.append(content);
 
 		$stats.off("click", ".mon__btn-scale-cr").on("click", ".mon__btn-scale-cr", function (evt) {
@@ -4330,8 +4886,8 @@ Renderer.hover = {
 				"animation": "initial"
 			});
 			drag.type = type;
-			drag.startX = Renderer.hover._getClientX(evt);
-			drag.startY = Renderer.hover._getClientY(evt);
+			drag.startX = EventUtil.getClientX(evt);
+			drag.startY = EventUtil.getClientY(evt);
 			drag.baseTop = parseFloat($hov.css("top"));
 			drag.baseLeft = parseFloat($hov.css("left"));
 			drag.baseHeight = $wrpStats.height();
@@ -4390,40 +4946,40 @@ Renderer.hover = {
 		const resizeId = `resize.${hoverId}`;
 
 		function isOverHoverTarget (evt, target) {
-			return Renderer.hover._getClientX(evt) >= target.left &&
-				Renderer.hover._getClientX(evt) <= target.left + target.width &&
-				Renderer.hover._getClientY(evt) >= target.top &&
-				Renderer.hover._getClientY(evt) <= target.top + target.height;
+			return EventUtil.getClientX(evt) >= target.left &&
+				EventUtil.getClientX(evt) <= target.left + target.width &&
+				EventUtil.getClientY(evt) >= target.top &&
+				EventUtil.getClientY(evt) <= target.top + target.height;
 		}
 
 		function handleNorthDrag (evt) {
-			const diffY = Math.max(drag.startY - Renderer.hover._getClientY(evt), 80 - drag.baseHeight); // prevent <80 height, as this will cause the box to move downwards
+			const diffY = Math.max(drag.startY - EventUtil.getClientY(evt), 80 - drag.baseHeight); // prevent <80 height, as this will cause the box to move downwards
 			$wrpStats.css("height", drag.baseHeight + diffY);
 			$hov.css("top", drag.baseTop - diffY);
-			drag.startY = Renderer.hover._getClientY(evt);
+			drag.startY = EventUtil.getClientY(evt);
 			drag.baseHeight = $wrpStats.height();
 			drag.baseTop = parseFloat($hov.css("top"));
 		}
 
 		function handleEastDrag (evt) {
-			const diffX = drag.startX - Renderer.hover._getClientX(evt);
+			const diffX = drag.startX - EventUtil.getClientX(evt);
 			$hov.css("width", drag.baseWidth - diffX);
-			drag.startX = Renderer.hover._getClientX(evt);
+			drag.startX = EventUtil.getClientX(evt);
 			drag.baseWidth = $hov.width();
 		}
 
 		function handleSouthDrag (evt) {
-			const diffY = drag.startY - Renderer.hover._getClientY(evt);
+			const diffY = drag.startY - EventUtil.getClientY(evt);
 			$wrpStats.css("height", drag.baseHeight - diffY);
-			drag.startY = Renderer.hover._getClientY(evt);
+			drag.startY = EventUtil.getClientY(evt);
 			drag.baseHeight = $wrpStats.height();
 		}
 
 		function handleWestDrag (evt) {
-			const diffX = Math.max(drag.startX - Renderer.hover._getClientX(evt), 150 - drag.baseWidth);
-			$hov.css("width", drag.baseWidth + diffX);
-			$hov.css("left", drag.baseLeft - diffX);
-			drag.startX = Renderer.hover._getClientX(evt);
+			const diffX = Math.max(drag.startX - EventUtil.getClientX(evt), 150 - drag.baseWidth);
+			$hov.css("width", drag.baseWidth + diffX)
+				.css("left", drag.baseLeft - diffX);
+			drag.startX = EventUtil.getClientX(evt);
 			drag.baseWidth = $hov.width();
 			drag.baseLeft = parseFloat($hov.css("left"));
 		}
@@ -4448,7 +5004,7 @@ Renderer.hover = {
 
 						// handle DM screen integration
 						if (this._dmScreen) {
-							const panel = this._dmScreen.getPanelPx(Renderer.hover._getClientX(evt), Renderer.hover._getClientY(evt));
+							const panel = this._dmScreen.getPanelPx(EventUtil.getClientX(evt), EventUtil.getClientY(evt));
 							if (!panel) return;
 							this._dmScreen.setHoveringPanel(panel);
 							const target = panel.getAddButtonPos();
@@ -4475,18 +5031,18 @@ Renderer.hover = {
 					case 7: handleNorthDrag(evt); handleWestDrag(evt); break;
 					case 8: handleNorthDrag(evt); break;
 					case 9: {
-						const diffX = drag.startX - Renderer.hover._getClientX(evt);
-						const diffY = drag.startY - Renderer.hover._getClientY(evt);
-						$hov.css("left", drag.baseLeft - diffX);
-						$hov.css("top", drag.baseTop - diffY);
-						drag.startX = Renderer.hover._getClientX(evt);
-						drag.startY = Renderer.hover._getClientY(evt);
+						const diffX = drag.startX - EventUtil.getClientX(evt);
+						const diffY = drag.startY - EventUtil.getClientY(evt);
+						$hov.css("left", drag.baseLeft - diffX)
+							.css("top", drag.baseTop - diffY);
+						drag.startX = EventUtil.getClientX(evt);
+						drag.startY = EventUtil.getClientY(evt);
 						drag.baseTop = parseFloat($hov.css("top"));
 						drag.baseLeft = parseFloat($hov.css("left"));
 
 						// handle DM screen integration
 						if (this._dmScreen) {
-							const panel = this._dmScreen.getPanelPx(Renderer.hover._getClientX(evt), Renderer.hover._getClientY(evt));
+							const panel = this._dmScreen.getPanelPx(EventUtil.getClientX(evt), EventUtil.getClientY(evt));
 							if (!panel) return;
 							this._dmScreen.setHoveringPanel(panel);
 							const target = panel.getAddButtonPos();
@@ -4498,9 +5054,7 @@ Renderer.hover = {
 					}
 				}
 			});
-		$(window).on(resizeId, () => {
-			adjustPosition(true);
-		});
+		$(window).on(resizeId, () => adjustPosition(true));
 
 		$brdrTop.attr("data-display-title", false);
 		$brdrTop.on("dblclick", () => {
@@ -4512,9 +5066,16 @@ Renderer.hover = {
 		});
 		$brdrTop.append($hovTitle);
 		const $brdTopRhs = $(`<div class="flex" style="margin-left: auto;"/>`).appendTo($brdrTop);
+
+		if (page && source && hash) {
+			const $btnGotoPage = $(`<span class="top-border-icon glyphicon glyphicon-new-window" style="margin-right: 2px;" title="Go to Page"></span>`)
+				.click(() => window.location = `${page}#${hash}`)
+				.appendTo($brdTopRhs);
+		}
+
 		// TODO fix dice rollers?
 		// TODO fix hover links?
-		const $btnPopout = $(`<span class="top-border-icon glyphicon glyphicon-new-window hvr__popout" style="margin-right: 3px;" title="Open as Popup Window"></span>`)
+		const $btnPopout = $(`<span class="top-border-icon glyphicon glyphicon-modal-window hvr__popout" style="margin-right: 2px;" title="Open as Popup Window"></span>`)
 			.on("click", (evt) => {
 				evt.stopPropagation();
 				const h = $stats.height();
@@ -4545,15 +5106,16 @@ Renderer.hover = {
 				`);
 				altTeardown();
 			}).appendTo($brdTopRhs);
+
 		const $btnClose = $(`<span class="delete-icon glyphicon glyphicon-remove hvr__close" title="Close"></span>`)
 			.on("click", (evt) => {
 				evt.stopPropagation();
 				altTeardown();
 			}).appendTo($brdTopRhs);
+
 		$wrpStats.append($stats);
 
-		$hov
-			.append($brdrTopResize).append($brdrTopRightResize).append($brdrRightResize).append($brdrBottomRightResize)
+		$hov.append($brdrTopResize).append($brdrTopRightResize).append($brdrRightResize).append($brdrBottomRightResize)
 			.append($brdrBtmLeftResize).append($brdrLeftResize).append($brdrTopLeftResize)
 
 			.append($brdrTop)
@@ -4593,9 +5155,8 @@ Renderer.hover = {
 			}
 			// ...if horizontally clipping off screen
 			const hvLeft = parseFloat($hov.css("left"));
-			if (hvLeft < 0) {
-				$hov.css("left", 0)
-			} else if (hvLeft + $hov.width() > $(window).width()) {
+			if (hvLeft < 0) $hov.css("left", 0);
+			else if (hvLeft + $hov.width() > $(window).width()) {
 				$hov.css("left", Math.max($(window).width() - $hov.width(), 0));
 			}
 		}
@@ -4630,44 +5191,27 @@ Renderer.hover = {
 
 	_pageToRenderFn (page) {
 		switch (page) {
-			case "hover":
-				return Renderer.hover.getGenericCompactRenderedString;
-			case UrlUtil.PG_SPELLS:
-				return Renderer.spell.getCompactRenderedString;
-			case UrlUtil.PG_ITEMS:
-				return Renderer.item.getCompactRenderedString;
-			case UrlUtil.PG_BESTIARY:
-				return (it) => Renderer.monster.getCompactRenderedString(it, null, {showScaler: true, isScaled: it._originalCr != null});
-			case UrlUtil.PG_CONDITIONS_DISEASES:
-				return Renderer.condition.getCompactRenderedString;
-			case UrlUtil.PG_BACKGROUNDS:
-				return Renderer.background.getCompactRenderedString;
-			case UrlUtil.PG_FEATS:
-				return Renderer.feat.getCompactRenderedString;
-			case UrlUtil.PG_OPT_FEATURES:
-				return Renderer.optionalfeature.getCompactRenderedString;
-			case UrlUtil.PG_PSIONICS:
-				return Renderer.psionic.getCompactRenderedString;
-			case UrlUtil.PG_REWARDS:
-				return Renderer.reward.getCompactRenderedString;
-			case UrlUtil.PG_RACES:
-				return Renderer.race.getCompactRenderedString;
-			case UrlUtil.PG_DEITIES:
-				return Renderer.deity.getCompactRenderedString;
-			case UrlUtil.PG_OBJECTS:
-				return Renderer.object.getCompactRenderedString;
-			case UrlUtil.PG_TRAPS_HAZARDS:
-				return Renderer.traphazard.getCompactRenderedString;
-			case UrlUtil.PG_VARIATNRULES:
-				return Renderer.variantrule.getCompactRenderedString;
-			case UrlUtil.PG_CULTS_BOONS:
-				return Renderer.cultboon.getCompactRenderedString;
-			case UrlUtil.PG_TABLES:
-				return Renderer.table.getCompactRenderedString;
-			case UrlUtil.PG_SHIPS:
-				return Renderer.ship.getCompactRenderedString;
-			default:
-				return null;
+			case "generic":
+			case "hover": return Renderer.hover.getGenericCompactRenderedString;
+			case UrlUtil.PG_CLASSES: return Renderer.hover.getGenericCompactRenderedString;
+			case UrlUtil.PG_SPELLS: return Renderer.spell.getCompactRenderedString;
+			case UrlUtil.PG_ITEMS: return Renderer.item.getCompactRenderedString;
+			case UrlUtil.PG_BESTIARY: return (it) => Renderer.monster.getCompactRenderedString(it, null, {showScaler: true, isScaled: it._originalCr != null});
+			case UrlUtil.PG_CONDITIONS_DISEASES: return Renderer.condition.getCompactRenderedString;
+			case UrlUtil.PG_BACKGROUNDS: return Renderer.background.getCompactRenderedString;
+			case UrlUtil.PG_FEATS: return Renderer.feat.getCompactRenderedString;
+			case UrlUtil.PG_OPT_FEATURES: return Renderer.optionalfeature.getCompactRenderedString;
+			case UrlUtil.PG_PSIONICS: return Renderer.psionic.getCompactRenderedString;
+			case UrlUtil.PG_REWARDS: return Renderer.reward.getCompactRenderedString;
+			case UrlUtil.PG_RACES: return Renderer.race.getCompactRenderedString;
+			case UrlUtil.PG_DEITIES: return Renderer.deity.getCompactRenderedString;
+			case UrlUtil.PG_OBJECTS: return Renderer.object.getCompactRenderedString;
+			case UrlUtil.PG_TRAPS_HAZARDS: return Renderer.traphazard.getCompactRenderedString;
+			case UrlUtil.PG_VARIATNRULES: return Renderer.variantrule.getCompactRenderedString;
+			case UrlUtil.PG_CULTS_BOONS: return Renderer.cultboon.getCompactRenderedString;
+			case UrlUtil.PG_TABLES: return Renderer.table.getCompactRenderedString;
+			case UrlUtil.PG_VEHICLES: return Renderer.vehicle.getCompactRenderedString;
+			default: return null;
 		}
 	},
 
@@ -4698,24 +5242,31 @@ Renderer.hover = {
 		Renderer.hover.show({evt, ele, preLoaded, page, source, hash, isPopout});
 	},
 
+	/**
+	 * The most basic hover display possible. Creates a new window which displays the thing.
+	 */
+	doHover (evt, ele, entries, isBookContent) {
+		Renderer.hover.show({evt, ele, preLoaded: entries, page: "generic", isBookContent: !!isBookContent});
+	},
+
+	/**
+	 * As above, but designed to be used with e.g. button clicks, as opposed to hover.
+	 */
+	doOpenWindow (evt, ele, entries, isBookContent) {
+		const fauxEvent = {shiftKey: true, clientX: evt.clientX, clientY: evt.clientY};
+		Renderer.hover.show({evt: fauxEvent, ele, preLoaded: entries, page: "generic", isBookContent: !!isBookContent});
+	},
+
 	_doInit () {
 		if (!Renderer.hover._isInit) {
 			Renderer.hover._isInit = true;
-			$(`body`).on("click", () => {
-				Renderer.hover._cleanWindows();
-			});
+			$(`body`).on("click", () => Renderer.hover._cleanWindows());
 			ContextUtil.doInitContextMenu("hoverBorder", (evt, ele, $invokedOn, $selectedMenu) => {
 				const $perms = $(`.hoverborder[data-perm="true"]`);
 				switch (Number($selectedMenu.data("ctx-id"))) {
-					case 0:
-						$perms.attr("data-display-title", "false");
-						break;
-					case 1:
-						$perms.attr("data-display-title", "true");
-						break;
-					case 2:
-						$(`.hvr__close`).click();
-						break;
+					case 0: $perms.attr("data-display-title", "false"); break;
+					case 1: $perms.attr("data-display-title", "true"); break;
+					case 2: $(`.hvr__close`).click(); break;
 				}
 			}, ["Maximize All", "Minimize All", null, "Close All"]);
 		}
@@ -4750,6 +5301,7 @@ Renderer.hover = {
 		const isPopout = options.isPopout;
 		const isBookContent = options.isBookContent;
 
+		const $ele = $(ele);
 		Renderer.hover._doInit();
 
 		// don't show on narrow screens
@@ -4759,18 +5311,17 @@ Renderer.hover = {
 		if (isPopout) {
 			// always use a new hover ID if popout
 			hoverId = Renderer.hover._popoutId--;
-			$(ele).attr("data-hover-id", hoverId);
+			$ele.attr("data-hover-id", hoverId);
 		} else {
-			const curHoverId = $(ele).attr("data-hover-id");
-			if (curHoverId) {
-				hoverId = Number(curHoverId);
-			} else {
+			const curHoverId = $ele.attr("data-hover-id");
+			if (curHoverId) hoverId = Number(curHoverId);
+			else {
 				hoverId = Renderer.hover._hoverId++;
-				$(ele).attr("data-hover-id", hoverId);
+				$ele.attr("data-hover-id", hoverId);
 			}
 		}
 
-		const alreadyHovering = $(ele).attr("data-hover-active");
+		const alreadyHovering = $ele.attr("data-hover-active");
 		const $curWin = $(`.hoverborder[data-hover-id="${hoverId}"]`);
 		if (alreadyHovering === "true" && $curWin.length) return;
 
@@ -4785,26 +5336,22 @@ Renderer.hover = {
 			cSource: source,
 			cHash: hash,
 			permanent: evt.shiftKey,
-			clientX: Renderer.hover._getClientX(evt),
+			clientX: EventUtil.getClientX(evt),
 			isBookContent
 		};
 
 		// return if another event chain is handling the event
-		if (Renderer.hover._showInProgress) {
-			return;
-		}
+		if (Renderer.hover._showInProgress) return;
 
 		Renderer.hover._showInProgress = true;
-		$(ele).css("cursor", "wait");
-
-		// clean up any old event listeners
-		$(ele).off("mouseleave.hoverwindow");
+		$ele.css("cursor", "wait")
+			.off("mouseleave.hoverwindow"); // clean up any old event listeners
 
 		// clean up any abandoned windows
 		Renderer.hover._cleanWindows();
 
 		// cancel hover if the mouse leaves
-		$(ele).on("mouseleave.hoverwindow", () => {
+		$ele.on("mouseleave.hoverwindow", () => {
 			if (!Renderer.hover._curHovering || !Renderer.hover._curHovering.permanent) {
 				Renderer.hover._curHovering = null;
 			}
@@ -4826,16 +5373,16 @@ Renderer.hover = {
 		const popoutCodeId = Renderer.hover.__initOnMouseHoverEntry({});
 
 		$btnPop.on("click", handlerGenerator ? handlerGenerator(toList, $btnPop, popoutCodeId) : (evt) => {
-			if (History.lastLoadedId !== null) {
+			if (Hist.lastLoadedId !== null) {
 				if (evt.shiftKey) {
 					Renderer.hover.handlePopoutCode(evt, toList, $btnPop, popoutCodeId);
-				} else Renderer.hover.doPopout($btnPop, toList, History.lastLoadedId, evt.clientX);
+				} else Renderer.hover.doPopout($btnPop, toList, Hist.lastLoadedId, evt.clientX);
 			}
 		});
 	},
 
 	handlePopoutCode (evt, toList, $btnPop, popoutCodeId) {
-		const data = toList[History.lastLoadedId];
+		const data = toList[Hist.lastLoadedId];
 		const cleanCopy = DataUtil.cleanJson(MiscUtil.copy(data));
 		Renderer.hover.__updateOnMouseHoverEntry(popoutCodeId, {
 			type: "code",
@@ -4905,17 +5452,15 @@ Renderer.dice = {
 	parseRandomise2 (str) {
 		if (!str || !str.trim()) return null;
 		const tree = Renderer.dice._parse2(str);
-		if (tree) {
-			return tree.evl({});
-		} else return null;
+		if (tree) return tree.evl({});
+		else return null;
 	},
 
 	parseAverage (str) {
 		if (!str || !str.trim()) return null;
 		const tree = Renderer.dice._parse2(str);
-		if (tree) {
-			return tree.avg({});
-		} else return null;
+		if (tree) return tree.avg({});
+		else return null;
 	},
 
 	parseToTree (str) {
@@ -4938,16 +5483,14 @@ Renderer.dice = {
 
 	getNextDice (faces) {
 		const idx = Renderer.dice.DICE.indexOf(faces);
-		if (~idx) {
-			return Renderer.dice.DICE[idx + 1];
-		} else return null;
+		if (~idx) return Renderer.dice.DICE[idx + 1];
+		else return null;
 	},
 
 	getPreviousDice (faces) {
 		const idx = Renderer.dice.DICE.indexOf(faces);
-		if (~idx) {
-			return Renderer.dice.DICE[idx - 1];
-		} else return null;
+		if (~idx) return Renderer.dice.DICE[idx - 1];
+		else return null;
 	},
 
 	DICE: [4, 6, 8, 10, 12, 20, 100],
@@ -4999,6 +5542,8 @@ Renderer.dice = {
 		Renderer.dice._$iptRoll = $iptRoll;
 
 		$(`body`).append($minRoll).append($wrpRoll);
+
+		$wrpRoll.on("click", ".out-roll-item-code", (evt) => Renderer.dice._$iptRoll.val(evt.target.innerHTML).focus());
 
 		Renderer.dice.storage = await StorageUtil.pGet(ROLLER_MACRO_STORAGE) || {};
 	},
@@ -5153,13 +5698,9 @@ Renderer.dice = {
 
 		function attemptToGetName () {
 			const $hov = $ele.closest(`.hwin`);
-			if ($hov.length) {
-				return $hov.find(`.stats-name`).first().text();
-			}
+			if ($hov.length) return $hov.find(`.stats-name`).first().text();
 			const $roll = $ele.closest(`.out-roll-wrp`);
-			if ($roll.length) {
-				return $roll.data("name");
-			}
+			if ($roll.length) return $roll.data("name");
 			let name = document.title.replace("- 5etools", "").trim();
 			return name === "DM Screen" ? "Dungeon Master" : name;
 		}
@@ -5191,18 +5732,8 @@ Renderer.dice = {
 		};
 
 		function doRoll (toRoll = entry) {
-			if ($ele.parent().is("th")) {
-				Renderer.dice.rollEntry(
-					toRoll,
-					rolledBy,
-					getThRoll
-				);
-			} else {
-				Renderer.dice.rollEntry(
-					toRoll,
-					rolledBy
-				);
-			}
+			if ($ele.parent().is("th") && $ele.parent().attr("data-isroller") === "true") Renderer.dice.rollEntry(toRoll, rolledBy, getThRoll);
+			else Renderer.dice.rollEntry(toRoll, rolledBy);
 		}
 
 		// roll twice on shift, rolling advantage/crits where appropriate
@@ -5234,6 +5765,11 @@ Renderer.dice = {
 		if (str.startsWith("/")) Renderer.dice._handleCommand(str, rolledBy);
 		else if (str.startsWith("#")) return Renderer.dice._handleSavedRoll(str, rolledBy);
 		else {
+			const [head, ...tail] = str.split(":");
+			if (tail.length) {
+				str = tail.join(":");
+				rolledBy.label = head;
+			}
 			const tree = Renderer.dice._parse2(str);
 			return Renderer.dice._handleRoll2(tree, rolledBy);
 		}
@@ -5275,7 +5811,7 @@ Renderer.dice = {
 						${cbMessage ? `<span class="message">${cbMessage(result)}</span>` : ""}
 					</div>
 					<div class="out-roll-item-button-wrp">
-						<button title="Copy to input" class="btn btn-xs btn-copy-roll" onclick="Renderer.dice._$iptRoll.val('${tree._asString.replace(/\s+/g, "")}')"><span class="glyphicon glyphicon-pencil"></span></button>
+						<button title="Copy to input" class="btn btn-default btn-xs btn-copy-roll" onclick="Renderer.dice._$iptRoll.val('${tree._asString.replace(/\s+/g, "")}'); Renderer.dice._$iptRoll.focus()"><span class="glyphicon glyphicon-pencil"></span></button>
 					</div>
 				</div>`);
 
@@ -5314,10 +5850,11 @@ Renderer.dice = {
 			Renderer.dice._showMessage(
 				`Drop highest (<span class="out-roll-item-code">2d4dh1</span>) and lowest (<span class="out-roll-item-code">4d6dl1</span>) are supported.<br>
 				Up and down arrow keys cycle input history.<br>
+				Anything before a colon is treated as a label (<span class="out-roll-item-code">Fireball: 8d6</span>)<br>
 Use <span class="out-roll-item-code">${PREF_MACRO} list</span> to list saved macros.<br>
 				Use <span class="out-roll-item-code">${PREF_MACRO} add myName 1d2+3</span> to add (or update) a macro. Macro names should not contain spaces or hashes.<br>
 				Use <span class="out-roll-item-code">${PREF_MACRO} remove myName</span> to remove a macro.<br>
-				Use <span class="out-roll-item-code">#myName</span> to roll a macro.
+				Use <span class="out-roll-item-code">#myName</span> to roll a macro.<br>
 				Use <span class="out-roll-item-code">/clear</span> to clear the roller.`,
 				Renderer.dice.SYSTEM_USER
 			);
@@ -5382,6 +5919,7 @@ Use <span class="out-roll-item-code">${PREF_MACRO} list</span> to list saved mac
 		id = id.replace(/^#/, "");
 		const macro = Renderer.dice.storage[id];
 		if (macro) {
+			rolledBy.label = id;
 			const tree = Renderer.dice._parse2(macro);
 			return Renderer.dice._handleRoll2(tree, rolledBy);
 		} else Renderer.dice._showMessage(`Macro <span class="out-roll-item-code">#${id}</span> not found`, Renderer.dice.SYSTEM_USER);
@@ -5921,7 +6459,6 @@ Use <span class="out-roll-item-code">${PREF_MACRO} list</span> to list saved mac
 
 				this.avg = meta => this._get(meta, "avg");
 
-				this._hasNext = true;
 				this._nxt = function* () {
 					const genL = a.nxt();
 
@@ -5959,7 +6496,6 @@ Use <span class="out-roll-item-code">${PREF_MACRO} list</span> to list saved mac
 
 				this.avg = meta => this._get(meta, "avg");
 
-				this._hasNext = true;
 				this._nxt = function* () {
 					const genL = a.nxt();
 
@@ -6065,7 +6601,7 @@ Use <span class="out-roll-item-code">${PREF_MACRO} list</span> to list saved mac
 		return tree;
 	}
 };
-if (!IS_ROLL20 && typeof window !== "undefined") {
+if (!IS_VTT && typeof window !== "undefined") {
 	window.addEventListener("load", Renderer.dice.init);
 }
 
@@ -6128,7 +6664,8 @@ Renderer.stripTags = function (str) {
 		const tagSplit = Renderer.splitByTags(str);
 		return tagSplit.filter(it => it).map(it => {
 			if (it.startsWith("@")) {
-				const [tag, text] = Renderer.splitFirstSpace(it);
+				let [tag, text] = Renderer.splitFirstSpace(it);
+				text = text.replace(/<\$([^$]+)\$>/gi, ""); // remove any variable tags
 				switch (tag) {
 					case "@b":
 					case "@bold":
@@ -6139,6 +6676,8 @@ Renderer.stripTags = function (str) {
 						return text.replace(/^{@(i|italic|b|bold|s|strike) (.*?)}$/, "$1");
 
 					case "@h": return "Hit: ";
+
+					case "@dc": return `DC ${text}`;
 
 					case "@atk": return Renderer.attackTagToFull(text);
 
@@ -6191,7 +6730,9 @@ Renderer.stripTags = function (str) {
 					case "@filter":
 					case "@footnote":
 					case "@link":
-					case "@scaledice": {
+					case "@scaledice":
+					case "@loader":
+					case "@color": {
 						const parts = text.split("|");
 						return parts[0];
 					}
@@ -6212,7 +6753,7 @@ Renderer.stripTags = function (str) {
 					case "@psionic":
 					case "@race":
 					case "@reward":
-					case "@ship":
+					case "@vehicle":
 					case "@spell":
 					case "@table":
 					case "@trap":
