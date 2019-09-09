@@ -15,14 +15,16 @@ echo "Optimizing the header."
 # Header / Day-Night mode
 npm run minify -- js/styleswitch.js --out-file js/styleswitch.js
 npm run minify -- js/navigation.js --out-file js/navigation.js
-cat js/styleswitch.js <(echo ";") js/navigation.js > js/header.js
+npm run minify -- js/browsercheck.js --out-file js/browsercheck.js
+cat js/styleswitch.js <(echo ";") js/navigation.js <(echo ";") js/browsercheck.js > js/header.js
 rm js/styleswitch.js js/navigation.js
 
 # Replace the files with the minified version we made above
-find . -type f -name '*.html' -print0 |
+find . -maxdepth 1 -type f -name '*.html' -print0 |
     while IFS= read -r -d $'\0' line; do
         sed -i -e 's;js/styleswitch.js;js/header.js;g' $line
 		sed -n -i '/js\/navigation.js/!p' $line
+		sed -n -i '/js\/browsercheck.js/!p' $line
     done
 
 echo "Optimizing the JS."
@@ -31,7 +33,7 @@ cat js/utils.js <(echo ";") js/utils-ui.js <(echo ";") js/omnidexer.js <(echo ";
 rm js/utils.js js/utils-ui.js js/omnidexer.js js/omnisearch.js js/render.js js/scalecreature.js
 
 # Replace the files with the minified version we made above
-find . -type f -name '*.html' -print0 |
+find . -maxdepth 1 -type f -name '*.html' -print0 |
     while IFS= read -r -d $'\0' line; do
         sed -i -e 's;js/utils.js;js/shared.js;g' $line
 		sed -n -i '/js\/utils-ui.js/!p' $line
@@ -43,7 +45,7 @@ find . -type f -name '*.html' -print0 |
 
 echo "Replacing local files with combined jsdelivr."
 
-find . -type f -name '*.html' -print0 |
+find . -maxdepth 1 -type f -name '*.html' -print0 |
     while IFS= read -r -d $'\0' line; do
         sed -n -i '/lib\/jquery.js/!p' $line
         sed -n -i '/lib\/list.js/!p' $line
@@ -54,13 +56,13 @@ find . -type f -name '*.html' -print0 |
 
 echo "Installing Query Strings."
 for file in js/*; do
-    find . -type f -name '*.html' -print0 |
+    find . -maxdepth 1 -type f -name '*.html' -print0 |
     while IFS= read -r -d $'\0' line; do
         sed -i -e "s;$file;$file?v=${version};g" $line
     done
 done
 for file in css/*; do
-    find . -type f -name '*.html' -print0 |
+    find . -maxdepth 1 -type f -name '*.html' -print0 |
     while IFS= read -r -d $'\0' line; do
         sed -i -e "s;$file;$file?v=${version};g" $line
     done

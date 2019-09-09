@@ -19,6 +19,8 @@
 	src: local('glyphicons-halflings-regular'), url('../fonts/glyphicons-halflings-regular.ttf') format('truetype');
 }
 
+$sz-y-header: 73px;
+
 $spacer: 1rem;
 
 $rgb-off-black: #333;
@@ -47,6 +49,8 @@ $rgb-stripe-grey: #88888818;
 $rgb-stripe-grey--faint: #bbbbbb18;
 $rgb-night-stripe-grey: #aaa4;
 
+$rgb-night-hr-grey: #888;
+
 $rgb-night-font-color: #bbb;
 $rgb-night-bg-color: #222;
 
@@ -54,6 +58,8 @@ $rgb-alert-text-success: #3c763d;
 $rgb-alert-text-info: #31708f;
 $rgb-alert-text-warning: #8a6d3b;
 $rgb-alert-text-danger: #a94442;
+
+$rgb-btn-danger-border-red: #ac2925;
 
 $rgb-btn-primary-blue: $rgb-active-blue;
 $rgb-btn-primary-blue--desaturated: #b8b8b8;
@@ -90,6 +96,22 @@ $z-temp-effect: 2000;
 
 @mixin shadow-1 () {
 	box-shadow: 0 6px 12px $rgb-shadow-grey;
+}
+
+@mixin shadow-active {
+	box-shadow: 0 0 2px 0 #000b;
+}
+
+@mixin shadow-active--night {
+	box-shadow: 0 0 3px 0 #fffb;
+}
+
+/* *** */
+
+@mixin font-regular {
+	font-family: Arial, sans-serif;
+	font-variant: normal;
+	font-weight: normal;
 }
 
 $width-screen-xs: 480px;

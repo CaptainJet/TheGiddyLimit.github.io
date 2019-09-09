@@ -1,3 +1,54 @@
+class ProxyBase {
+	constructor () {
+		this.__hooks = {};
+		this.__hooksAll = {};
+	}
+
+	_getProxy (hookProp, toProxy) {
+		return new Proxy(toProxy, {
+			set: (object, prop, value) => {
+				object[prop] = value;
+				if (this.__hooksAll[hookProp]) this.__hooksAll[hookProp].forEach(hook => hook(prop, value));
+				if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]) this.__hooks[hookProp][prop].forEach(hook => hook(prop, value));
+				return true;
+			},
+			deleteProperty: (object, prop) => {
+				delete object[prop];
+				if (this.__hooksAll[hookProp]) this.__hooksAll[hookProp].forEach(hook => hook(prop, null));
+				if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]) this.__hooks[hookProp][prop].forEach(hook => hook(prop, null));
+				return true;
+			}
+		});
+	}
+
+	/**
+	 * Register a hook versus a root property on the state object. **INTERNAL CHANGES TO CHILD OBJECTS ON THE STATE
+	 *   OBJECT ARE NOT TRACKED**.
+	 * @param hookProp The state object.
+	 * @param prop The root property to track.
+	 * @param hook The hook to run. Will be called with two arguments; the property and the value of the property being
+	 *   modified.
+	 */
+	_addHook (hookProp, prop, hook) {
+		((this.__hooks[hookProp] = this.__hooks[hookProp] || {})[prop] = (this.__hooks[hookProp][prop] || [])).push(hook);
+	}
+
+	_addHookAll (hookProp, hook) {
+		(this.__hooksAll[hookProp] = this.__hooksAll[hookProp] || []).push(hook);
+	}
+
+	_removeHook (hookProp, prop, hook) {
+		if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]) {
+			const ix = this.__hooks[hookProp][prop].findIndex(hk => hk === hook);
+			if (~ix) this.__hooks[hookProp][prop].splice(ix, 1);
+		}
+	}
+
+	_resetHooks (hookProp) {
+		delete this.__hooks[hookProp];
+	}
+}
+
 class UiUtil {
 	/**
 	 * @param string String to parse.
@@ -5,6 +56,7 @@ class UiUtil {
 	 * @param [opts] Options Object.
 	 * @param [opts.max] Max allowed return value.
 	 * @param [opts.min] Min allowed return value.
+	 * @param [opts.fallbackOnNaN] Return value if not a number.
 	 * @return {number}
 	 */
 	static strToInt (string, fallbackEmpty = 0, opts) {
@@ -16,7 +68,9 @@ class UiUtil {
 			const unary = preDot.replace(/^([-+]*).*$/, (...m) => m[1]);
 			const numPart = preDot.replace(/[^0-9]/g, "");
 			const num = Number(`${unary}${numPart}` || 0);
-			out = isNaN(num) ? 0 : num;
+			out = isNaN(num)
+				? opts.fallbackOnNaN !== undefined ? opts.fallbackOnNaN : 0
+				: num;
 		}
 		if (opts.max != null) out = Math.min(out, opts.max);
 		if (opts.min != null) out = Math.max(out, opts.min);
@@ -127,13 +181,14 @@ class UiUtil {
 	 * @param {Object} [opts] Options object.
 	 * @param {string} [opts.title] Modal title.
 	 * @param {boolean} [opts.fullHeight] If the modal should take up (almost) the full height of the screen.
-	 * @param {boolean} [opts.fullWidth] If the modal should take up (almost) the full width of the screen.
+	 * @param {boolean} [opts.isLarge] If the modal should have (almost) unrestrained dimensions
 	 * @param {boolean} [opts.noMinHeight] If the modal should have no minimum height.
 	 * @param {function} [opts.cbClose] Callback run when the modal is closed.
 	 * @param {JQuery} [opts.titleSplit] Element to have split alongside the title.
 	 * @param {int} [opts.zIndex] Z-index of the modal.
 	 * @param {number} [opts.overlayColor] Overlay color.
-	 * @returns JQuery Modal inner wrapper, to have content added as required.
+	 * @param {boolean} [opts.isPermanent] If the modal should be impossible to close.
+	 * @returns {object}
 	 */
 	static getShowModal (opts) {
 		opts = opts || {};
@@ -148,12 +203,15 @@ class UiUtil {
 		if (opts.zIndex != null) $modal.css({zIndex: opts.zIndex});
 		if (opts.overlayColor != null) $modal.css({backgroundColor: opts.overlayColor});
 		const $scroller = $(`<div class="ui-modal__scroller"/>`);
-		const $modalInner = $$`<div class="ui-modal__inner ui-modal__inner--modal dropdown-menu${opts.fullWidth ? ` ui-modal__inner--large` : ""}${opts.fullHeight ? " h-100" : ""}"><div class="split flex-v-center no-shrink">${opts.title ? `<h4>${opts.title.escapeQuotes()}</h4>` : ""}${opts.titleSplit || ""}</div>${$scroller}</div>`
+		const $modalInner = $$`<div class="ui-modal__inner ui-modal__inner--modal dropdown-menu${opts.isLarge ? ` ui-modal__inner--large` : ""}${opts.fullHeight ? "h-100" : ""}"><div class="split flex-v-center no-shrink">${opts.title ? `<h4>${opts.title.escapeQuotes()}</h4>` : ""}${opts.titleSplit || ""}</div>${$scroller}</div>`
 			.appendTo($modal);
 		if (opts.noMinHeight) $modalInner.css("height", "initial");
 
 		$modal.click(evt => {
-			if (evt.target === $modal[0]) handleCloseClick(false);
+			if (evt.target === $modal[0]) {
+				if (opts.isPermanent) return;
+				handleCloseClick(false);
+			}
 		});
 
 		$(`body`).append($modal);
@@ -226,8 +284,17 @@ UiUtil.SEARCH_RESULTS_CAP = 75;
 UiUtil.TYPE_TIMEOUT_MS = 100; // auto-search after 100ms
 
 class ProfUiUtil {
-	static getProfCycler (state = 0) {
-		const NUM_STATES = Object.keys(ProfUiUtil.PROF_TO_FULL).length;
+	/**
+	 * @param state Initial state.
+	 * @param [opts] Options object.
+	 * @param [opts.isSimple] If the cycler only has "not proficient" and "proficient" options
+	 */
+	static getProfCycler (state = 0, opts) {
+		opts = opts || {};
+
+		const STATES = opts.isSimple ? Object.keys(ProfUiUtil.PROF_TO_FULL).slice(0, 2) : Object.keys(ProfUiUtil.PROF_TO_FULL);
+
+		const NUM_STATES = Object.keys(STATES).length;
 
 		// validate initial state
 		state = Number(state) || 0;
@@ -242,7 +309,6 @@ class ProfUiUtil {
 					.trigger("change");
 			})
 			.contextmenu(evt => {
-				if (evt.ctrlKey) return;
 				evt.preventDefault();
 				$btnCycle
 					.attr("data-state", --state < 0 ? state = NUM_STATES - 1 : state)
@@ -347,12 +413,12 @@ class SearchUiUtil {
 
 		const availContent = {};
 
-		const data = Omnidexer.decompressIndex(await DataUtil.loadJSON("search/index.json"));
+		const data = Omnidexer.decompressIndex(await DataUtil.loadJSON(`${Renderer.get().baseUrl}search/index.json`));
 
 		const additionalData = {};
 		if (options.additionalIndices) {
 			await Promise.all(options.additionalIndices.map(async add => {
-				additionalData[add] = Omnidexer.decompressIndex(await DataUtil.loadJSON(`search/index-${add}.json`));
+				additionalData[add] = Omnidexer.decompressIndex(await DataUtil.loadJSON(`${Renderer.get().baseUrl}search/index-${add}.json`));
 				const maxId = additionalData[add].last().id;
 				const brewIndex = await BrewUtil.pGetAdditionalSearchIndices(maxId, add);
 				if (brewIndex.length) additionalData[add] = additionalData[add].concat(brewIndex);
@@ -362,7 +428,7 @@ class SearchUiUtil {
 		const alternateData = {};
 		if (options.alternateIndices) {
 			await Promise.all(options.alternateIndices.map(async alt => {
-				alternateData[alt] = Omnidexer.decompressIndex(await DataUtil.loadJSON(`search/index-alt-${alt}.json`));
+				alternateData[alt] = Omnidexer.decompressIndex(await DataUtil.loadJSON(`${Renderer.get().baseUrl}search/index-alt-${alt}.json`));
 				const maxId = alternateData[alt].last().id;
 				const brewIndex = await BrewUtil.pGetAlternateSearchIndices(maxId, alt);
 				if (brewIndex.length) alternateData[alt] = alternateData[alt].concat(brewIndex);
@@ -457,8 +523,13 @@ class SearchWidget {
 		this._$rendered = null;
 	}
 
-	static async pDoGlobalInit () {
-		SearchWidget.CONTENT_INDICES = await SearchUiUtil.pGetContentIndices({additionalIndices: ["item"], alternateIndices: ["spell"]});
+	static pDoGlobalInit () {
+		if (!SearchWidget.P_LOADING_CONTENT) {
+			SearchWidget.P_LOADING_CONTENT = (async () => {
+				Object.assign(SearchWidget.CONTENT_INDICES, await SearchUiUtil.pGetContentIndices({additionalIndices: ["item"], alternateIndices: ["spell"]}));
+			})();
+		}
+		return SearchWidget.P_LOADING_CONTENT;
 	}
 
 	__getSearchOptions () {
@@ -626,23 +697,69 @@ class SearchWidget {
 			SearchWidget.CONTENT_INDICES[d.cf].addDoc(d);
 		});
 	}
+
+	static async pGetUserSpellSearch (opts) {
+		opts = opts || {};
+		await SearchWidget.P_LOADING_CONTENT;
+
+		const nxtOpts = {};
+		if (opts.level != null) nxtOpts.resultFilter = result => result.lvl === opts.level;
+		const tagBuilder = (encName, encSource) => `{@spell ${decodeURIComponent(encName)}${encSource !== UrlUtil.encodeForHash(SRC_PHB) ? `|${decodeURIComponent(encSource)}` : ""}}`;
+		const title = opts.level === 0 ? "Select Cantrip" : "Select Spell";
+		return SearchWidget.pGetUserEntitySearch(title, "alt_Spell", tagBuilder, nxtOpts);
+	}
+
+	static async pGetUserEntitySearch (title, indexName, tagBuilder, opts) {
+		opts = opts || {};
+
+		return new Promise(resolve => {
+			const searchOpts = {defaultCategory: indexName};
+			if (opts.resultFilter) searchOpts.resultFilter = opts.resultFilter;
+
+			const searchWidget = new SearchWidget(
+				{[indexName]: SearchWidget.CONTENT_INDICES[indexName]},
+				(page, source, hash) => {
+					const [encName, encSource] = hash.split(HASH_LIST_SEP);
+					doClose(false); // "cancel" close
+					resolve({
+						page,
+						source,
+						hash,
+						name: encName,
+						tag: tagBuilder(encName, encSource)
+					});
+				},
+				searchOpts
+			);
+			const {$modalInner, doClose} = UiUtil.getShowModal({
+				title,
+				cbClose: (doResolve) => {
+					searchWidget.$wrpSearch.detach();
+					if (doResolve) resolve(null); // ensure resolution
+				}
+			});
+			$modalInner.append(searchWidget.$wrpSearch);
+			searchWidget.doFocus();
+		});
+	}
 }
+SearchWidget.P_LOADING_CONTENT = null;
 SearchWidget.CONTENT_INDICES = {};
 
 class InputUiUtil {
 	/**
-	 * @param options Options.
-	 * @param options.min Minimum value.
-	 * @param options.max Maximum value.
-	 * @param options.int If the value returned should be an integer.
-	 * @param options.title Prompt title.
-	 * @param options.default Default value.
+	 * @param opts Options.
+	 * @param opts.min Minimum value.
+	 * @param opts.max Maximum value.
+	 * @param opts.int If the value returned should be an integer.
+	 * @param opts.title Prompt title.
+	 * @param opts.default Default value.
 	 * @return {Promise<number>} A promise which resolves to the number if the user entered one, or null otherwise.
 	 */
-	static pGetUserNumber (options) {
-		options = options || {};
+	static pGetUserNumber (opts) {
+		opts = opts || {};
 		return new Promise(resolve => {
-			const $iptNumber = $(`<input class="form-control mb-2 text-right" type="number" ${options.min ? `min="${options.min}"` : ""} ${options.max ? `max="${options.max}"` : ""} ${options.default != null ? `value="${options.default}"` : ""}>`)
+			const $iptNumber = $(`<input class="form-control mb-2 text-right" type="number" ${opts.min ? `min="${opts.min}"` : ""} ${opts.max ? `max="${opts.max}"` : ""} ${opts.default != null ? `value="${opts.default}"` : ""}>`)
 				.keydown(evt => {
 					// return key
 					if (evt.which === 13) doClose(true);
@@ -651,16 +768,16 @@ class InputUiUtil {
 			const $btnOk = $(`<button class="btn btn-default">Enter</button>`)
 				.click(() => doClose(true));
 			const {$modalInner, doClose} = UiUtil.getShowModal({
-				title: options.title || "Enter a Number",
+				title: opts.title || "Enter a Number",
 				noMinHeight: true,
 				cbClose: (isDataEntered) => {
 					if (!isDataEntered) return resolve(null);
 					const raw = $iptNumber.val();
 					if (!raw.trim()) return resolve(null);
 					let num = Number(raw) || 0;
-					if (options.min) num = Math.max(options.min, num);
-					if (options.max) num = Math.min(options.max, num);
-					if (options.int) return resolve(Math.round(num));
+					if (opts.min) num = Math.max(opts.min, num);
+					if (opts.max) num = Math.min(opts.max, num);
+					if (opts.int) return resolve(Math.round(num));
 					else resolve(num);
 				}
 			});
@@ -672,61 +789,163 @@ class InputUiUtil {
 	}
 
 	/**
-	 * @param options Options.
-	 * @param options.values Array of enum values.
-	 * @param options.placeholder Placeholder text.
-	 * @param options.title Prompt title.
-	 * @param options.default Default selected index.
-	 * @param options.$elePost Element to add below the select box.
-	 * @param options.fnGetExtraState Function which returns additional state from, generally, other elements in the modal.
+	 * @param opts Options.
+	 * @param opts.values Array of values.
+	 * @param [opts.placeholder] Placeholder text.
+	 * @param [opts.title] Prompt title.
+	 * @param [opts.default] Default selected index.
+	 * @param [opts.fnDisplay] Function which takes a value and returns display text.
+	 * @param [opts.isResolveItem] True if the promise should resolve the item instead of the index.
+	 * @param [opts.$elePost] Element to add below the select box.
+	 * @param [opts.fnGetExtraState] Function which returns additional state from, generally, other elements in the modal.
 	 * @return {Promise} A promise which resolves to the index of the item the user selected (or an object if fnGetExtraState is passed), or null otherwise.
 	 */
-	static pGetUserEnum (options) {
-		options = options || {};
+	static pGetUserEnum (opts) {
+		opts = opts || {};
 		return new Promise(resolve => {
-			const $selEnum = $(`<select class="form-control mb-2"><option value="-1" disabled>${options.placeholder || "Select..."}</option></select>`);
+			const $selEnum = $(`<select class="form-control mb-2"><option value="-1" disabled>${opts.placeholder || "Select..."}</option></select>`);
 
-			options.values.forEach((v, i) => $(`<option value="${i}"/>`).text(v).appendTo($selEnum));
-			if (options.default != null) $selEnum.val(options.default);
+			opts.values.forEach((v, i) => $(`<option value="${i}"/>`).text(opts.fnDisplay ? opts.fnDisplay(v, i) : v).appendTo($selEnum));
+			if (opts.default != null) $selEnum.val(opts.default);
 			else $selEnum[0].selectedIndex = 0;
 
 			const $btnOk = $(`<button class="btn btn-default">Confirm</button>`)
 				.click(() => doClose(true));
 
 			const {$modalInner, doClose} = UiUtil.getShowModal({
-				title: options.title || "Select an Option",
+				title: opts.title || "Select an Option",
 				noMinHeight: true,
 				cbClose: (isDataEntered) => {
 					if (!isDataEntered) return resolve(null);
 					const ix = Number($selEnum.val());
-					if (!~ix) resolve(null);
-					return resolve(options.fnGetExtraState ? {ix, extraState: options.fnGetExtraState()} : ix);
+					if (!~ix) return resolve(null);
+					if (opts.fnGetExtraState) {
+						const out = {extraState: opts.fnGetExtraState()};
+						if (opts.isResolveItem) out.item = opts.values[ix];
+						else out.ix = ix;
+						resolve(out)
+					} else resolve(opts.isResolveItem ? opts.values[ix] : ix);
 				}
 			});
 			$selEnum.appendTo($modalInner);
-			if (options.$elePost) options.$elePost.appendTo($modalInner);
+			if (opts.$elePost) opts.$elePost.appendTo($modalInner);
 			$$`<div class="flex-vh-center">${$btnOk}</div>`.appendTo($modalInner);
 			$selEnum.focus();
 		});
 	}
 
 	/**
+	 * @param opts Options.
+	 * @param opts.values Array of values.
+	 * @param [opts.title] Prompt title.
+	 * @param [opts.count] Number of choices the user can make (cannot be used with min/max).
+	 * @param [opts.min] Minimum number of choices the user can make (cannot be used with count).
+	 * @param [opts.max] Maximum number of choices the user can make (cannot be used with count).
+	 * @param [opts.defaults] Default selected indices.
+	 * @param [opts.isResolveItems] True if the promise should resolve to an array of the items instead of the indices.
+	 * @param [opts.fnDisplay] Function which takes a value and returns display text.
+	 * @return {Promise} A promise which resolves to the indices of the items the user selected, or null otherwise.
+	 */
+	static pGetUserMultipleChoice (opts) {
+		opts = opts || {};
+
+		if (opts.count != null && (opts.min != null || opts.max != null)) throw new Error(`Chooser must be either in "count" mode or "min/max" mode!`);
+		// If no mode is specified, default to a "count 1" chooser
+		if (opts.count == null && opts.min == null && opts.max == null) opts.count = 1;
+
+		class ChoiceRow extends BaseComponent {
+			_getDefaultState () { return {isActive: false}; }
+		}
+
+		return new Promise(resolve => {
+			const $btnOk = $(`<button class="btn btn-default">Confirm</button>`)
+				.click(() => doClose(true));
+
+			const rowMetas = [];
+			opts.values.forEach((v, i) => {
+				const comp = new ChoiceRow();
+				if (opts.defaults) comp._state.isActive = opts.defaults.includes(i);
+
+				const $cb = ComponentUiUtil.$getCbBool(comp, "isActive");
+				const hookDisable = () => {
+					const activeRows = rowMetas.filter(it => it.comp._state.isActive);
+
+					let isAcceptable = false;
+					if (opts.count != null) {
+						if (activeRows.length >= opts.count) isAcceptable = true;
+					} else {
+						if (activeRows.length >= (opts.min || 0) && activeRows.length <= (opts.max || Number.MAX_SAFE_INTEGER)) isAcceptable = true;
+					}
+
+					if (isAcceptable) {
+						if (opts.count != null || (opts.max != null && activeRows.length === opts.max)) {
+							rowMetas.forEach(it => it.$cb.attr("disabled", !it.comp._state.isActive));
+						} else {
+							rowMetas.forEach(it => it.$cb.attr("disabled", false));
+						}
+						$btnOk.attr("disabled", false);
+					} else {
+						rowMetas.forEach(it => it.$cb.attr("disabled", false));
+						$btnOk.attr("disabled", true);
+					}
+				};
+				comp._addHookBase("isActive", hookDisable);
+				hookDisable();
+
+				rowMetas.push({
+					$cb,
+					$ele: $$`<label class="flex-v-center row my-1">
+						<div class="col-2 flex-vh-center">${$cb}</div>
+						<div class="col-10">${opts.fnDisplay ? opts.fnDisplay(v, i) : v}</div>
+					</label>`,
+					comp
+				});
+			});
+
+			const $wrpList = $$`<div class="flex-col w-100 striped-even mb-1 overflow-y-auto">${rowMetas.map(it => it.$ele)}</div>`;
+
+			let title = opts.title;
+			if (!title) {
+				if (opts.count != null) title = `Choose ${Parser.numberToText(opts.count).uppercaseFirst()}`;
+				else if (opts.min != null && opts.max != null) title = `Choose Between ${Parser.numberToText(opts.min).uppercaseFirst()} and ${Parser.numberToText(opts.max).uppercaseFirst()} Options`;
+				else if (opts.min != null) title = `Choose At Least ${Parser.numberToText(opts.min).uppercaseFirst()}`;
+				else title = `Choose At Most ${Parser.numberToText(opts.max).uppercaseFirst()}`;
+			}
+
+			const {$modalInner, doClose} = UiUtil.getShowModal({
+				title,
+				noMinHeight: true,
+				cbClose: (isDataEntered) => {
+					if (!isDataEntered) return resolve(null);
+
+					const ixs = rowMetas.map((row, ix) => row.comp._state.isActive ? ix : null).filter(it => it != null);
+					resolve(opts.isResolveItems ? ixs.map(ix => opts.values[ix]) : ixs);
+				}
+			});
+			$modalInner.addClass("flex-col");
+			$wrpList.appendTo($modalInner);
+			$$`<div class="flex-vh-center no-shrink">${$btnOk}</div>`.appendTo($modalInner);
+			$wrpList.focus();
+		});
+	}
+
+	/**
 	 * NOTE: designed to work with FontAwesome.
 	 *
-	 * @param options Options.
-	 * @param options.values Array of icon metadata. Items should be of the form: `{name: "<n>", iconClass: "<c>"}`
-	 * @param options.title Prompt title.
-	 * @param options.default Default selected index.
+	 * @param opts Options.
+	 * @param opts.values Array of icon metadata. Items should be of the form: `{name: "<n>", iconClass: "<c>", buttonClass: "<cs>"}`
+	 * @param opts.title Prompt title.
+	 * @param opts.default Default selected index.
 	 * @return {Promise<number>} A promise which resolves to the index of the item the user selected, or null otherwise.
 	 */
-	static pGetUserIcon (options) {
-		options = options || {};
+	static pGetUserIcon (opts) {
+		opts = opts || {};
 		return new Promise(resolve => {
-			let lastIx = -1;
+			let lastIx = opts.default != null ? opts.default : -1;
 			const onclicks = [];
 
 			const {$modalInner, doClose} = UiUtil.getShowModal({
-				title: options.title || "Select an Option",
+				title: opts.title || "Select an Option",
 				noMinHeight: true,
 				cbClose: (isDataEntered) => {
 					if (!isDataEntered) return resolve(null);
@@ -734,8 +953,8 @@ class InputUiUtil {
 				}
 			});
 
-			$$`<div class="flex flex-wrap flex-h-center mb-2">${options.values.map((v, i) => {
-				const $btn = $$`<div class="m-2 btn ${v.buttonClass || ""} ui-icn__btn flex-col flex-h-center">
+			$$`<div class="flex flex-wrap flex-h-center mb-2">${opts.values.map((v, i) => {
+				const $btn = $$`<div class="m-2 btn ${v.buttonClass || "btn-default"} ui-icn__btn flex-col flex-h-center">
 					${v.iconClass ? `<div class="ui-icn__wrp-icon ${v.iconClass} mb-1"></div>` : ""}
 					${v.iconContent ? v.iconContent : ""}
 					<div class="whitespace-normal w-100">${v.name}</div>
@@ -744,7 +963,7 @@ class InputUiUtil {
 						lastIx = i;
 						onclicks.forEach(it => it());
 					})
-					.toggleClass("active", options.default === i);
+					.toggleClass("active", opts.default === i);
 				onclicks.push(() => $btn.toggleClass("active", lastIx === i));
 				return $btn;
 			})}</div>`.appendTo($modalInner);
@@ -757,18 +976,18 @@ class InputUiUtil {
 	}
 
 	/**
-	 * @param options Options.
-	 * @param options.title Prompt title.
-	 * @param options.default Default value.
-	 * @param options.autocomplete Array of autocomplete strings. REQUIRES INCLUSION OF THE TYPEAHEAD LIBRARY.
+	 * @param opts Options.
+	 * @param opts.title Prompt title.
+	 * @param opts.default Default value.
+	 * @param opts.autocomplete Array of autocomplete strings. REQUIRES INCLUSION OF THE TYPEAHEAD LIBRARY.
 	 * @return {Promise<String>} A promise which resolves to the string if the user entered one, or null otherwise.
 	 */
-	static pGetUserString (options) {
-		options = options || {};
+	static pGetUserString (opts) {
+		opts = opts || {};
 		return new Promise(resolve => {
-			const $iptStr = $(`<input class="form-control mb-2" ${options.default != null ? `value="${options.default}"` : ""}>`)
+			const $iptStr = $(`<input class="form-control mb-2" ${opts.default != null ? `value="${opts.default}"` : ""}>`)
 				.keydown(async evt => {
-					if (options.autocomplete) {
+					if (opts.autocomplete) {
 						// prevent double-binding the return key if we have autocomplete enabled
 						await MiscUtil.pDelay(17); // arbitrary delay to allow dropdown to render (~1000/60, i.e. 1 60 FPS frame)
 						if ($modalInner.find(`.typeahead.dropdown-menu`).is(":visible")) return;
@@ -777,11 +996,11 @@ class InputUiUtil {
 					if (evt.which === 13) doClose(true);
 					evt.stopPropagation();
 				});
-			if (options.autocomplete && options.autocomplete.length) $iptStr.typeahead({source: options.autocomplete});
+			if (opts.autocomplete && opts.autocomplete.length) $iptStr.typeahead({source: opts.autocomplete});
 			const $btnOk = $(`<button class="btn btn-default">Enter</button>`)
 				.click(() => doClose(true));
 			const {$modalInner, doClose} = UiUtil.getShowModal({
-				title: options.title || "Enter Text",
+				title: opts.title || "Enter Text",
 				noMinHeight: true,
 				cbClose: (isDataEntered) => {
 					if (!isDataEntered) return resolve(null);
@@ -799,20 +1018,20 @@ class InputUiUtil {
 
 	/**
 	 *
-	 * @param [options] Options object.
-	 * @param [options.title] Modal title.
-	 * @param [options.default] Default angle.
-	 * @param [options.stepButtons] Array of labels for quick-set buttons, which will be evenly spread around the clock.
-	 * @param [options.step] Number of steps in the gauge (default 360; would be e.g. 12 for a "clock").
+	 * @param [opts] Options object.
+	 * @param [opts.title] Modal title.
+	 * @param [opts.default] Default angle.
+	 * @param [opts.stepButtons] Array of labels for quick-set buttons, which will be evenly spread around the clock.
+	 * @param [opts.step] Number of steps in the gauge (default 360; would be e.g. 12 for a "clock").
 	 * @returns {Promise<number>} A promise which resolves to the number of degrees if the user pressed "Enter," or null otherwise.
 	 */
-	static pGetUserDirection (options) {
+	static pGetUserDirection (opts) {
 		const X = 0;
 		const Y = 1;
 		const DEG_CIRCLE = 360;
 
-		options = options || {};
-		const step = Math.max(2, Math.min(DEG_CIRCLE, options.step || DEG_CIRCLE));
+		opts = opts || {};
+		const step = Math.max(2, Math.min(DEG_CIRCLE, opts.step || DEG_CIRCLE));
 		const stepDeg = DEG_CIRCLE / step;
 
 		function getAngle (p1, p2) {
@@ -821,7 +1040,7 @@ class InputUiUtil {
 
 		return new Promise(resolve => {
 			let active = false;
-			let curAngle = Math.min(DEG_CIRCLE, options.default) || 0;
+			let curAngle = Math.min(DEG_CIRCLE, opts.default) || 0;
 
 			const $arm = $(`<div class="ui-dir__arm"/>`);
 			const handleAngle = () => $arm.css({transform: `rotate(${curAngle + 180}deg)`});
@@ -857,8 +1076,8 @@ class InputUiUtil {
 			const BTN_STEP_SIZE = 26;
 			const BORDER_PAD = 16;
 			const CONTROLS_RADIUS = (92 + BTN_STEP_SIZE + BORDER_PAD) / 2;
-			const $padOuter = options.stepButtons ? (() => {
-				const steps = options.stepButtons;
+			const $padOuter = opts.stepButtons ? (() => {
+				const steps = opts.stepButtons;
 				const SEG_ANGLE = 360 / steps.length;
 
 				const $btns = [];
@@ -899,11 +1118,12 @@ class InputUiUtil {
 			const $btnOk = $(`<button class="btn btn-default">Confirm</button>`)
 				.click(() => doClose(true));
 			const {$modalInner, doClose} = UiUtil.getShowModal({
-				title: options.title || "Select Direction",
+				title: opts.title || "Select Direction",
 				noMinHeight: true,
 				cbClose: (isDataEntered) => {
 					$document.off(`mousemove.${evtId} touchmove${evtId} mouseup.${evtId} touchend${evtId} touchcancel${evtId}`);
 					if (!isDataEntered) return resolve(null);
+					if (curAngle < 0) curAngle += 360;
 					return resolve(curAngle); // TODO returning the step number is more useful if step is specified?
 				}
 			});
@@ -973,6 +1193,56 @@ class DragReorderUiUtil {
 		};
 
 		return $(`<div class="m${opts.marginSide || "l"}-2 ui-drag__patch" title="Drag to Reorder">
+		<div class="ui-drag__patch-col"><div>&#8729</div><div>&#8729</div><div>&#8729</div></div>
+		<div class="ui-drag__patch-col"><div>&#8729</div><div>&#8729</div><div>&#8729</div></div>
+		</div>`).mousedown(() => doDragRender());
+	}
+
+	/**
+	 * @param comp The component which will contain the drag pad.
+	 * @param $parent Parent elements to attach row elements to.
+	 * @param parent Parent component which has a pod decomposable as {swapRowPositions, childComponents}.
+	 * @return jQuery
+	 */
+	static $getDragPad2 (comp, $parent, parent) {
+		const {swapRowPositions, childComponents} = parent;
+
+		const dragMeta = {};
+		const doDragCleanup = () => {
+			dragMeta.on = false;
+			dragMeta.$wrap.remove();
+			dragMeta.$dummies.forEach($d => $d.remove());
+		};
+
+		const doDragRender = () => {
+			if (dragMeta.on) doDragCleanup();
+
+			dragMeta.on = true;
+			dragMeta.$wrap = $(`<div class="flex-col ui-drag__wrp-drag-block"/>`).appendTo($parent);
+			dragMeta.$dummies = [];
+
+			const ixRow = childComponents.indexOf(comp);
+
+			childComponents.forEach((row, i) => {
+				const dimensions = {w: row.$row.outerWidth(true), h: row.$row.outerHeight(true)};
+				const $dummy = $(`<div class="${i === ixRow ? "ui-drag__wrp-drag-dummy--highlight" : "ui-drag__wrp-drag-dummy--lowlight"}"/>`)
+					.width(dimensions.w).height(dimensions.h)
+					.mouseup(() => {
+						if (dragMeta.on) doDragCleanup();
+					})
+					.appendTo(dragMeta.$wrap);
+				dragMeta.$dummies.push($dummy);
+
+				if (i !== ixRow) { // on entering other areas, swap positions
+					$dummy.mouseenter(() => {
+						swapRowPositions(i, ixRow);
+						doDragRender();
+					});
+				}
+			});
+		};
+
+		return $(`<div class="mr-2 ui-drag__patch" title="Drag to Reorder">
 		<div class="ui-drag__patch-col"><div>&#8729</div><div>&#8729</div><div>&#8729</div></div>
 		<div class="ui-drag__patch-col"><div>&#8729</div><div>&#8729</div><div>&#8729</div></div>
 		</div>`).mousedown(() => doDragRender());
@@ -1135,6 +1405,9 @@ class BaseComponent extends ProxyBase {
 	constructor () {
 		super();
 
+		this.__locks = {};
+		this.__rendered = {};
+
 		// state
 		this.__state = {...this._getDefaultState()};
 		this._state = this._getProxy("state", this.__state);
@@ -1148,13 +1421,15 @@ class BaseComponent extends ProxyBase {
 		this._removeHook("state", prop, hook);
 	}
 
-	_getPod () {
+	getPod () {
 		return {
 			get: (prop) => this._state[prop],
 			set: (prop, val) => this._state[prop] = val,
-			assignState: (toAssign) => Object.assign(this._state, toAssign),
+			delete: (prop) => delete this._state[prop],
 			addHook: (prop, hook) => this._addHookBase(prop, hook),
-			removeHook: (prop, hook) => this._removeHookBase(prop, hook)
+			removeHook: (prop, hook) => this._removeHookBase(prop, hook),
+			triggerCollectionUpdate: (prop) => this._triggerCollectionUpdate(prop),
+			component: this
 		}
 	}
 
@@ -1171,11 +1446,273 @@ class BaseComponent extends ProxyBase {
 		toLoad.state && Object.assign(this._state, toLoad.state);
 	}
 
+	/**
+	 * Asynchronous version available below.
+	 * @param prop The state property.
+	 * @param cbExists Function to run on existing render meta. Arguments are `rendered, item, i`.
+	 * @param cbNotExists Function to run which generates existing render meta. Arguments are `item, i`.
+	 * @param [opts] Options object.
+	 * @param [opts.isDiffMode] If a diff of the state should be taken/checked before updating renders.
+	 */
+	_renderCollection (prop, cbExists, cbNotExists, opts) {
+		opts = opts || {};
+
+		const rendered = (this.__rendered[prop] = this.__rendered[prop] || {});
+		const toDelete = new Set(Object.keys(rendered));
+
+		(this._state[prop] || []).forEach((it, i) => {
+			if (it.id == null) throw new Error(`Collection item did not have an ID!`);
+			const meta = rendered[it.id];
+
+			toDelete.delete(it.id);
+			if (meta) {
+				if (opts.isDiffMode) {
+					// Hashing the stringified JSON relies on the property order remaining consistent, but this is fine
+					const nxtHash = CryptUtil.md5(JSON.stringify(it));
+					if (nxtHash !== meta.__hash) {
+						meta.__hash = nxtHash;
+					} else return;
+				}
+
+				meta.data = it; // update any existing pointers
+				cbExists(meta, it, i);
+			} else {
+				const meta = cbNotExists(it, i);
+				meta.data = it;
+				if (!meta.$wrpRow) throw new Error(`A "$wrpRow" property is required in order for deletes!`);
+
+				if (opts.isDiffMode) meta.hash = CryptUtil.md5(JSON.stringify(it));
+
+				rendered[it.id] = meta;
+			}
+		});
+
+		this._renderCollection_doDeletes(rendered, toDelete);
+	}
+
+	/**
+	 * Synchronous version available below.
+	 * @param prop The state property.
+	 * @param cbExists Function to run on existing render meta. Arguments are `rendered, item, i`.
+	 * @param cbNotExists Function to run which generates existing render meta. Arguments are `item, i`.
+	 * @param [opts] Options object.
+	 */
+	async _pRenderCollection (prop, cbExists, cbNotExists, opts) {
+		opts = opts || {};
+
+		const rendered = (this.__rendered[prop] = this.__rendered[prop] || {});
+		const toDelete = new Set(Object.keys(rendered));
+
+		// Run the external functions in serial, to prevent element re-ordering
+		for (let i = 0; i < this._state[prop].length; ++i) {
+			const it = this._state[prop][i];
+
+			if (!it.id) throw new Error(`Collection item did not have an ID!`);
+			const meta = rendered[it.id];
+
+			toDelete.delete(it.id);
+			if (meta) {
+				if (opts.isDiffMode) {
+					// Hashing the stringified JSON relies on the property order remaining consistent, but this is fine
+					const nxtHash = CryptUtil.md5(JSON.stringify(it));
+					if (nxtHash !== meta.__hash) {
+						meta.__hash = nxtHash;
+					} else continue;
+				}
+
+				meta.data = it; // update any existing pointers
+				await cbExists(meta, it, i);
+			} else {
+				const meta = await cbNotExists(it, i);
+				// If the generator decides there's nothing to render, skip this item
+				if (meta == null) continue;
+
+				meta.data = it;
+				if (!meta.$wrpRow) throw new Error(`A "$wrpRow" property is required in order for deletes!`);
+
+				if (opts.isDiffMode) meta.hash = CryptUtil.md5(JSON.stringify(it));
+
+				rendered[it.id] = meta;
+			}
+		}
+
+		this._renderCollection_doDeletes(rendered, toDelete);
+	}
+
+	_renderCollection_doDeletes (rendered, toDelete) {
+		toDelete.forEach(id => {
+			const meta = rendered[id];
+			meta.$wrpRow.remove();
+			delete rendered[id];
+		});
+	}
+
+	/**
+	 * Detach (and thus preserve) rendered collection elements so they can be re-used later.
+	 * @param prop The state property.
+	 */
+	_detachCollection (prop) {
+		const rendered = (this.__rendered[prop] = this.__rendered[prop] || {});
+		Object.values(rendered).forEach(it => it.$wrpRow.detach());
+	}
+
+	/**
+	 * Wipe any rendered collection elements, and reset the render cache.
+	 * @param prop The state property.
+	 */
+	_resetCollectionRenders (prop) {
+		const rendered = (this.__rendered[prop] = this.__rendered[prop] || {});
+		Object.values(rendered).forEach(it => it.$wrpRow.remove());
+		delete this.__rendered[prop];
+	}
+
 	render () { throw new Error("Unimplemented!"); }
 
 	// to be overridden as required
 	getSaveableState () { return {...this.getBaseSaveableState()}; }
 	setStateFrom (toLoad) { this.setBaseSaveableStateFrom(toLoad); }
+
+	async _pLock (lockName) {
+		const lockMeta = this.__locks[lockName];
+		if (lockMeta) await lockMeta.lock;
+		let unlock = null;
+		const lock = new Promise(resolve => unlock = resolve);
+		this.__locks[lockName] = {
+			lock,
+			unlock
+		}
+	}
+
+	_unlock (lockName) {
+		const lockMeta = this.__locks[lockName];
+		if (lockMeta) {
+			lockMeta.unlock();
+		}
+	}
+
+	_triggerCollectionUpdate (prop) {
+		this._state[prop] = [...this._state[prop]];
+	}
+
+	static _toCollection (array) {
+		if (array) return array.map(it => ({id: CryptUtil.uid(), entity: it}));
+	}
+
+	static _fromCollection (array) {
+		if (array) return array.map(it => it.entity);
+	}
+
+	static fromObject (obj, ...noModCollections) {
+		const comp = new BaseComponent();
+		Object.entries(MiscUtil.copy(obj)).forEach(([k, v]) => {
+			if (v == null) comp.__state[k] = v;
+			else if (noModCollections.includes(k)) comp.__state[k] = v;
+			else if (typeof v === "object" && v instanceof Array) comp.__state[k] = BaseComponent._toCollection(v);
+			else comp.__state[k] = v;
+		});
+		return comp;
+	}
+
+	toObject () {
+		const cpy = MiscUtil.copy(this.__state);
+		Object.entries(cpy).forEach(([k, v]) => {
+			if (v != null && v instanceof Array && v.every(it => it && it.id)) cpy[k] = BaseComponent._fromCollection(v);
+		});
+		return cpy;
+	}
+}
+
+class BaseLayeredComponent extends BaseComponent {
+	constructor () {
+		super();
+
+		// layers
+		this._layers = [];
+		this.__layerMeta = {};
+		this._layerMeta = this._getProxy("layerMeta", this.__layerMeta);
+	}
+
+	_addHookDeep (prop, hook) {
+		this._addHookBase(prop, hook);
+		this._addHook("layerMeta", prop, hook);
+	}
+
+	_removeHookDeep (prop, hook) {
+		this._removeHookBase(prop, hook);
+		this._removeHook("layerMeta", prop, hook);
+	}
+
+	_getBase (prop) {
+		return this._state[prop];
+	}
+
+	_get (prop) {
+		if (this._layerMeta[prop]) {
+			for (let i = this._layers.length - 1; i >= 0; --i) {
+				const val = this._layers[i].data[prop];
+				if (val != null) return val;
+			}
+			// this should never fall through, but if it does, returning the base value is fine
+		}
+		return this._state[prop];
+	}
+
+	_addLayer (layer) {
+		this._layers.push(layer);
+		this._addLayer_addLayerMeta(layer);
+	}
+
+	_addLayer_addLayerMeta (layer) {
+		Object.entries(layer.data).forEach(([k, v]) => this._layerMeta[k] = v != null);
+	}
+
+	_removeLayer (layer) {
+		const ix = this._layers.indexOf(layer);
+		if (~ix) {
+			this._layers.splice(ix, 1);
+
+			// regenerate layer meta
+			Object.keys(this._layerMeta).forEach(k => delete this._layerMeta[k]);
+			this._layers.forEach(l => this._addLayer_addLayerMeta(l));
+		}
+	}
+
+	updateLayersActive (prop) {
+		// this uses the fact that updating a proxy value to the same value still triggers hooks
+		//   anything listening to changes in this flag will be forced to recalculate from base + all layers
+		this._layerMeta[prop] = this._layers.some(l => l.data[prop] != null);
+	}
+
+	getBaseSaveableState () {
+		return {
+			state: MiscUtil.copy(this.__state),
+			layers: MiscUtil.copy(this._layers.map(l => l.getSaveableState()))
+		};
+	}
+
+	setBaseSaveableStateFrom (toLoad) {
+		toLoad.state && Object.assign(this._state, toLoad.state);
+		if (toLoad.layers) toLoad.layers.forEach(l => this._addLayer(CharLayer.fromSavedState(this, l)));
+	}
+
+	getPod () {
+		return {
+			...super.getPod(),
+
+			addHookDeep: (prop, hook) => this._addHookDeep(prop, hook),
+			removeHookDeep: (prop, hook) => this._removeHookDeep(prop, hook),
+			getBase: (prop) => this._getBase(prop),
+			get: (prop) => this._get(prop),
+			addLayer: (name, data) => {
+				// FIXME
+				const l = new CharLayer(this, name, data);
+				this._addLayer(l);
+				return l;
+			},
+			removeLayer: (layer) => this._removeLayer(layer),
+			layers: this._layers // FIXME avoid passing this directly to the child
+		}
+	}
 }
 
 class ComponentUiUtil {
@@ -1188,6 +1725,8 @@ class ComponentUiUtil {
 	 * @param [opts.max] Max allowed return value.
 	 * @param [opts.min] Min allowed return value.
 	 * @param [opts.offset] Offset to add to value displayed.
+	 * @param [opts.padLength] Number of digits to pad the number to.
+	 * @param [opts.fallbackOnNaN] Return value if not a number.
 	 * @return {JQuery}
 	 */
 	static $getIptInt (component, prop, fallbackEmpty = 0, opts) {
@@ -1196,7 +1735,10 @@ class ComponentUiUtil {
 
 		const $ipt = (opts.$ele || $(`<input class="form-control input-xs form-control--minimal text-right">`))
 			.change(() => component._state[prop] = UiUtil.strToInt($ipt.val(), fallbackEmpty, opts) - opts.offset);
-		const hook = () => $ipt.val(component._state[prop] + opts.offset);
+		const hook = () => {
+			const num = (component._state[prop] || 0) + opts.offset;
+			$ipt.val(opts.padLength ? `${num}`.padStart(opts.padLength, "0") : num)
+		};
 		component._addHookBase(prop, hook);
 		hook();
 		return $ipt;
@@ -1215,7 +1757,7 @@ class ComponentUiUtil {
 		const $ipt = (opts.$ele || $(`<input class="form-control input-xs form-control--minimal">`))
 			.change(() => component._state[prop] = $ipt.val().trim());
 		const hook = () => $ipt.val(component._state[prop]);
-		component._addHookBase("name", hook);
+		component._addHookBase(prop, hook);
 		hook();
 		return $ipt
 	}
@@ -1230,7 +1772,7 @@ class ComponentUiUtil {
 	static $getIptEntries (component, prop, opts) {
 		opts = opts || {};
 
-		const $ipt = (opts.$ele || $(`<textarea class="form-control input-xs form-control--minimal resize-none"/>`))
+		const $ipt = (opts.$ele || $(`<textarea class="form-control input-xs form-control--minimal resize-vertical"/>`))
 			.change(() => component._state[prop] = UiUtil.getTextAsEntries($ipt.val().trim()));
 		const hook = () => $ipt.val(UiUtil.getEntriesAsText(component._state[prop]));
 		hook();
@@ -1250,8 +1792,103 @@ class ComponentUiUtil {
 		const $ipt = (opts.$ele || $(`<input class="form-control input-xs form-control--minimal" type="color">`))
 			.change(() => component._state[prop] = $ipt.val());
 		const hook = () => $ipt.val(component._state[prop]);
-		component._addHookBase("prop", hook);
+		component._addHookBase(prop, hook);
 		hook();
 		return $ipt;
+	}
+
+	/**
+	 * @param component An instance of a class which extends BaseComponent.
+	 * @param prop Component to hook on.
+	 * @param [opts] Options Object.
+	 * @param [opts.$ele] Element to use.
+	 * @param [opts.fnHookPost] Function to run after primary hook.
+	 * @param [opts.stateName] State name.
+	 * @param [opts.stateProp] State prop.
+	 * @return {JQuery}
+	 */
+	static $getBtnBool (component, prop, opts) {
+		opts = opts || {};
+
+		const stateName = opts.stateName || "state";
+		const stateProp = opts.stateProp || "_state";
+
+		const $btn = (opts.$ele || $(`<button class="btn btn-xs btn-default">Toggle</button>`))
+			.click(() => component[stateProp][prop] = !component[stateProp][prop]);
+		const hook = () => {
+			$btn.toggleClass("active", !!component[stateProp][prop]);
+			if (opts.fnHookPost) opts.fnHookPost(component[stateProp][prop]);
+		};
+		component._addHook(stateName, prop, hook);
+		hook();
+		return $btn
+	}
+
+	/**
+	 * @param component An instance of a class which extends BaseComponent.
+	 * @param prop Component to hook on.
+	 * @param [opts] Options Object.
+	 * @param [opts.$ele] Element to use.
+	 * @return {JQuery}
+	 */
+	static $getCbBool (component, prop, opts) {
+		opts = opts || {};
+
+		const $cb = (opts.$ele || $(`<input type="checkbox">`))
+			.change(() => component._state[prop] = $cb.prop("checked"));
+		const hook = () => $cb.prop("checked", !!component._state[prop]);
+		component._addHookBase(prop, hook);
+		hook();
+		return $cb
+	}
+
+	/**
+	 * @param component An instance of a class which extends BaseComponent.
+	 * @param prop Component to hook on.
+	 * @param opts Options Object.
+	 * @param opts.values Values to display.
+	 * @param [opts.$ele] Element to use.
+	 * @param [opts.isAllowNull] If null is allowed.
+	 * @param [opts.fnDisplay] Value display function.
+	 * @return {JQuery}
+	 */
+	static $getSelEnum (component, prop, opts) {
+		opts = opts || {};
+
+		const $sel = (opts.$ele || $(`<select class="form-control input-xs"/>`))
+			.change(() => {
+				const ix = Number($sel.val());
+				if (~ix) component._state[prop] = opts.values[ix];
+				else {
+					if (opts.isAllowNull) component._state[prop] = null;
+					else component._state[prop] = 0;
+				}
+			});
+		if (opts.isAllowNull) $(`<option/>`, {value: -1, text: "\u2014"}).appendTo($sel);
+		opts.values.forEach((it, i) => $(`<option/>`, {value: i, text: opts.fnDisplay ? opts.fnDisplay(it) : it}).appendTo($sel));
+		const hook = () => {
+			// Null handling is done in change handler
+			const ix = opts.values.indexOf(component._state[prop]);
+			$sel.val(`${ix}`);
+		};
+		component._addHookBase(prop, hook);
+		hook();
+		return $sel
+	}
+}
+
+if (typeof module !== "undefined") {
+	module.exports = {
+		ProxyBase,
+		UiUtil,
+		ProfUiUtil,
+		TabUiUtil,
+		SearchUiUtil,
+		SearchWidget,
+		InputUiUtil,
+		DragReorderUiUtil,
+		SourceUiUtil,
+		BaseComponent,
+		ComponentUiUtil
 	}
 }

@@ -49,24 +49,6 @@ STR_NONE = "None";
 STR_ANY = "Any";
 STR_SPECIAL = "Special";
 
-RNG_SPECIAL = "special";
-RNG_POINT = "point";
-RNG_LINE = "line";
-RNG_CUBE = "cube";
-RNG_CONE = "cone";
-RNG_RADIUS = "radius";
-RNG_SPHERE = "sphere";
-RNG_HEMISPHERE = "hemisphere";
-RNG_CYLINDER = "cylinder"; // homebrew only
-RNG_SELF = "self";
-RNG_SIGHT = "sight";
-RNG_UNLIMITED = "unlimited";
-RNG_UNLIMITED_SAME_PLANE = "plane";
-RNG_TOUCH = "touch";
-
-UNT_FEET = "feet";
-UNT_MILES = "miles";
-
 HOMEBREW_STORAGE = "HOMEBREW_STORAGE";
 HOMEBREW_META_STORAGE = "HOMEBREW_META_STORAGE";
 EXCLUDES_STORAGE = "EXCLUDES_STORAGE";
@@ -78,163 +60,146 @@ POINTBUY_STORAGE = "POINTBUY_STORAGE";
 JSON_HOMEBREW_INDEX = `homebrew/index.json`;
 
 // STRING ==============================================================================================================
-String.prototype.uppercaseFirst = String.prototype.uppercaseFirst ||
-	function () {
-		const str = this.toString();
-		if (str.length === 0) return str;
-		if (str.length === 1) return str.charAt(0).toUpperCase();
-		return str.charAt(0).toUpperCase() + str.slice(1);
-	};
+String.prototype.uppercaseFirst = String.prototype.uppercaseFirst || function () {
+	const str = this.toString();
+	if (str.length === 0) return str;
+	if (str.length === 1) return str.charAt(0).toUpperCase();
+	return str.charAt(0).toUpperCase() + str.slice(1);
+};
 
-String.prototype.lowercaseFirst = String.prototype.lowercaseFirst ||
-	function () {
-		const str = this.toString();
-		if (str.length === 0) return str;
-		if (str.length === 1) return str.charAt(0).toLowerCase();
-		return str.charAt(0).toLowerCase() + str.slice(1);
-	};
+String.prototype.lowercaseFirst = String.prototype.lowercaseFirst || function () {
+	const str = this.toString();
+	if (str.length === 0) return str;
+	if (str.length === 1) return str.charAt(0).toLowerCase();
+	return str.charAt(0).toLowerCase() + str.slice(1);
+};
 
-String.prototype.toTitleCase = String.prototype.toTitleCase ||
-	function () {
-		let str;
-		str = this.replace(/([^\W_]+[^\s-/]*) */g, function (txt) {
-			return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-		});
+String.prototype.toTitleCase = String.prototype.toTitleCase || function () {
+	let str;
+	str = this.replace(/([^\W_]+[^\s-/]*) */g, function (txt) {
+		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+	});
 
-		if (!StrUtil._TITLE_LOWER_WORDS_RE) {
-			StrUtil._TITLE_LOWER_WORDS_RE = StrUtil.TITLE_LOWER_WORDS.map(it => new RegExp(`\\s${it}\\s`, 'g'));
+	if (!StrUtil._TITLE_LOWER_WORDS_RE) {
+		StrUtil._TITLE_LOWER_WORDS_RE = StrUtil.TITLE_LOWER_WORDS.map(it => new RegExp(`\\s${it}\\s`, 'g'));
+	}
+
+	for (let i = 0; i < StrUtil.TITLE_LOWER_WORDS.length; i++) {
+		str = str.replace(
+			StrUtil._TITLE_LOWER_WORDS_RE[i],
+			(txt) => {
+				return txt.toLowerCase();
+			});
+	}
+
+	if (!StrUtil._TITLE_UPPER_WORDS_RE) {
+		StrUtil._TITLE_UPPER_WORDS_RE = StrUtil.TITLE_UPPER_WORDS.map(it => new RegExp(`\\b${it}\\b`, 'g'));
+	}
+
+	for (let i = 0; i < StrUtil.TITLE_UPPER_WORDS.length; i++) {
+		str = str.replace(
+			StrUtil._TITLE_UPPER_WORDS_RE[i],
+			StrUtil.TITLE_UPPER_WORDS[i].toUpperCase()
+		);
+	}
+
+	return str;
+};
+
+String.prototype.toSentenceCase = String.prototype.toSentenceCase || function () {
+	const out = [];
+	const re = /([^.!?]+)([.!?]\s*|$)/gi;
+	let m;
+	do {
+		m = re.exec(this);
+		if (m) {
+			out.push(m[0].toLowerCase().uppercaseFirst());
 		}
+	} while (m);
+	return out.join("");
+};
 
-		for (let i = 0; i < StrUtil.TITLE_LOWER_WORDS.length; i++) {
-			str = str.replace(
-				StrUtil._TITLE_LOWER_WORDS_RE[i],
-				(txt) => {
-					return txt.toLowerCase();
-				});
-		}
+String.prototype.toSpellCase = String.prototype.toSpellCase || function () {
+	return this.toLowerCase().replace(/(^|of )(bigby|otiluke|mordenkainen|evard|hadar|agatys|abi-dalzim|aganazzar|drawmij|leomund|maximilian|melf|nystul|otto|rary|snilloc|tasha|tenser|jim)('s|$| )/g, (...m) => `${m[1]}${m[2].toTitleCase()}${m[3]}`);
+};
 
-		if (!StrUtil._TITLE_UPPER_WORDS_RE) {
-			StrUtil._TITLE_UPPER_WORDS_RE = StrUtil.TITLE_UPPER_WORDS.map(it => new RegExp(`\\b${it}\\b`, 'g'));
-		}
+String.prototype.toCamelCase = String.prototype.toCamelCase || function () {
+	return this.split(" ").map((word, index) => {
+		if (index === 0) return word.toLowerCase();
+		return `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`;
+	}).join("");
+};
 
-		for (let i = 0; i < StrUtil.TITLE_UPPER_WORDS.length; i++) {
-			str = str.replace(
-				StrUtil._TITLE_UPPER_WORDS_RE[i],
-				StrUtil.TITLE_UPPER_WORDS[i].toUpperCase()
-			);
-		}
+String.prototype.escapeQuotes = String.prototype.escapeQuotes || function () {
+	return this.replace(/'/g, `&apos;`).replace(/"/g, `&quot;`);
+};
 
-		return str;
-	};
-
-String.prototype.toSentenceCase = String.prototype.toSentenceCase ||
-	function () {
-		const out = [];
-		const re = /([^.!?]+)([.!?]\s*|$)/gi;
-		let m;
-		do {
-			m = re.exec(this);
-			if (m) {
-				out.push(m[0].toLowerCase().uppercaseFirst());
-			}
-		} while (m);
-		return out.join("");
-	};
-
-String.prototype.toSpellCase = String.prototype.toSpellCase ||
-	function () {
-		return this.toLowerCase().replace(/(^|of )(bigby|otiluke|mordenkainen|evard|hadar|agatys|abi-dalzim|aganazzar|drawmij|leomund|maximilian|melf|nystul|otto|rary|snilloc|tasha|tenser|jim)('s|$| )/g, (...m) => `${m[1]}${m[2].toTitleCase()}${m[3]}`);
-	};
-
-String.prototype.toCamelCase = String.prototype.toCamelCase ||
-	function () {
-		return this.split(" ").map((word, index) => {
-			if (index === 0) return word.toLowerCase();
-			return `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`;
-		}).join("");
-	};
-
-String.prototype.escapeQuotes = String.prototype.escapeQuotes ||
-	function () {
-		return this.replace(/'/g, `&apos;`).replace(/"/g, `&quot;`);
-	};
-
-String.prototype.unescapeQuotes = String.prototype.unescapeQuotes ||
-	function () {
-		return this.replace(/&apos;/g, `'`).replace(/&quot;/g, `"`);
-	};
+String.prototype.unescapeQuotes = String.prototype.unescapeQuotes || function () {
+	return this.replace(/&apos;/g, `'`).replace(/&quot;/g, `"`);
+};
 
 /**
  * Calculates the Damerau-Levenshtein distance between two strings.
  * https://gist.github.com/IceCreamYou/8396172
  */
-String.prototype.distance = String.prototype.distance ||
-	function (target) {
-		let source = this; let i; let j;
-		if (!source) return target ? target.length : 0;
-		else if (!target) return source.length;
+String.prototype.distance = String.prototype.distance || function (target) {
+	let source = this; let i; let j;
+	if (!source) return target ? target.length : 0;
+	else if (!target) return source.length;
 
-		const m = source.length; const n = target.length; const INF = m + n; const score = new Array(m + 2); const sd = {};
-		for (i = 0; i < m + 2; i++) score[i] = new Array(n + 2);
-		score[0][0] = INF;
-		for (i = 0; i <= m; i++) {
-			score[i + 1][1] = i;
-			score[i + 1][0] = INF;
-			sd[source[i]] = 0;
-		}
-		for (j = 0; j <= n; j++) {
-			score[1][j + 1] = j;
-			score[0][j + 1] = INF;
-			sd[target[j]] = 0;
-		}
+	const m = source.length; const n = target.length; const INF = m + n; const score = new Array(m + 2); const sd = {};
+	for (i = 0; i < m + 2; i++) score[i] = new Array(n + 2);
+	score[0][0] = INF;
+	for (i = 0; i <= m; i++) {
+		score[i + 1][1] = i;
+		score[i + 1][0] = INF;
+		sd[source[i]] = 0;
+	}
+	for (j = 0; j <= n; j++) {
+		score[1][j + 1] = j;
+		score[0][j + 1] = INF;
+		sd[target[j]] = 0;
+	}
 
-		for (i = 1; i <= m; i++) {
-			let DB = 0;
-			for (j = 1; j <= n; j++) {
-				const i1 = sd[target[j - 1]]; const j1 = DB;
-				if (source[i - 1] === target[j - 1]) {
-					score[i + 1][j + 1] = score[i][j];
-					DB = j;
-				} else {
-					score[i + 1][j + 1] = Math.min(score[i][j], Math.min(score[i + 1][j], score[i][j + 1])) + 1;
-				}
-				score[i + 1][j + 1] = Math.min(score[i + 1][j + 1], score[i1] ? score[i1][j1] + (i - i1 - 1) + 1 + (j - j1 - 1) : Infinity);
+	for (i = 1; i <= m; i++) {
+		let DB = 0;
+		for (j = 1; j <= n; j++) {
+			const i1 = sd[target[j - 1]]; const j1 = DB;
+			if (source[i - 1] === target[j - 1]) {
+				score[i + 1][j + 1] = score[i][j];
+				DB = j;
+			} else {
+				score[i + 1][j + 1] = Math.min(score[i][j], Math.min(score[i + 1][j], score[i][j + 1])) + 1;
 			}
-			sd[source[i - 1]] = i;
+			score[i + 1][j + 1] = Math.min(score[i + 1][j + 1], score[i1] ? score[i1][j1] + (i - i1 - 1) + 1 + (j - j1 - 1) : Infinity);
 		}
-		return score[m + 1][n + 1];
-	};
+		sd[source[i - 1]] = i;
+	}
+	return score[m + 1][n + 1];
+};
 
-String.prototype.isNumeric = String.prototype.isNumeric ||
-	function () {
-		return !isNaN(parseFloat(this)) && isFinite(this);
-	};
+String.prototype.isNumeric = String.prototype.isNumeric || function () {
+	return !isNaN(parseFloat(this)) && isFinite(this);
+};
 
-String.prototype.last = String.prototype.last ||
-	function () {
-		return this[this.length - 1];
-	};
+String.prototype.last = String.prototype.last || function () {
+	return this[this.length - 1];
+};
 
-Array.prototype.joinConjunct = Array.prototype.joinConjunct ||
-	function (joiner, lastJoiner, nonOxford) {
-		if (this.length === 0) return "";
-		if (this.length === 1) return this[0];
-		if (this.length === 2) return this.join(lastJoiner);
-		else {
-			let outStr = "";
-			for (let i = 0; i < this.length; ++i) {
-				outStr += this[i];
-				if (i < this.length - 2) outStr += joiner;
-				else if (i === this.length - 2) outStr += `${(!nonOxford && this.length > 2 ? joiner.trim() : "")}${lastJoiner}`;
-			}
-			return outStr;
+Array.prototype.joinConjunct = Array.prototype.joinConjunct || function (joiner, lastJoiner, nonOxford) {
+	if (this.length === 0) return "";
+	if (this.length === 1) return this[0];
+	if (this.length === 2) return this.join(lastJoiner);
+	else {
+		let outStr = "";
+		for (let i = 0; i < this.length; ++i) {
+			outStr += this[i];
+			if (i < this.length - 2) outStr += joiner;
+			else if (i === this.length - 2) outStr += `${(!nonOxford && this.length > 2 ? joiner.trim() : "")}${lastJoiner}`;
 		}
-	};
-
-Array.prototype.peek = Array.prototype.peek ||
-	function () {
-		return this.slice(-1)[0];
-	};
+		return outStr;
+	}
+};
 
 StrUtil = {
 	COMMAS_NOT_IN_PARENTHESES_REGEX: /,\s?(?![^(]*\))/g,
@@ -280,14 +245,14 @@ RegExp.escape = function (string) {
 // PARSING =============================================================================================================
 Parser = {};
 Parser._parse_aToB = function (abMap, a, fallback) {
-	if (a === undefined || a === null) throw new Error("undefined or null object passed to parser");
+	if (a === undefined || a === null) throw new TypeError("undefined or null object passed to parser");
 	if (typeof a === "string") a = a.trim();
 	if (abMap[a] !== undefined) return abMap[a];
 	return fallback || a;
 };
 
 Parser._parse_bToA = function (abMap, b) {
-	if (b === undefined || b === null) throw new Error("undefined or null object passed to parser");
+	if (b === undefined || b === null) throw new TypeError("undefined or null object passed to parser");
 	if (typeof b === "string") b = b.trim();
 	for (const v in abMap) {
 		if (!abMap.hasOwnProperty(v)) continue;
@@ -308,7 +273,8 @@ Parser.attrChooseToFull = function (attList) {
 };
 
 Parser.numberToText = function (number) {
-	if (Math.abs(number) >= 100) return number;
+	if (number == null) throw new TypeError(`undefined or null object passed to parser`);
+	if (Math.abs(number) >= 100) return `${number}`;
 
 	function getAsText (num) {
 		const abs = Math.abs(num);
@@ -415,7 +381,7 @@ Parser._addCommas = function (intNum) {
 };
 
 Parser.crToXp = function (cr) {
-	if (cr.xp) return Parser._addCommas(cr.xp);
+	if (cr != null && cr.xp) return Parser._addCommas(cr.xp);
 
 	const toConvert = cr ? (cr.cr || cr) : null;
 	if (toConvert === "Unknown" || toConvert == null) return "Unknown";
@@ -427,7 +393,7 @@ Parser.crToXp = function (cr) {
 };
 
 Parser.crToXpNumber = function (cr) {
-	if (cr.xp) return cr.xp;
+	if (cr != null && cr.xp) return cr.xp;
 	const toConvert = cr ? (cr.cr || cr) : cr;
 	if (toConvert === "Unknown" || toConvert == null) return null;
 	return Parser.XP_CHART_ALT[toConvert];
@@ -687,43 +653,22 @@ Parser.dmgTypeToFull = function (dmgType) {
 };
 
 Parser.skillToExplanation = function (skillType) {
-	const fromBrew = MiscUtil.getProperty(BrewUtil.homebrewMeta, "skills", skillType);
+	const fromBrew = MiscUtil.get(BrewUtil.homebrewMeta, "skills", skillType);
 	if (fromBrew) return fromBrew;
 	return Parser._parse_aToB(Parser.SKILL_JSON_TO_FULL, skillType);
 };
 
 Parser.actionToExplanation = function (actionType) {
-	const fromBrew = MiscUtil.getProperty(BrewUtil.homebrewMeta, "actions", actionType);
+	const fromBrew = MiscUtil.get(BrewUtil.homebrewMeta, "actions", actionType);
 	if (fromBrew) return fromBrew;
 	return Parser._parse_aToB(Parser.ACTION_JSON_TO_FULL, actionType, ["No explanation available."]);
 };
 
 Parser.senseToExplanation = function (senseType) {
 	senseType = senseType.toLowerCase();
-	const fromBrew = MiscUtil.getProperty(BrewUtil.homebrewMeta, "senses", senseType);
+	const fromBrew = MiscUtil.get(BrewUtil.homebrewMeta, "senses", senseType);
 	if (fromBrew) return fromBrew;
 	return Parser._parse_aToB(Parser.SENSE_JSON_TO_FULL, senseType, ["No explanation available."]);
-};
-
-Parser.numberToString = function (num) {
-	if (num === 0) return "zero";
-	else return parse_hundreds(num);
-
-	function parse_hundreds (num) {
-		if (num > 99) {
-			return Parser.NUMBERS_ONES[Math.floor(num / 100)] + " hundred " + parse_tens(num % 100);
-		} else {
-			return parse_tens(num);
-		}
-	}
-
-	function parse_tens (num) {
-		if (num < 10) return Parser.NUMBERS_ONES[num];
-		else if (num >= 10 && num < 20) return Parser.NUMBERS_TEENS[num - 10];
-		else {
-			return Parser.NUMBERS_TENS[Math.floor(num / 10)] + " " + Parser.NUMBERS_ONES[num % 10];
-		}
-	}
 };
 
 // sp-prefix functions are for parsing spell data, and shared with the roll20 script
@@ -775,9 +720,10 @@ Parser.spLevelToFullLevelText = function (level, dash) {
 };
 
 Parser.spMetaToFull = function (meta) {
-	// these tags are (so far) mutually independent, so we don't need to combine the text
-	if (meta && meta.ritual) return " (ritual)";
-	if (meta && meta.technomagic) return " (technomagic)";
+	const out = [];
+	if (meta && meta.ritual) out.push("ritual");
+	if (meta && meta.technomagic) out.push("technomagic");
+	if (out.length) return ` (${out.join(", ")})`;
 	return "";
 };
 
@@ -787,20 +733,90 @@ Parser.spLevelSchoolMetaToFull = function (level, school, meta, subschools) {
 	return levelSchoolStr + Parser.spMetaToFull(meta);
 };
 
-Parser.spTimeListToFull = function (times) {
-	return times.map(t => `${Parser.getTimeToFull(t)}${t.condition ? `, ${Renderer.get().render(t.condition)}` : ""}`).join(" or ");
+Parser.spTimeListToFull = function (times, isStripTags) {
+	return times.map(t => `${Parser.getTimeToFull(t)}${t.condition ? `, ${isStripTags ? Renderer.stripTags(t.condition) : Renderer.get().render(t.condition)}` : ""}`).join(" or ");
 };
 
 Parser.getTimeToFull = function (time) {
 	return `${time.number} ${time.unit === "bonus" ? "bonus action" : time.unit}${time.number > 1 ? "s" : ""}`;
 };
 
-Parser.spRangeToFull = function (range) {
+RNG_SPECIAL = "special";
+RNG_POINT = "point";
+RNG_LINE = "line";
+RNG_CUBE = "cube";
+RNG_CONE = "cone";
+RNG_RADIUS = "radius";
+RNG_SPHERE = "sphere";
+RNG_HEMISPHERE = "hemisphere";
+RNG_CYLINDER = "cylinder"; // homebrew only
+RNG_SELF = "self";
+RNG_SIGHT = "sight";
+RNG_UNLIMITED = "unlimited";
+RNG_UNLIMITED_SAME_PLANE = "plane";
+RNG_TOUCH = "touch";
+Parser.SP_RANGE_TYPE_TO_FULL = {
+	[RNG_SPECIAL]: "Special",
+	[RNG_POINT]: "Point",
+	[RNG_LINE]: "Line",
+	[RNG_CUBE]: "Cube",
+	[RNG_CONE]: "Cone",
+	[RNG_RADIUS]: "Radius",
+	[RNG_SPHERE]: "Sphere",
+	[RNG_HEMISPHERE]: "Hemisphere",
+	[RNG_CYLINDER]: "Cylinder",
+	[RNG_SELF]: "Self",
+	[RNG_SIGHT]: "Sight",
+	[RNG_UNLIMITED]: "Unlimited",
+	[RNG_UNLIMITED_SAME_PLANE]: "Unlimited on the same plane",
+	[RNG_TOUCH]: "Touch"
+};
+
+Parser.spRangeTypeToFull = function (range) {
+	return Parser._parse_aToB(Parser.SP_RANGE_TYPE_TO_FULL, range);
+};
+
+UNT_FEET = "feet";
+UNT_MILES = "miles";
+Parser.SP_DIST_TYPE_TO_FULL = {
+	[UNT_FEET]: "Feet",
+	[UNT_MILES]: "Miles",
+	[RNG_SELF]: Parser.SP_RANGE_TYPE_TO_FULL[RNG_SELF],
+	[RNG_TOUCH]: Parser.SP_RANGE_TYPE_TO_FULL[RNG_TOUCH],
+	[RNG_SIGHT]: Parser.SP_RANGE_TYPE_TO_FULL[RNG_SIGHT],
+	[RNG_UNLIMITED]: Parser.SP_RANGE_TYPE_TO_FULL[RNG_UNLIMITED],
+	[RNG_UNLIMITED_SAME_PLANE]: Parser.SP_RANGE_TYPE_TO_FULL[RNG_UNLIMITED_SAME_PLANE]
+};
+
+Parser.spDistanceTypeToFull = function (range) {
+	return Parser._parse_aToB(Parser.SP_DIST_TYPE_TO_FULL, range);
+};
+
+Parser.SP_RANGE_TO_ICON = {
+	[RNG_SPECIAL]: "fa-star",
+	[RNG_POINT]: "",
+	[RNG_LINE]: "fa-grip-lines-vertical",
+	[RNG_CUBE]: "fa-cube",
+	[RNG_CONE]: "fa-traffic-cone",
+	[RNG_RADIUS]: "fa-hockey-puck",
+	[RNG_SPHERE]: "fa-globe",
+	[RNG_HEMISPHERE]: "fa-globe",
+	[RNG_CYLINDER]: "fa-database",
+	[RNG_SELF]: "fa-street-view",
+	[RNG_SIGHT]: "fa-eye",
+	[RNG_UNLIMITED_SAME_PLANE]: "fa-globe-americas",
+	[RNG_UNLIMITED]: "fa-infinity",
+	[RNG_TOUCH]: "fa-hand-paper"
+};
+
+Parser.spRangeTypeToIcon = function (range) {
+	return Parser._parse_aToB(Parser.SP_RANGE_TO_ICON, range);
+};
+
+Parser.spRangeToShortHtml = function (range) {
 	switch (range.type) {
-		case RNG_SPECIAL:
-			return "Special";
-		case RNG_POINT:
-			return renderPoint();
+		case RNG_SPECIAL: return `<span class="fas ${Parser.spRangeTypeToIcon(range.type)} help--subtle" title="Special"/>`;
+		case RNG_POINT: return Parser.spRangeToShortHtml._renderPoint(range);
 		case RNG_LINE:
 		case RNG_CUBE:
 		case RNG_CONE:
@@ -808,57 +824,82 @@ Parser.spRangeToFull = function (range) {
 		case RNG_SPHERE:
 		case RNG_HEMISPHERE:
 		case RNG_CYLINDER:
-			return renderArea();
+			return Parser.spRangeToShortHtml._renderArea(range);
 	}
-
-	function renderPoint () {
-		const dist = range.distance;
-		switch (dist.type) {
-			case RNG_SELF:
-				return "Self";
-			case RNG_SIGHT:
-				return "Sight";
-			case RNG_UNLIMITED:
-				return "Unlimited";
-			case RNG_UNLIMITED_SAME_PLANE:
-				return "Unlimited on the same plane";
-			case RNG_TOUCH:
-				return "Touch";
-			case UNT_FEET:
-			case UNT_MILES:
-			default:
-				return `${dist.amount} ${dist.amount === 1 ? Parser.getSingletonUnit(dist.type) : dist.type}`;
-		}
+};
+Parser.spRangeToShortHtml._renderPoint = function (range) {
+	const dist = range.distance;
+	switch (dist.type) {
+		case RNG_SELF:
+		case RNG_SIGHT:
+		case RNG_UNLIMITED:
+		case RNG_UNLIMITED_SAME_PLANE:
+		case RNG_SPECIAL:
+		case RNG_TOUCH: return `<span class="fas ${Parser.spRangeTypeToIcon(dist.type)} help--subtle" title="${Parser.spRangeTypeToFull(dist.type)}"/>`;
+		case UNT_FEET:
+		case UNT_MILES:
+		default:
+			return `${dist.amount} <span class="small">${Parser.getSingletonUnit(dist.type, true)}</span>`;
 	}
+};
+Parser.spRangeToShortHtml._renderArea = function (range) {
+	const size = range.distance;
+	return `<span class="fas ${Parser.spRangeTypeToIcon(RNG_SELF)} help--subtle" title="Self"/> ${size.amount}<span class="small">-${Parser.getSingletonUnit(size.type, true)}</span> ${Parser.spRangeToShortHtml._getAreaStyleString(range)}`;
+};
+Parser.spRangeToShortHtml._getAreaStyleString = function (range) {
+	return `<span class="fas ${Parser.spRangeTypeToIcon(range.type)} help--subtle" title="${Parser.spRangeTypeToFull(range.type)}"/>`
+};
 
-	function renderArea () {
-		const size = range.distance;
-		return `Self (${size.amount}-${Parser.getSingletonUnit(size.type)}${getAreaStyleStr()}${range.type === RNG_CYLINDER ? `, ${size.amountSecondary}-${Parser.getSingletonUnit(size.typeSecondary)}-high cylinder` : ""})`;
-
-		function getAreaStyleStr () {
-			switch (range.type) {
-				case RNG_SPHERE:
-					return " radius";
-				case RNG_HEMISPHERE:
-					return `-radius ${range.type}`;
-				case RNG_CYLINDER:
-					return "-radius";
-
-				default:
-					return ` ${range.type}`;
-			}
-		}
+Parser.spRangeToFull = function (range) {
+	switch (range.type) {
+		case RNG_SPECIAL: return Parser.spRangeTypeToFull(range.type);
+		case RNG_POINT: return Parser.spRangeToFull._renderPoint(range);
+		case RNG_LINE:
+		case RNG_CUBE:
+		case RNG_CONE:
+		case RNG_RADIUS:
+		case RNG_SPHERE:
+		case RNG_HEMISPHERE:
+		case RNG_CYLINDER:
+			return Parser.spRangeToFull._renderArea(range);
+	}
+};
+Parser.spRangeToFull._renderPoint = function (range) {
+	const dist = range.distance;
+	switch (dist.type) {
+		case RNG_SELF:
+		case RNG_SIGHT:
+		case RNG_UNLIMITED:
+		case RNG_UNLIMITED_SAME_PLANE:
+		case RNG_SPECIAL:
+		case RNG_TOUCH: return Parser.spRangeTypeToFull(dist.type);
+		case UNT_FEET:
+		case UNT_MILES:
+		default:
+			return `${dist.amount} ${dist.amount === 1 ? Parser.getSingletonUnit(dist.type) : dist.type}`;
+	}
+}
+Parser.spRangeToFull._renderArea = function (range) {
+	const size = range.distance;
+	return `Self (${size.amount}-${Parser.getSingletonUnit(size.type)}${Parser.spRangeToFull._getAreaStyleString(range)}${range.type === RNG_CYLINDER ? `, ${size.amountSecondary}-${Parser.getSingletonUnit(size.typeSecondary)}-high cylinder` : ""})`;
+};
+Parser.spRangeToFull._getAreaStyleString = function (range) {
+	switch (range.type) {
+		case RNG_SPHERE: return " radius";
+		case RNG_HEMISPHERE: return `-radius ${range.type}`;
+		case RNG_CYLINDER: return "-radius";
+		default: return ` ${range.type}`;
 	}
 };
 
-Parser.getSingletonUnit = function (unit) {
+Parser.getSingletonUnit = function (unit, isShort) {
 	switch (unit) {
 		case UNT_FEET:
-			return "foot";
+			return isShort ? "ft." : "foot";
 		case UNT_MILES:
-			return "mile";
+			return isShort ? "mi." : "mile";
 		default: {
-			const fromBrew = MiscUtil.getProperty(BrewUtil.homebrewMeta, "spellDistanceUnits", unit, "singular");
+			const fromBrew = MiscUtil.get(BrewUtil.homebrewMeta, "spellDistanceUnits", unit, "singular");
 			if (fromBrew) return fromBrew;
 			if (unit.charAt(unit.length - 1) === "s") return unit.slice(0, -1);
 			return unit;
@@ -866,16 +907,50 @@ Parser.getSingletonUnit = function (unit) {
 	}
 };
 
-Parser.spComponentsToFull = function (spell) {
-	const comp = spell.components;
+Parser.RANGE_TYPES = [
+	{type: RNG_POINT, hasDistance: true, isRequireAmount: false},
+
+	{type: RNG_LINE, hasDistance: true, isRequireAmount: true},
+	{type: RNG_CUBE, hasDistance: true, isRequireAmount: true},
+	{type: RNG_CONE, hasDistance: true, isRequireAmount: true},
+	{type: RNG_RADIUS, hasDistance: true, isRequireAmount: true},
+	{type: RNG_SPHERE, hasDistance: true, isRequireAmount: true},
+	{type: RNG_HEMISPHERE, hasDistance: true, isRequireAmount: true},
+	{type: RNG_CYLINDER, hasDistance: true, isRequireAmount: true},
+
+	{type: RNG_SPECIAL, hasDistance: false, isRequireAmount: false}
+];
+
+Parser.DIST_TYPES = [
+	{type: RNG_SELF, hasAmount: false},
+	{type: RNG_TOUCH, hasAmount: false},
+
+	{type: UNT_FEET, hasAmount: true},
+	{type: UNT_MILES, hasAmount: true},
+
+	{type: RNG_SIGHT, hasAmount: false},
+	{type: RNG_UNLIMITED_SAME_PLANE, hasAmount: false},
+	{type: RNG_UNLIMITED, hasAmount: false}
+];
+
+Parser.spComponentsToFull = function (comp, level) {
 	if (!comp) return "None";
 	const out = [];
 	if (comp.v) out.push("V");
 	if (comp.s) out.push("S");
-	if (comp.m) out.push(`M${comp.m !== true ? ` (${comp.m.text || comp.m})` : ""}`);
-	if (comp.r) out.push(`R (${spell.level} gp)`);
-	return out.join(", ");
+	if (comp.m != null) out.push(`M${comp.m !== true ? ` (${comp.m.text != null ? comp.m.text : comp.m})` : ""}`);
+	if (comp.r) out.push(`R (${level} gp)`);
+	return out.join(", ") || "None";
 };
+
+Parser.SP_END_TYPE_TO_FULL = {
+	"dispel": "dispelled",
+	"trigger": "triggered",
+	"discharge": "discharged"
+};
+Parser.spEndTypeToFull = function (type) {
+	return Parser._parse_aToB(Parser.SP_END_TYPE_TO_FULL, type);
+}
 
 Parser.spDurationToFull = function (dur) {
 	return dur.map(d => {
@@ -888,13 +963,30 @@ Parser.spDurationToFull = function (dur) {
 				return `${d.concentration ? "Concentration, " : ""}${d.concentration ? "u" : d.duration.upTo ? "U" : ""}${d.concentration || d.duration.upTo ? "p to " : ""}${d.duration.amount} ${d.duration.amount === 1 ? d.duration.type : `${d.duration.type}s`}`;
 			case "permanent":
 				if (d.ends) {
-					return `Until ${d.ends.map(m => m === "dispel" ? "dispelled" : m === "trigger" ? "triggered" : m === "discharge" ? "discharged" : undefined).join(" or ")}`;
+					return `Until ${d.ends.map(m => Parser.spEndTypeToFull(m)).join(" or ")}`;
 				} else {
 					return "Permanent";
 				}
 		}
 	}).join(" or ") + (dur.length > 1 ? " (see below)" : "");
 };
+
+Parser.DURATION_TYPES = [
+	{type: "instant", full: "Instantaneous"},
+	{type: "timed", hasAmount: true},
+	{type: "permanent", hasEnds: true},
+	{type: "special"}
+];
+
+Parser.DURATION_AMOUNT_TYPES = [
+	"turn",
+	"round",
+	"minute",
+	"hour",
+	"day",
+	"week",
+	"year"
+];
 
 Parser.spClassesToFull = function (classes, textOnly) {
 	const fromSubclasses = Parser.spSubclassesToFull(classes, textOnly);
@@ -925,7 +1017,7 @@ Parser._spSubclassItem = function (fromSubclass, textOnly, subclassLookup) {
 	const text = `${sc.name}${sc.subSubclass ? ` (${sc.subSubclass})` : ""}`;
 	if (textOnly) return text;
 	const classPart = `<a href="${UrlUtil.PG_CLASSES}#${UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES](c)}" title="Source: ${Parser.sourceJsonToFull(c.source)}">${c.name}</a>`;
-	const fromLookup = subclassLookup ? MiscUtil.getProperty(subclassLookup, c.source, c.name, sc.source, sc.name) : null;
+	const fromLookup = subclassLookup ? MiscUtil.get(subclassLookup, c.source, c.name, sc.source, sc.name) : null;
 	if (fromLookup) return `<a class="italic" href="${UrlUtil.PG_CLASSES}#${UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES](c)}${HASH_PART_SEP}${HASH_SUBCLASS}${UrlUtil.encodeForHash(fromLookup)}${HASH_SUB_LIST_SEP}${UrlUtil.encodeForHash(sc.source)}" title="Source: ${Parser.sourceJsonToFull(fromSubclass.subclass.source)}">${text}</a> ${classPart}`;
 	else return `<span class="italic" title="Source: ${Parser.sourceJsonToFull(fromSubclass.subclass.source)}">${text}</span> ${classPart}`;
 };
@@ -954,6 +1046,26 @@ Parser.SPELL_AREA_TYPE_TO_FULL = {
 };
 Parser.spAreaTypeToFull = function (type) {
 	return Parser._parse_aToB(Parser.SPELL_AREA_TYPE_TO_FULL, type);
+};
+
+Parser.SP_MISC_TAG_TO_FULL = {
+	HL: "Healing",
+	SGT: "Requires Sight",
+	PRM: "Permanent Effects",
+	SCL: "Scaling Effects",
+	SMN: "Summons Creature"
+};
+Parser.spMiscTagToFull = function (type) {
+	return Parser._parse_aToB(Parser.SP_MISC_TAG_TO_FULL, type);
+};
+
+Parser.SP_CASTER_PROGRESSION_TO_FULL = {
+	full: "Full",
+	"1/2": "Half",
+	"1/3": "One-Third"
+};
+Parser.spCasterProgressionToFull = function (type) {
+	return Parser._parse_aToB(Parser.SP_CASTER_PROGRESSION_TO_FULL, type);
 };
 
 // mon-prefix functions are for parsing monster data, and shared with the roll20 script
@@ -1146,7 +1258,7 @@ Parser.OPT_FEATURE_TYPE_TO_FULL = {
 	ED: "Elemental Discipline",
 	EI: "Eldritch Invocation",
 	MM: "Metamagic",
-	"MV:B": "Maneuver, Battlemaster",
+	"MV:B": "Maneuver, Battle Master",
 	"MV:C2-UA": "Maneuver, Cavalier V2 (UA)",
 	"AS:V1-UA": "Arcane Shot, V1 (UA)",
 	"AS:V2-UA": "Arcane Shot, V2 (UA)",
@@ -1494,6 +1606,54 @@ SKL_ABV_NEC = "N";
 SKL_ABV_TRA = "T";
 SKL_ABV_CON = "C";
 SKL_ABV_PSI = "P";
+Parser.SKL_ABVS = [
+	SKL_ABV_ABJ,
+	SKL_ABV_EVO,
+	SKL_ABV_ENC,
+	SKL_ABV_ILL,
+	SKL_ABV_DIV,
+	SKL_ABV_NEC,
+	SKL_ABV_TRA,
+	SKL_ABV_CON,
+	SKL_ABV_PSI
+];
+
+Parser.SP_TM_ACTION = "action";
+Parser.SP_TM_B_ACTION = "bonus";
+Parser.SP_TM_REACTION = "reaction";
+Parser.SP_TM_ROUND = "round";
+Parser.SP_TM_MINS = "minute";
+Parser.SP_TM_HRS = "hour";
+Parser.SP_TIME_SINGLETONS = [Parser.SP_TM_ACTION, Parser.SP_TM_B_ACTION, Parser.SP_TM_REACTION, Parser.SP_TM_ROUND];
+Parser.SP_TIME_TO_FULL = {
+	[Parser.SP_TM_ACTION]: "Action",
+	[Parser.SP_TM_B_ACTION]: "Bonus Action",
+	[Parser.SP_TM_REACTION]: "Reaction",
+	[Parser.SP_TM_ROUND]: "Rounds",
+	[Parser.SP_TM_MINS]: "Minutes",
+	[Parser.SP_TM_HRS]: "Hours"
+};
+Parser.spTimeUnitToFull = function (timeUnit) {
+	return Parser._parse_aToB(Parser.SP_TIME_TO_FULL, timeUnit);
+};
+
+Parser.SP_TIME_TO_ABV = {
+	[Parser.SP_TM_ACTION]: "A",
+	[Parser.SP_TM_B_ACTION]: "BA",
+	[Parser.SP_TM_REACTION]: "R",
+	[Parser.SP_TM_ROUND]: "rnd",
+	[Parser.SP_TM_MINS]: "min",
+	[Parser.SP_TM_HRS]: "hr"
+};
+Parser.spTimeUnitToAbv = function (timeUnit) {
+	return Parser._parse_aToB(Parser.SP_TIME_TO_ABV, timeUnit);
+};
+
+Parser.spTimeToShort = function (time, isHtml) {
+	return (time.number === 1 && Parser.SP_TIME_SINGLETONS.includes(time.unit))
+		? `${Parser.spTimeUnitToAbv(time.unit)}${time.condition ? "*" : ""}`
+		: `${time.number} ${isHtml ? `<span class="small">` : ""}${Parser.spTimeUnitToAbv(time.unit)}${isHtml ? `</span>` : ""}${time.condition ? "*" : ""}`;
+};
 
 SKL_ABJ = "Abjuration";
 SKL_EVO = "Evocation";
@@ -1675,6 +1835,9 @@ SRC_AI = "AI";
 SRC_OoW = "OoW";
 SRC_DIP = "DIP";
 SRC_HftT = "HftT";
+SRC_DC = "DC";
+SRC_SLW = "SLW";
+SRC_SDW = "SDW";
 SRC_AL = "AL";
 SRC_SCREEN = "Screen";
 
@@ -1740,6 +1903,8 @@ SRC_UAWGE = SRC_UA_PREFIX + "WGE";
 SRC_UAOSS = SRC_UA_PREFIX + "OfShipsAndSea";
 SRC_UASIK = SRC_UA_PREFIX + "Sidekicks";
 SRC_UAAR = SRC_UA_PREFIX + "ArtificerRevisited";
+SRC_UABAM = SRC_UA_PREFIX + "BarbarianAndMonk";
+SRC_UASAW = SRC_UA_PREFIX + "SorcererAndWarlock";
 
 SRC_3PP_SUFFIX = " 3pp";
 SRC_STREAM = "Stream";
@@ -1794,6 +1959,9 @@ Parser.SOURCE_JSON_TO_FULL[SRC_AI] = "Acquisitions Incorporated";
 Parser.SOURCE_JSON_TO_FULL[SRC_OoW] = "The Orrery of the Wanderer";
 Parser.SOURCE_JSON_TO_FULL[SRC_DIP] = "Dragon of Icespire Peak";
 Parser.SOURCE_JSON_TO_FULL[SRC_HftT] = "Hunt for the Thessalhydra";
+Parser.SOURCE_JSON_TO_FULL[SRC_DC] = "Divine Contention";
+Parser.SOURCE_JSON_TO_FULL[SRC_SLW] = "Storm Lord's Wrath";
+Parser.SOURCE_JSON_TO_FULL[SRC_SDW] = "Sleeping Dragon's Wake";
 Parser.SOURCE_JSON_TO_FULL[SRC_AL] = "Adventurers' League";
 Parser.SOURCE_JSON_TO_FULL[SRC_SCREEN] = "Dungeon Master's Screen";
 Parser.SOURCE_JSON_TO_FULL[SRC_ALCoS] = AL_PREFIX + "Curse of Strahd";
@@ -1852,6 +2020,8 @@ Parser.SOURCE_JSON_TO_FULL[SRC_UAWGE] = "Wayfinder's Guide to Eberron";
 Parser.SOURCE_JSON_TO_FULL[SRC_UAOSS] = UA_PREFIX + "Of Ships and the Sea";
 Parser.SOURCE_JSON_TO_FULL[SRC_UASIK] = UA_PREFIX + "Sidekicks";
 Parser.SOURCE_JSON_TO_FULL[SRC_UAAR] = UA_PREFIX + "Artificer Revisited";
+Parser.SOURCE_JSON_TO_FULL[SRC_UABAM] = UA_PREFIX + "Barbarian and Monk";
+Parser.SOURCE_JSON_TO_FULL[SRC_UASAW] = UA_PREFIX + "Sorcerer and Warlock";
 Parser.SOURCE_JSON_TO_FULL[SRC_STREAM] = "Livestream";
 Parser.SOURCE_JSON_TO_FULL[SRC_TWITTER] = "Twitter";
 
@@ -1896,6 +2066,9 @@ Parser.SOURCE_JSON_TO_ABV[SRC_AI] = "AI";
 Parser.SOURCE_JSON_TO_ABV[SRC_OoW] = "OoW";
 Parser.SOURCE_JSON_TO_ABV[SRC_DIP] = "DIP";
 Parser.SOURCE_JSON_TO_ABV[SRC_HftT] = "HftT";
+Parser.SOURCE_JSON_TO_ABV[SRC_DC] = "DC";
+Parser.SOURCE_JSON_TO_ABV[SRC_SLW] = "SLW";
+Parser.SOURCE_JSON_TO_ABV[SRC_SDW] = "SDW";
 Parser.SOURCE_JSON_TO_ABV[SRC_AL] = "AL";
 Parser.SOURCE_JSON_TO_ABV[SRC_SCREEN] = "Screen";
 Parser.SOURCE_JSON_TO_ABV[SRC_ALCoS] = "ALCoS";
@@ -1954,6 +2127,8 @@ Parser.SOURCE_JSON_TO_ABV[SRC_UAWGE] = "WGE";
 Parser.SOURCE_JSON_TO_ABV[SRC_UAOSS] = "UAOSS";
 Parser.SOURCE_JSON_TO_ABV[SRC_UASIK] = "UASIK";
 Parser.SOURCE_JSON_TO_ABV[SRC_UAAR] = "UAAR";
+Parser.SOURCE_JSON_TO_ABV[SRC_UABAM] = "UABAM";
+Parser.SOURCE_JSON_TO_ABV[SRC_UASAW] = "UASAW";
 Parser.SOURCE_JSON_TO_ABV[SRC_STREAM] = "Stream";
 Parser.SOURCE_JSON_TO_ABV[SRC_TWITTER] = "Twitter";
 
@@ -2133,13 +2308,13 @@ Parser.NUMBERS_TEENS = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fift
 // SOURCES =============================================================================================================
 SourceUtil = {
 	hasBeenReprinted (shortName, source) {
-		return (shortName !== undefined && shortName !== null && source !== undefined && source !== null) &&
-			(
-				(shortName === "Sun Soul" && source === SRC_SCAG) ||
-				(shortName === "Mastermind" && source === SRC_SCAG) ||
-				(shortName === "Swashbuckler" && source === SRC_SCAG) ||
-				(shortName === "Storm" && source === SRC_SCAG) ||
-				(shortName === "Deep Stalker Conclave" && source === SRC_UATRR)
+		return (shortName !== undefined && shortName !== null && source !== undefined && source !== null)
+			&& (
+				(shortName === "Sun Soul" && source === SRC_SCAG)
+				|| (shortName === "Mastermind" && source === SRC_SCAG)
+				|| (shortName === "Swashbuckler" && source === SRC_SCAG)
+				|| (shortName === "Storm" && source === SRC_SCAG)
+				|| (shortName === "Deep Stalker Conclave" && source === SRC_UATRR)
 			);
 	},
 
@@ -2162,29 +2337,25 @@ SourceUtil = {
 };
 
 // CONVENIENCE/ELEMENTS ================================================================================================
-Math.sum = Math.sum ||
-	function (...values) {
-		return values.reduce((a, b) => a + b, 0);
-	};
+Math.sum = Math.sum || function (...values) {
+	return values.reduce((a, b) => a + b, 0);
+};
 
-Math.mean = Math.mean ||
-	function (...values) {
-		return Math.sum(...values) / values.length;
-	};
+Math.mean = Math.mean || function (...values) {
+	return Math.sum(...values) / values.length;
+};
 
-Math.meanAbsoluteDeviation = Math.meanAbsoluteDeviation ||
-	function (...values) {
-		const mean = Math.mean(...values);
-		return Math.mean(...(values.map(num => Math.abs(num - mean))));
-	};
+Math.meanAbsoluteDeviation = Math.meanAbsoluteDeviation || function (...values) {
+	const mean = Math.mean(...values);
+	return Math.mean(...(values.map(num => Math.abs(num - mean))));
+};
 
-Math.seed = Math.seed ||
-	function (s) {
-		return function () {
-			s = Math.sin(s) * 10000;
-			return s - Math.floor(s);
-		};
+Math.seed = Math.seed || function (s) {
+	return function () {
+		s = Math.sin(s) * 10000;
+		return s - Math.floor(s);
 	};
+};
 
 function xor (a, b) {
 	return !a !== !b;
@@ -2257,14 +2428,13 @@ JqueryUtil = {
 		};
 
 		$.fn.extend({
-			disableSpellcheck: function () {
-				this.attr("autocomplete", "off").attr("autocapitalize", "off").attr("spellcheck", "false");
-				return this;
-			},
+			disableSpellcheck: function () { return this.attr("autocomplete", "off").attr("autocapitalize", "off").attr("spellcheck", "false"); },
 
 			tag: function () {
 				return this.prop("tagName").toLowerCase();
-			}
+			},
+
+			title: function (title) { return this.attr("title", title); }
 		});
 
 		$.event.special.destroyed = {
@@ -2282,9 +2452,7 @@ JqueryUtil = {
 		// Add a selector to match contained text (case insensitive)
 		$.expr[':'].containsInsensitive = (el, i, m) => {
 			const searchText = m[3];
-			const textNode = $(el).contents().filter((i, e) => {
-				return e.nodeType === 3;
-			})[0];
+			const textNode = $(el).contents().filter((i, e) => e.nodeType === 3)[0];
 			if (!textNode) return false;
 			const match = textNode.nodeValue.toLowerCase().trim().match(`${RegExp.escape(searchText.toLowerCase().trim())}`);
 			return match && match.length > 0;
@@ -2417,6 +2585,13 @@ ObjUtil = {
 
 // TODO refactor other misc utils into this
 MiscUtil = {
+	COLOR_HEALTHY: "#00bb20",
+	COLOR_HURT: "#c5ca00",
+	COLOR_BLOODIED: "#f7a100",
+	COLOR_DEFEATED: "#cc0000",
+
+	STR_SEE_CONSOLE: "See the console (CTRL+SHIFT+J) for more information.",
+
 	copy (obj) {
 		return JSON.parse(JSON.stringify(obj));
 	},
@@ -2448,7 +2623,7 @@ MiscUtil = {
 		return true;
 	},
 
-	getProperty (object, ...path) {
+	get (object, ...path) {
 		for (let i = 0; i < path.length; ++i) {
 			object = object[path[i]];
 			if (object == null) return object;
@@ -2494,7 +2669,8 @@ MiscUtil = {
 	},
 
 	isInInput (event) {
-		return event.target.nodeName === "INPUT" || event.target.nodeName === "TEXTAREA";
+		return event.target.nodeName === "INPUT" || event.target.nodeName === "TEXTAREA"
+			|| event.target.getAttribute("contenteditable") === "true";
 	},
 
 	expEval (str) {
@@ -2707,6 +2883,53 @@ MiscUtil = {
 
 	pDelay (msecs) {
 		return new Promise(resolve => setTimeout(() => resolve(), msecs));
+	},
+
+	getWalker (keyBlacklist = new Set()) {
+		function applyHandlers (handlers, ident, obj, lastKey) {
+			if (!(handlers instanceof Array)) handlers = [handlers];
+			handlers.forEach(h => obj = h(ident, obj, lastKey));
+			return obj;
+		}
+
+		const fn = (ident, obj, primitiveHandlers, lastKey) => {
+			if (obj == null) {
+				if (primitiveHandlers.null) return applyHandlers(primitiveHandlers.null, ident, obj, lastKey);
+				return obj;
+			}
+
+			const to = typeof obj;
+			switch (to) {
+				case undefined:
+					if (primitiveHandlers.undefined) return applyHandlers(primitiveHandlers.undefined, ident, obj, lastKey);
+					return obj;
+				case "boolean":
+					if (primitiveHandlers.boolean) return applyHandlers(primitiveHandlers.boolean, ident, obj, lastKey);
+					return obj;
+				case "number":
+					if (primitiveHandlers.number) return applyHandlers(primitiveHandlers.number, ident, obj, lastKey);
+					return obj;
+				case "string":
+					if (primitiveHandlers.string) return applyHandlers(primitiveHandlers.string, ident, obj, lastKey);
+					return obj;
+				case "object": {
+					if (obj instanceof Array) {
+						if (primitiveHandlers.array) obj = applyHandlers(primitiveHandlers.array, ident, obj, lastKey);
+						return obj.map(it => fn(ident, it, primitiveHandlers, lastKey));
+					} else {
+						if (primitiveHandlers.object) obj = applyHandlers(primitiveHandlers.object, ident, obj, lastKey);
+						Object.keys(obj).forEach(k => {
+							const v = obj[k];
+							if (!keyBlacklist.has(k)) obj[k] = fn(ident, v, primitiveHandlers, k);
+						});
+						return obj;
+					}
+				}
+				default: throw new Error(`Unhandled type "${to}"`);
+			}
+		};
+
+		return {walk: fn};
 	}
 };
 
@@ -2757,10 +2980,14 @@ ContextUtil = {
 		let i = 0;
 		labels.forEach(it => {
 			if (it === null) tempString += `<li class="divider"/>`;
-			else if (it.disabled) {
-				tempString += `<li class="disabled"><a href="${STR_VOID_LINK}">${it.text}</a></li>`;
+			else if (typeof it === "object") {
+				if (it.disabled) tempString += `<li class="disabled"><span>${it.text}</span></li>`;
+				else {
+					tempString += `<li><span data-ctx-id="${i}" ${it.title ? `title="${it.title.escapeQuotes()}"` : ""}>${it.text}</span></li>`;
+					i++;
+				}
 			} else {
-				tempString += `<li><a data-ctx-id="${i}" href="${STR_VOID_LINK}">${it}</a></li>`;
+				tempString += `<li><span data-ctx-id="${i}">${it}</span></li>`;
 				i++;
 			}
 		});
@@ -2777,7 +3004,6 @@ ContextUtil = {
 	},
 
 	handleOpenContextMenu: (evt, ele, menuId, closeHandler) => {
-		if (evt.ctrlKey) return;
 		evt.preventDefault();
 		evt.stopPropagation();
 		const thisId = ContextUtil._ctxOpenRefsNextId++;
@@ -2790,7 +3016,7 @@ ContextUtil = {
 				top: ContextUtil._getMenuPosition(menuId, evt.clientY, "height", "scrollTop")
 			})
 			.off("click")
-			.on("click", "a", function (e) {
+			.on("click", "span", function (e) {
 				$menu.hide();
 				if (ContextUtil._ctxOpenRefs[menuId][thisId]) ContextUtil._ctxOpenRefs[menuId][thisId](true);
 				delete ContextUtil._ctxOpenRefs[menuId][thisId];
@@ -3655,7 +3881,7 @@ ListUtil = {
 		function getAsCsv () {
 			const headers = $pnlCols.find(`input:checked`).map((i, e) => $(e).data("name")).get();
 			const rows = $modalInner.find(`.data-row`).map((i, e) => $(e)).get().map($e => {
-				return $e.find(`td:visible`).map((j, d) => $(d).text()).get();
+				return $e.children().filter(`td:visible`).map((j, d) => $(d).text().trim()).get();
 			});
 			return DataUtil.getCsv(headers, rows);
 		}
@@ -3771,6 +3997,7 @@ function getFilterWithMergedOptions (baseOptions, addOptions) {
  */
 async function pInitFilterBox (opts) {
 	opts.$wrpFormTop = $(`#${ID_SEARCH_BAR}`);
+	opts.$wrpFormTop.attr("title", "Hotkey: f");
 	opts.$btnReset = $(`#${ID_RESET_BUTTON}`);
 	const filterBox = new FilterBox(opts);
 	await filterBox.pDoLoadState();
@@ -3834,7 +4061,7 @@ UrlUtil = {
 			if (out[k].length === 1 && out[k] === HASH_SUB_NONE) out[k] = [];
 			return out;
 		} else {
-			throw new Error(`Baldy formatted subhash ${subHash}`)
+			throw new Error(`Badly formatted subhash ${subHash}`)
 		}
 	},
 
@@ -4071,6 +4298,8 @@ SortUtil = {
 		return SortUtil._ascSort(a, b);
 	},
 
+	ascSortProp: (prop, a, b) => { return SortUtil.ascSort(a[prop], b[prop]); },
+
 	ascSortLower: (a, b) => {
 		if (typeof FilterItem !== "undefined") {
 			if (a instanceof FilterItem) a = a.item;
@@ -4079,6 +4308,8 @@ SortUtil = {
 
 		return SortUtil._ascSort(a.toLowerCase(), b.toLowerCase());
 	},
+
+	ascSortLowerProp: (prop, a, b) => { return SortUtil.ascSortLower(a[prop], b[prop]); },
 
 	// warning: slow
 	ascSortNumericalSuffix (a, b) {
@@ -4373,9 +4604,9 @@ DataUtil = {
 		// TODO in future, allow value to be e.g. a string (assumed to be an official data's source); an object e.g. `{type: external, url: <>}`,...
 		switch (key) {
 			case "monster": {
-				const index = await DataUtil.loadJSON(`data/bestiary/index.json`);
+				const index = await DataUtil.loadJSON(`${Renderer.get().baseUrl}data/bestiary/index.json`);
 				if (!index[value]) throw new Error(`Bestiary index did not contain source "${value}"`);
-				return `data/bestiary/${index[value]}`;
+				return `${Renderer.get().baseUrl}data/bestiary/${index[value]}`;
 			}
 			default: throw new Error(`Could not get loadable URL for \`${JSON.stringify({key, value})}\``);
 		}
@@ -4583,10 +4814,7 @@ StorageUtil = {
 
 		StorageUtil._initAsync = true;
 
-		try {
-			await localforage.setItem("_storage_check", true);
-			return localforage;
-		} catch (e) {
+		const getInitFakeStorage = () => {
 			StorageUtil.__fakeStorageAsync = true;
 			StorageUtil._fakeStorageAsync = {
 				pIsAsyncFake: true,
@@ -4601,7 +4829,22 @@ StorageUtil = {
 				}
 			};
 			return StorageUtil._fakeStorageAsync;
-		}
+		};
+
+		if (typeof window !== "undefined") {
+			try {
+				// check if IndexedDB is available (i.e. not in Firefox private browsing)
+				await new Promise((resolve, reject) => {
+					const request = window.indexedDB.open("_test_db", 1);
+					request.onerror = reject;
+					request.onsuccess = resolve;
+				});
+				await localforage.setItem("_storage_check", true);
+				return localforage;
+			} catch (e) {
+				return getInitFakeStorage();
+			}
+		} else return getInitFakeStorage();
 	},
 
 	// SYNC METHODS ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4779,7 +5022,7 @@ BrewUtil = {
 		if (options.filterBox) BrewUtil._filterBox = options.filterBox;
 		if (options.sourceFilter) BrewUtil._sourceFilter = options.sourceFilter;
 		// allow external source for handleBrew
-		if (options.pHandleBrew) this._pHandleBrew = options.pHandleBrew;
+		if (options.pHandleBrew !== undefined) this._pHandleBrew = options.pHandleBrew;
 	},
 
 	async pAddBrewData () {
@@ -4848,7 +5091,6 @@ BrewUtil = {
 					await DataUtil.pDoMetaMerge(json);
 
 					await BrewUtil.pDoHandleBrewJson(json, page, BrewUtil._pRenderBrewScreen_pRefreshBrewList.bind(this, $appendTo, $overlay, $brewList));
-					await ExcludeUtil.pSetList(json.blacklist || []);
 
 					if (input.files[readIndex]) reader.readAsText(input.files[readIndex++]);
 					else $(evt.target).val(""); // reset the input
@@ -4898,7 +5140,7 @@ BrewUtil = {
 							<button class="col-3 sort btn btn-default btn-xs" data-sort="author">Author</button>
 							<button class="col-2 sort btn btn-default btn-xs" data-sort="category">Category</button>
 							<button class="col-2 sort btn btn-default btn-xs" data-sort="timestamp">Added</button>
-							<button class="col-1 sort btn btn-default btn-xs" disabled>Source</button>
+							<button class="sort btn btn-default btn-xs" disabled>Source</button>
 						</div>
 						${$ulRows}
 					</div>
@@ -5204,7 +5446,7 @@ BrewUtil = {
 							<button class="col-5 sort btn btn-default btn-xs" data-sort="source">Source</button>
 							<button class="col-4 sort btn btn-default btn-xs" data-sort="authors">Authors</button>
 							<button class="col-1 btn btn-default btn-xs" disabled>Origin</button>
-							<button class="col-2 btn btn-default btn-xs" disabled>&nbsp;</button>
+							<button class="btn btn-default btn-xs" disabled>&nbsp;</button>
 						</div>
 						<ul class="list-display-only brew-list brew-list--target"></ul>
 						<ul class="list-display-only brew-list brew-list--groups"></ul>
@@ -5276,6 +5518,7 @@ BrewUtil = {
 						<span class="col-5 manbrew__col--tall source manbrew__source">${isGroup ? "<i>" : ""}${src.full}${isGroup ? "</i>" : ""}</span>
 						<span class="col-4 manbrew__col--tall authors">${validAuthors}</span>
 						<${src.url ? "a" : "span"} class="col-1 manbrew__col--tall text-center" ${src.url ? `href="${src.url}" target="_blank" rel="noopener"` : ""}>${src.url ? "View Source" : ""}</${src.url ? "a" : "span"}>
+						<span class="hidden abbreviation">${src.abbreviation}</span>
 					</li>`);
 				createButtons(src, $row);
 				$ul.append($row);
@@ -5294,7 +5537,7 @@ BrewUtil = {
 			// hack to delay list indexing, otherwise it seems to fail
 			setTimeout(() => {
 				const list = new List("outerbrewlistcontainer", {
-					valueNames: ["source", "authors"],
+					valueNames: ["source", "authors", "abbreviation"],
 					listClass: "brew-list--target"
 				});
 				ListUtil.bindEscapeKey(list, $lst.find(`.search`), true);
@@ -5485,7 +5728,7 @@ BrewUtil = {
 		obj.uniqueId = CryptUtil.md5(JSON.stringify(obj));
 	},
 
-	_DIRS: ["spell", "class", "subclass", "creature", "background", "feat", "optionalfeature", "race", "object", "trap", "hazard", "deity", "item", "reward", "psionic", "variantrule", "condition", "disease", "adventure", "book", "vehicle", "magicvariant"],
+	_DIRS: ["adventure", "background", "book", "class", "condition", "creature", "deity", "disease", "feat", "hazard", "item", "magicvariant", "object", "optionalfeature", "psionic", "race", "reward", "spell", "subclass", "table", "trap", "variantrule", "vehicle"],
 	_STORABLE: ["class", "subclass", "spell", "monster", "legendaryGroup", "monsterFluff", "background", "feat", "optionalfeature", "race", "deity", "item", "baseitem", "variant", "itemProperty", "itemType", "psionic", "reward", "object", "trap", "hazard", "variantrule", "condition", "disease", "adventure", "adventureData", "book", "bookData", "table", "tableGroup", "vehicle"],
 	async pDoHandleBrewJson (json, page, pFuncRefresh) {
 		function storePrep (arrName) {
@@ -5609,7 +5852,7 @@ BrewUtil = {
 			case UrlUtil.PG_MAKE_SHAPED:
 			case UrlUtil.PG_TABLES:
 			case UrlUtil.PG_VEHICLES:
-				(BrewUtil._pHandleBrew || handleBrew)(toAdd);
+				await (BrewUtil._pHandleBrew || handleBrew)(toAdd);
 				break;
 			case UrlUtil.PG_MANAGE_BREW:
 			case UrlUtil.PG_DEMO:
@@ -5704,10 +5947,15 @@ BrewUtil = {
 	sourceJsonToStyle (source) {
 		BrewUtil._buildSourceCache();
 		if (BrewUtil._sourceCache[source] && BrewUtil._sourceCache[source].color) {
-			const validColor = BrewUtil._sourceCache[source].color.trim().replace(/[^0-9a-fA-F]+/g, "").slice(0, 8);
+			const validColor = BrewUtil.getValidColor(BrewUtil._sourceCache[source].color);
 			if (validColor.length) return `style="color: #${validColor};"`;
 			return "";
 		} else return "";
+	},
+
+	getValidColor (color) {
+		// Prevent any injection shenenagins
+		return color.replace(/[^a-fA-F0-9]/g, "").slice(0, 8);
 	},
 
 	addSource (source) {
@@ -5810,6 +6058,7 @@ BrewUtil = {
 
 // ID GENERATION =======================================================================================================
 CryptUtil = {
+	// region md5 internals
 	// stolen from http://www.myersdaily.org/joseph/javascript/md5.js
 	_md5cycle: (x, k) => {
 		let a = x[0];
@@ -5950,6 +6199,11 @@ CryptUtil = {
 		return s;
 	},
 
+	_add32: (a, b) => {
+		return (a + b) & 0xFFFFFFFF;
+	},
+	// endregion
+
 	hex: (x) => {
 		for (let i = 0; i < x.length; i++) {
 			x[i] = CryptUtil._rhex(x[i]);
@@ -5963,10 +6217,6 @@ CryptUtil = {
 
 	md5: (s) => {
 		return CryptUtil.hex(CryptUtil._md51(s));
-	},
-
-	_add32: (a, b) => {
-		return (a + b) & 0xFFFFFFFF;
 	},
 
 	/**
@@ -6066,59 +6316,55 @@ CollectionUtil = {
 	}
 };
 
-Array.prototype.last = Array.prototype.last ||
-	function () {
-		return this[this.length - 1];
-	};
+Array.prototype.last = Array.prototype.last || function (arg) {
+	if (arg !== undefined) this[this.length - 1] = arg;
+	else return this[this.length - 1];
+};
 
-Array.prototype.filterIndex = Array.prototype.filterIndex ||
-	function (fnCheck) {
-		const out = [];
-		this.forEach((it, i) => {
-			if (fnCheck(it)) out.push(i);
-		});
-		return out;
-	};
+Array.prototype.filterIndex = Array.prototype.filterIndex || function (fnCheck) {
+	const out = [];
+	this.forEach((it, i) => {
+		if (fnCheck(it)) out.push(i);
+	});
+	return out;
+};
 
-Array.prototype.equals = Array.prototype.equals ||
-	function (array2) {
-		const array1 = this;
-		if (!array1 && !array2) return true;
-		else if ((!array1 && array2) || (array1 && !array2)) return false;
+Array.prototype.equals = Array.prototype.equals || function (array2) {
+	const array1 = this;
+	if (!array1 && !array2) return true;
+	else if ((!array1 && array2) || (array1 && !array2)) return false;
 
-		let temp = [];
-		if ((!array1[0]) || (!array2[0])) return false;
-		if (array1.length !== array2.length) return false;
-		let key;
-		// Put all the elements from array1 into a "tagged" array
-		for (let i = 0; i < array1.length; i++) {
-			key = (typeof array1[i]) + "~" + array1[i]; // Use "typeof" so a number 1 isn't equal to a string "1".
-			if (temp[key]) temp[key]++;
-			else temp[key] = 1;
-		}
-		// Go through array2 - if same tag missing in "tagged" array, not equal
-		for (let i = 0; i < array2.length; i++) {
-			key = (typeof array2[i]) + "~" + array2[i];
-			if (temp[key]) {
-				if (temp[key] === 0) return false;
-				else temp[key]--;
-			} else return false;
-		}
-		return true;
-	};
+	let temp = [];
+	if ((!array1[0]) || (!array2[0])) return false;
+	if (array1.length !== array2.length) return false;
+	let key;
+	// Put all the elements from array1 into a "tagged" array
+	for (let i = 0; i < array1.length; i++) {
+		key = (typeof array1[i]) + "~" + array1[i]; // Use "typeof" so a number 1 isn't equal to a string "1".
+		if (temp[key]) temp[key]++;
+		else temp[key] = 1;
+	}
+	// Go through array2 - if same tag missing in "tagged" array, not equal
+	for (let i = 0; i < array2.length; i++) {
+		key = (typeof array2[i]) + "~" + array2[i];
+		if (temp[key]) {
+			if (temp[key] === 0) return false;
+			else temp[key]--;
+		} else return false;
+	}
+	return true;
+};
 
-Array.prototype.partition = Array.prototype.partition ||
-	function (fnIsValid) {
-		return this.reduce(([pass, fail], elem) => fnIsValid(elem) ? [[...pass, elem], fail] : [pass, [...fail, elem]], [[], []]);
-	};
+Array.prototype.partition = Array.prototype.partition || function (fnIsValid) {
+	return this.reduce(([pass, fail], elem) => fnIsValid(elem) ? [[...pass, elem], fail] : [pass, [...fail, elem]], [[], []]);
+};
 
-Array.prototype.getNext = Array.prototype.getNext ||
-	function (curVal) {
-		let ix = this.indexOf(curVal);
-		if (!~ix) throw new Error("Value was not in array!");
-		if (++ix >= this.length) ix = 0;
-		return this[ix];
-	};
+Array.prototype.getNext = Array.prototype.getNext || function (curVal) {
+	let ix = this.indexOf(curVal);
+	if (!~ix) throw new Error("Value was not in array!");
+	if (++ix >= this.length) ix = 0;
+	return this[ix];
+};
 
 // OVERLAY VIEW ========================================================================================================
 /**
@@ -6283,7 +6529,7 @@ ExcludeUtil = {
 	},
 
 	async _pSave () {
-		StorageUtil.pSet(EXCLUDES_STORAGE, ExcludeUtil._excludes);
+		return StorageUtil.pSet(EXCLUDES_STORAGE, ExcludeUtil._excludes);
 	},
 
 	async pResetExcludes () {
@@ -6405,59 +6651,7 @@ class ReactorEvent {
 	}
 }
 
-// STATE PROXY =========================================================================================================
-class ProxyBase {
-	constructor () {
-		this.__hooks = {};
-		this.__hooksAll = {};
-	}
-
-	_getProxy (hookProp, toProxy) {
-		return new Proxy(toProxy, {
-			set: (object, prop, value) => {
-				object[prop] = value;
-				if (this.__hooksAll[hookProp]) this.__hooksAll[hookProp].forEach(hook => hook(prop, value));
-				if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]) this.__hooks[hookProp][prop].forEach(hook => hook(prop, value));
-				return true;
-			},
-			deleteProperty: (object, prop) => {
-				delete object[prop];
-				if (this.__hooksAll[hookProp]) this.__hooksAll[hookProp].forEach(hook => hook(prop, null));
-				if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]) this.__hooks[hookProp][prop].forEach(hook => hook(prop, null));
-				return true;
-			}
-		});
-	}
-
-	/**
-	 * Register a hook versus a root property on the state object. **INTERNAL CHANGES TO CHILD OBJECTS ON THE STATE
-	 *   OBJECT ARE NOT TRACKED**.
-	 * @param hookProp The state object.
-	 * @param prop The root property to track.
-	 * @param hook The hook to run. Will be called with two arguments; the property and the value of the property being
-	 *   modified.
-	 */
-	_addHook (hookProp, prop, hook) {
-		((this.__hooks[hookProp] = this.__hooks[hookProp] || {})[prop] = (this.__hooks[hookProp][prop] || [])).push(hook);
-	}
-
-	_addHookAll (hookProp, hook) {
-		(this.__hooksAll[hookProp] = this.__hooksAll[hookProp] || []).push(hook);
-	}
-
-	_removeHook (hookProp, prop, hook) {
-		if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]) {
-			const ix = this.__hooks[hookProp][prop].findIndex(hk => hk === hook);
-			if (~ix) this.__hooks[hookProp][prop].splice(ix, 1);
-		}
-	}
-
-	_resetHooks (hookProp) {
-		delete this.__hooks[hookProp];
-	}
-}
-
-// LEGAL NOTICE ========================================================================================================
+// MISC WEBPAGE ONLOADS ================================================================================================
 if (!IS_VTT && typeof window !== "undefined") {
 	// add an obnoxious banner
 	// TODO is this something we want? If so, uncomment
@@ -6476,9 +6670,12 @@ if (!IS_VTT && typeof window !== "undefined") {
 	// Hack to lock the ad space at original size--prevents the screen from shifting around once loaded
 	setTimeout(() => {
 		const $wrp = $(`.cancer__wrp-leaderboard`);
-		const w = $wrp.outerWidth();
+		// const w = $wrp.outerWidth();
 		const h = $wrp.outerHeight();
-		$wrp.css({width: w, height: h});
+		$wrp.css({
+			// width: w,
+			height: h
+		});
 	}, 5000);
 }
 

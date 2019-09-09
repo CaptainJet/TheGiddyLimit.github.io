@@ -2,58 +2,56 @@
 
 window.onload = doPageInit;
 
-String.prototype.split_handleColon = String.prototype.split_handleColon ||
-	function (str, maxSplits = Number.MAX_SAFE_INTEGER) {
-		if (str === "") return this.split("");
+String.prototype.split_handleColon = String.prototype.split_handleColon || function (str, maxSplits = Number.MAX_SAFE_INTEGER) {
+	if (str === "") return this.split("");
 
-		const colonStr = `${str.trim()}:`;
-		const isColon = this.toLowerCase().startsWith(colonStr.toLowerCase());
+	const colonStr = `${str.trim()}:`;
+	const isColon = this.toLowerCase().startsWith(colonStr.toLowerCase());
 
-		const re = isColon ? new RegExp(colonStr, "ig") : new RegExp(str, "ig");
-		const targetString = isColon ? colonStr : str;
+	const re = isColon ? new RegExp(colonStr, "ig") : new RegExp(str, "ig");
+	const targetString = isColon ? colonStr : str;
 
-		let m = re.exec(this);
-		let splits = 0;
-		const out = [];
-		const indexes = [];
+	let m = re.exec(this);
+	let splits = 0;
+	const out = [];
+	const indexes = [];
 
-		while (m && splits < maxSplits) {
-			indexes.push(m.index);
+	while (m && splits < maxSplits) {
+		indexes.push(m.index);
 
-			splits++;
-			m = re.exec(this);
-		}
+		splits++;
+		m = re.exec(this);
+	}
 
-		if (indexes.length === 1) {
-			out.push(this.substring(0, indexes[0]));
-			out.push(this.substring(indexes[0] + targetString.length, this.length));
-		} else {
-			for (let i = 0; i < indexes.length - 1; ++i) {
-				const start = indexes[i];
+	if (indexes.length === 1) {
+		out.push(this.substring(0, indexes[0]));
+		out.push(this.substring(indexes[0] + targetString.length, this.length));
+	} else {
+		for (let i = 0; i < indexes.length - 1; ++i) {
+			const start = indexes[i];
 
-				if (i === 0) {
-					out.push(this.substring(0, start));
-				}
+			if (i === 0) {
+				out.push(this.substring(0, start));
+			}
 
-				const end = indexes[i + 1];
-				out.push(this.substring(start + targetString.length, end));
+			const end = indexes[i + 1];
+			out.push(this.substring(start + targetString.length, end));
 
-				if (i === indexes.length - 2) {
-					out.push(this.substring(end + targetString.length, this.length))
-				}
+			if (i === indexes.length - 2) {
+				out.push(this.substring(end + targetString.length, this.length));
 			}
 		}
+	}
 
-		return out.map(it => it.trim());
-	};
+	return out.map(it => it.trim());
+};
 
-String.prototype.indexOf_handleColon = String.prototype.indexOf_handleColon ||
-	function (str) {
-		const colonStr = `${str.trim()}:`;
-		const idxColon = this.toLowerCase().indexOf(colonStr.toLowerCase());
-		if (~idxColon) return idxColon;
-		return this.toLowerCase().indexOf(str.toLowerCase());
-	};
+String.prototype.indexOf_handleColon = String.prototype.indexOf_handleColon || function (str) {
+	const colonStr = `${str.trim()}:`;
+	const idxColon = this.toLowerCase().indexOf(colonStr.toLowerCase());
+	if (~idxColon) return idxColon;
+	return this.toLowerCase().indexOf(str.toLowerCase());
+};
 
 class ConverterUi {
 	constructor () {
@@ -375,7 +373,7 @@ class ConverterUi {
 					rebuildStageSource({mode: "edit", source: MiscUtil.copy(curSource)});
 					modalMeta = UiUtil.getShowModal({
 						fullHeight: true,
-						fullWidth: true,
+						isLarge: true,
 						cbClose: () => $wrpSourceOverlay.detach()
 					});
 					$wrpSourceOverlay.appendTo(modalMeta.$modalInner);
@@ -386,7 +384,7 @@ class ConverterUi {
 				rebuildStageSource({mode: "add"});
 				modalMeta = UiUtil.getShowModal({
 					fullHeight: true,
-					fullWidth: true,
+					isLarge: true,
 					cbClose: () => $wrpSourceOverlay.detach()
 				});
 				$wrpSourceOverlay.appendTo(modalMeta.$modalInner);
@@ -944,8 +942,8 @@ class StatblockConverter {
 			curLine = stripQuote(curLine).trim();
 			if (curLine === "") continue;
 			else if (
-				(curLine === "___" && prevBlank) || // handle nicely separated blocks
-				curLineRaw === "___" // handle multiple stacked blocks
+				(curLine === "___" && prevBlank) // handle nicely separated blocks
+				|| curLineRaw === "___" // handle multiple stacked blocks
 			) {
 				if (stats !== null) hasMultipleBlocks = true;
 				doOutputStatblock();
@@ -1481,13 +1479,6 @@ class TableConverter {
 		}
 	}
 
-	static _doCleanTable (tbl) {
-		if (!tbl.caption) delete tbl.caption;
-		if (tbl.colLabels && !tbl.colLabels.some(Boolean)) delete tbl.colLabels;
-		if (tbl.colStyles && !tbl.colStyles.some(Boolean)) delete tbl.colStyles;
-		if (!tbl.rows.some(Boolean)) throw new Error("Table had no rows!");
-	}
-
 	/**
 	 * Parses tables from HTML.
 	 * @param inText Input text.
@@ -1559,7 +1550,7 @@ class TableConverter {
 				$table.find(`tr`).each(handleTableRow);
 			}
 
-			this._postProcessTable(tbl);
+			MarkdownConverter.postProcessTable(tbl);
 			options.cbOutput(tbl, options.isAppend);
 		};
 
@@ -1587,56 +1578,6 @@ class TableConverter {
 	doParseMarkdown (inText, options) {
 		if (!inText || !inText.trim()) return options.cbWarning("No input!");
 
-		const getConvertedTable = (lines, caption) => {
-			// trim leading/trailing pipes if they're uniformly present
-			const contentLines = lines.filter(l => l && l.trim());
-			if (contentLines.every(l => l.trim().startsWith("|"))) {
-				lines = lines.map(l => l.replace(/^\s*\|(.*?)$/, "$1"));
-			}
-			if (contentLines.every(l => l.trim().endsWith("|"))) {
-				lines = lines.map(l => l.replace(/^(.*?)\|\s*$/, "$1"));
-			}
-
-			const tbl = {
-				type: "table",
-				caption,
-				colLabels: [],
-				colStyles: [],
-				rows: []
-			};
-
-			let seenHeaderBreak = false;
-			let alignment = [];
-			lines.map(l => l.trim()).filter(Boolean).forEach(l => {
-				const cells = l.split("|").map(it => it.trim());
-				if (cells.length) {
-					if (cells.every(c => !c || !!/^:?\s*---+\s*:?$/.exec(c))) { // a header break
-						alignment = cells.map(c => {
-							if (c.startsWith(":") && c.endsWith(":")) {
-								return "text-center";
-							} else if (c.startsWith(":")) {
-								return "text-align-left";
-							} else if (c.endsWith(":")) {
-								return "text-right";
-							} else {
-								return "";
-							}
-						});
-						seenHeaderBreak = true;
-					} else if (seenHeaderBreak) {
-						tbl.rows.push(cells);
-					} else {
-						tbl.colLabels = cells;
-					}
-				}
-			});
-
-			tbl.colStyles = alignment;
-
-			this._postProcessTable(tbl);
-			return tbl;
-		};
-
 		const lines = inText.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split(/\n/g);
 		const stack = [];
 		let cur = null;
@@ -1651,7 +1592,7 @@ class TableConverter {
 		});
 		if (cur && cur.lines.length) stack.push(cur);
 
-		const toOutput = stack.map(tbl => getConvertedTable(tbl.lines, tbl.caption)).reverse();
+		const toOutput = stack.map(tbl => MarkdownConverter.getConvertedTable(tbl.lines, tbl.caption)).reverse();
 		toOutput.forEach((out, i) => {
 			if (options.isAppend) options.cbOutput(out, true);
 			else {
@@ -1659,81 +1600,6 @@ class TableConverter {
 				else options.cbOutput(out, true);
 			}
 		});
-	}
-
-	_postProcessTable (tbl) {
-		// Post-processing
-		(function normalizeCellCounts () {
-			// pad all rows to max width
-			const maxWidth = Math.max(tbl.colLabels, ...tbl.rows.map(it => it.length));
-			tbl.rows.forEach(row => {
-				while (row.length < maxWidth) row.push("");
-			});
-		})();
-
-		(function doCalculateWidths () {
-			const BASE_CHAR_CAP = 200; // assume tables are approx 200 characters wide
-
-			// total the
-			const avgWidths = (() => {
-				if (!tbl.rows.length) return null;
-				const out = [...new Array(tbl.rows[0].length)].map(() => 0);
-				tbl.rows.forEach(r => {
-					r.forEach((cell, i) => {
-						out[i] += Math.min(BASE_CHAR_CAP, cell.length);
-					});
-				});
-				return out.map(it => it / tbl.rows.length);
-			})();
-
-			if (avgWidths != null) {
-				const totalWidths = avgWidths.reduce((a, b) => a + b, 0);
-				const redistributedWidths = (() => {
-					const MIN = totalWidths / 12;
-					const sorted = avgWidths.map((it, i) => ({ix: i, val: it})).sort((a, b) => SortUtil.ascSort(a.val, b.val));
-
-					for (let i = 0; i < sorted.length - 1; ++i) {
-						const it = sorted[i];
-						if (it.val < MIN) {
-							const diff = MIN - it.val;
-							sorted[i].val = MIN;
-							const toSteal = diff / sorted.length - (i + 1);
-							for (let j = i + 1; j < sorted.length; ++j) {
-								sorted[j].val -= toSteal;
-							}
-						}
-					}
-
-					return sorted.sort((a, b) => SortUtil.ascSort(a.ix, b.ix)).map(it => it.val);
-				})();
-				let nmlxWidths = redistributedWidths.map(it => it / totalWidths);
-				while (nmlxWidths.reduce((a, b) => a + b, 0) > 1) {
-					const diff = 1 - nmlxWidths.reduce((a, b) => a + b, 0);
-					nmlxWidths = nmlxWidths.map(it => it + diff / nmlxWidths.length);
-				}
-				const twelfthWidths = nmlxWidths.map(it => Math.round(it * 12));
-
-				twelfthWidths.forEach((it, i) => {
-					const widthPart = `col-${it}`;
-					tbl.colStyles[i] = tbl.colStyles[i] ? `${tbl.colStyles[i]} ${widthPart}` : widthPart;
-				});
-			}
-		})();
-
-		(function doCheckDiceCol () {
-			// check if first column is dice
-			let isDiceCol0 = true;
-			tbl.rows.forEach(r => {
-				if (isNaN(Number(r[0]))) isDiceCol0 = false;
-			});
-			if (isDiceCol0 && !tbl.colStyles.includes("text-center")) tbl.colStyles[0] += " text-center";
-		})();
-
-		(function tagRowDice () {
-			tbl.rows = tbl.rows.map(r => r.map(c => c.replace(RollerUtil.DICE_REGEX, `{@dice $&}`)));
-		})();
-
-		TableConverter._doCleanTable(tbl);
 	}
 }
 TableConverter.SAMPLE_HTML =

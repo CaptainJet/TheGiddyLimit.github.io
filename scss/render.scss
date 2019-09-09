@@ -126,6 +126,11 @@ Renderer
 		display: inline;
 	}
 
+	&prerequisite {
+		font-style: italic;
+		display: block;
+	}
+
 	&li-spell {
 		margin: 0;
 	}
@@ -306,4 +311,9 @@ Renderer
 			animation-timing-function: linear;
 		}
 	}
+}
+
+// Entries embedded in tables
+td > .rd__b:last-child {
+	margin-bottom: 0;
 }

@@ -88,7 +88,7 @@ class InitiativeTrackerUtil {
 		const $cond = $(`<div class="init__cond" ${styleStack.length ? `style="${styleStack.join(" ")}"` : ""}/>`)
 			.data("doTickDown", tickDown)
 			.data("getState", () => JSON.parse(JSON.stringify(state)))
-			.on("contextmenu", (e) => e.ctrlKey || (e.preventDefault() || tickDown(true)))
+			.on("contextmenu", (e) => e.preventDefault() || tickDown(true))
 			.click(() => tickUp(true));
 
 		if (opts.name) {
@@ -121,19 +121,19 @@ InitiativeTrackerUtil._WOUND_META = {
 	},
 	0: {
 		text: "Healthy",
-		color: "#00bb20"
+		color: MiscUtil.COLOR_HEALTHY
 	},
 	1: {
 		text: "Hurt",
-		color: "#c5ca00"
+		color: MiscUtil.COLOR_HURT
 	},
 	2: {
 		text: "Bloodied",
-		color: "#f7a100"
+		color: MiscUtil.COLOR_BLOODIED
 	},
 	3: {
 		text: "Defeated",
-		color: "#cc0000"
+		color: MiscUtil.COLOR_DEFEATED
 	}
 };
 InitiativeTrackerUtil.CONDITIONS = [

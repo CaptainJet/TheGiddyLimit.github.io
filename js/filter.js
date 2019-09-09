@@ -545,13 +545,13 @@ class FilterItem {
 	}
 }
 
-class FilterBase extends ProxyBase {
+class FilterBase extends BaseComponent {
 	constructor (opts) {
 		super();
 
 		this.header = opts.header;
 
-		this.__meta = {...FilterBase._DEFAULT_META};
+		this.__meta = {...this.getDefaultMeta()};
 		this._meta = this._getProxy("meta", this.__meta);
 	}
 
@@ -565,7 +565,7 @@ class FilterBase extends ProxyBase {
 		Object.assign(this._meta, MiscUtil.copy(FilterBase._DEFAULT_META));
 	}
 
-	getBaseSubHashes () {
+	getMetaSubHashes () {
 		const anyNotDefault = Object.keys(FilterBase._DEFAULT_META).find(k => this._meta[k] !== FilterBase._DEFAULT_META[k]);
 		if (anyNotDefault) {
 			const serMeta = Object.keys(FilterBase._DEFAULT_META).map(k => FilterUtil.compress(this._meta[k]));
@@ -573,18 +573,25 @@ class FilterBase extends ProxyBase {
 		} else return null;
 	}
 
-	setBaseFromSubHashState (state) {
+	setMetaFromSubHashState (state) {
+		const hasMeta = this._doApplyMeta(state, this.getDefaultMeta());
+		if (!hasMeta) this.resetBase();
+	}
+
+	_doApplyMeta (state, defaultMeta) {
 		let hasMeta = false;
 		Object.entries(state).forEach(([k, vals]) => {
 			const prop = FilterBase.getProp(k);
 			if (prop === "meta") {
 				hasMeta = true;
 				const data = vals.map(v => FilterUtil.decompress(v));
-				Object.keys(FilterBase._DEFAULT_META).forEach((k, i) => this._meta[k] = data[i]);
+				Object.keys(defaultMeta).forEach((k, i) => {
+					if (data[i] !== undefined) this._meta[k] = data[i];
+					else this._meta[k] = defaultMeta[k];
+				});
 			}
 		});
-
-		if (!hasMeta) this.resetBase();
+		return hasMeta;
 	}
 
 	setBaseStateFromLoaded (toLoad) { Object.assign(this._meta, toLoad.meta); }
@@ -602,6 +609,7 @@ class FilterBase extends ProxyBase {
 	}
 
 	getChildFilters () { return []; }
+	getDefaultMeta () { return {...FilterBase._DEFAULT_META}; }
 
 	$render () { throw new Error(`Unimplemented!`); }
 	getValues () { throw new Error(`Unimplemented!`); }
@@ -618,9 +626,7 @@ class FilterBase extends ProxyBase {
 	setFromValues () { throw new Error(`Unimplemented!`); }
 }
 FilterBase._DEFAULT_META = {
-	isHidden: false,
-	combineBlue: "or",
-	combineRed: "or"
+	isHidden: false
 };
 // These are assumed to be the same length (4 characters)
 FilterBase._SUB_HASH_STATE_PREFIX = "flst";
@@ -675,8 +681,6 @@ class Filter extends FilterBase {
 		Filter._validateItemNests(this._items, this._nests);
 
 		this._filterBox = null;
-		this.__state = {};
-		this._state = this._getProxy("state", this.__state);
 		this._items.forEach(it => this._defaultItemState(it));
 		this.__$wrpFilter = null;
 		this.__$wrpPills = null;
@@ -712,7 +716,7 @@ class Filter extends FilterBase {
 	getSubHashes () {
 		const out = [];
 
-		const baseMeta = this.getBaseSubHashes();
+		const baseMeta = this.getMetaSubHashes();
 		if (baseMeta) out.push(...baseMeta);
 
 		const areNotDefaultState = Object.entries(this._state).filter(([k, v]) => {
@@ -741,7 +745,7 @@ class Filter extends FilterBase {
 	}
 
 	setFromSubHashState (state) {
-		this.setBaseFromSubHashState(state);
+		this.setMetaFromSubHashState(state);
 
 		let hasState = false;
 		let hasNestsHidden = false;
@@ -751,6 +755,7 @@ class Filter extends FilterBase {
 			switch (prop) {
 				case "state": {
 					hasState = true;
+					Object.keys(this._state).forEach(k => this._state[k] = 0);
 					vals.forEach(v => {
 						const [statePropLower, state] = v.split("=");
 						const stateProp = Object.keys(this._state).find(k => k.toLowerCase() === statePropLower);
@@ -760,6 +765,7 @@ class Filter extends FilterBase {
 				}
 				case "nestsHidden": {
 					hasNestsHidden = true;
+					Object.keys(this._nestsHidden).forEach(k => this._nestsHidden[k] = false);
 					vals.forEach(v => {
 						const [nestNameLower, state] = v.split("=");
 						const nestName = Object.keys(this._nestsHidden).find(k => k.toLowerCase() === nestNameLower);
@@ -796,7 +802,6 @@ class Filter extends FilterBase {
 				if (++this._state[item.item] > 2) this._state[item.item] = 0;
 			})
 			.contextmenu((evt) => {
-				if (evt.ctrlKey) return true;
 				evt.preventDefault();
 
 				if (--this._state[item.item] < 0) this._state[item.item] = 2;
@@ -1200,8 +1205,8 @@ class Filter extends FilterBase {
 
 				if (this._umbrellaExcludes && this._umbrellaExcludes.some(it => filterState[it.item])) return false;
 
-				return this._umbrellaItems.some(u => entryVal.includes(u.item)) &&
-					(this._umbrellaItems.some(u => filterState[u.item] === 0) || this._umbrellaItems.some(u => filterState[u.item] === 1));
+				return this._umbrellaItems.some(u => entryVal.includes(u.item))
+					&& (this._umbrellaItems.some(u => filterState[u.item] === 0) || this._umbrellaItems.some(u => filterState[u.item] === 1));
 			}
 		};
 
@@ -1229,7 +1234,19 @@ class Filter extends FilterBase {
 
 		return display && !hide;
 	}
+
+	getDefaultMeta () {
+		// Key order is important, as @filter tags depend on it
+		return {
+			...Filter._DEFAULT_META,
+			...super.getDefaultMeta()
+		};
+	}
 }
+Filter._DEFAULT_META = {
+	combineBlue: "or",
+	combineRed: "or"
+};
 
 class RangeFilter extends FilterBase {
 	/**
@@ -1251,15 +1268,15 @@ class RangeFilter extends FilterBase {
 		this._labelSortFn = opts.labelSortFn || SortUtil.ascSort;
 
 		this._filterBox = null;
-		this.__state = {
-			min: this._min,
-			max: this._max,
-			curMin: this._min,
-			curMax: this._max
-		};
-		this._state = this._getProxy("state", this.__state);
-		this._isLabelsDirty = false;
-		this.__$wrpSlider = null;
+		Object.assign(
+			this.__state,
+			{
+				min: this._min,
+				max: this._max,
+				curMin: this._min,
+				curMax: this._max
+			}
+		);
 		this.__$wrpMini = null;
 		this._$btnsMini = [];
 		this._$slider = null;
@@ -1285,7 +1302,7 @@ class RangeFilter extends FilterBase {
 	getSubHashes () {
 		const out = [];
 
-		const baseMeta = this.getBaseSubHashes();
+		const baseMeta = this.getMetaSubHashes();
 		if (baseMeta) out.push(...baseMeta);
 
 		const serSliderState = [
@@ -1300,7 +1317,7 @@ class RangeFilter extends FilterBase {
 	}
 
 	setFromSubHashState (state) {
-		this.setBaseFromSubHashState(state);
+		this.setMetaFromSubHashState(state);
 
 		let hasState = false;
 
@@ -1350,8 +1367,17 @@ class RangeFilter extends FilterBase {
 	}
 
 	_$getHeaderControls () {
+		const $btnForceMobile = ComponentUiUtil.$getBtnBool(
+			this,
+			"isUseDropdowns",
+			{
+				$ele: $(`<button class="btn btn-default btn-xs mr-2">Show as Dropdowns</button>`),
+				stateName: "meta",
+				stateProp: "_meta"
+			}
+		);
 		const $btnReset = $(`<button class="btn btn-default btn-xs">Reset</button>`).click(() => this.reset());
-		const $wrpBtnReset = $$`<div>${$btnReset}</div>`;
+		const $wrpBtns = $$`<div>${$btnForceMobile}${$btnReset}</div>`;
 
 		const $wrpSummary = $(`<div class="flex-v-center fltr__summary_item fltr__summary_item--include"/>`).hide();
 
@@ -1359,7 +1385,7 @@ class RangeFilter extends FilterBase {
 			.click(() => this._meta.isHidden = !this._meta.isHidden);
 		const hook = () => {
 			$btnShowHide.toggleClass("active", this._meta.isHidden);
-			$wrpBtnReset.toggle(!this._meta.isHidden);
+			$wrpBtns.toggle(!this._meta.isHidden);
 			$wrpSummary.toggle(this._meta.isHidden);
 
 			// render summary
@@ -1376,7 +1402,8 @@ class RangeFilter extends FilterBase {
 
 		return $$`
 		<div class="flex-v-center">
-			${$wrpBtnReset}
+			${$btnForceMobile}
+			${$wrpBtns}
 			${$wrpSummary}
 			${$btnShowHide}
 		</div>`;
@@ -1395,11 +1422,17 @@ class RangeFilter extends FilterBase {
 
 		const $wrpControls = opts.isMulti ? null : this._$getHeaderControls();
 
-		this.__$wrpSlider = $$`<div class="fltr__wrp-pills fltr__wrp-pills--flex"/>`;
-		const hook = () => this.__$wrpSlider.toggle(!this._meta.isHidden);
-		this._addHook("meta", "isHidden", hook);
-		hook();
+		const $wrpSlider = $$`<div class="fltr__wrp-pills fltr__wrp-pills--flex"/>`;
+		const $wrpDropdowns = $$`<div class="fltr__wrp-pills fltr__wrp-pills--flex"/>`;
+		const hookHidden = () => {
+			$wrpSlider.toggle(!this._meta.isHidden && !this._meta.isUseDropdowns);
+			$wrpDropdowns.toggle(!this._meta.isHidden && !!this._meta.isUseDropdowns);
+		};
+		this._addHook("meta", "isHidden", hookHidden);
+		this._addHook("meta", "isUseDropdowns", hookHidden);
+		hookHidden();
 
+		// region Slider
 		// prepare slider options
 		const getSliderOpts = () => {
 			const sliderOpts = {};
@@ -1413,7 +1446,7 @@ class RangeFilter extends FilterBase {
 		};
 		const sliderOpts = getSliderOpts();
 
-		this._$slider = $(`<div class="fltr__slider"/>`).appendTo(this.__$wrpSlider);
+		this._$slider = $(`<div class="fltr__slider"/>`).appendTo($wrpSlider);
 		this._$slider
 			.slider({
 				min: this._min,
@@ -1428,7 +1461,27 @@ class RangeFilter extends FilterBase {
 				this._state.curMin = min;
 				this._state.curMax = max;
 			});
+		// endregion
 
+		// region Dropdowns
+		const $selMin = $(`<select class="form-control mr-2"/>`)
+			.change(() => {
+				const nxtMin = Number($selMin.val());
+				const [min, max] = [nxtMin, this._state.curMax].sort(SortUtil.ascSort);
+				this._state.curMin = min;
+				this._state.curMax = max;
+			});
+		const $selMax = $(`<select class="form-control"/>`)
+			.change(() => {
+				const nxMax = Number($selMax.val());
+				const [min, max] = [this._state.curMin, nxMax].sort(SortUtil.ascSort);
+				this._state.curMin = min;
+				this._state.curMax = max;
+			});
+		$$`<div class="flex-v-center w-100 px-3 py-1">${$selMin}${$selMax}</div>`.appendTo($wrpDropdowns);
+		// endregion
+
+		// region Mini pills
 		const $btnMiniGt = $(`<div class="fltr__mini-pill" state="ignore"/>`)
 			.click(() => {
 				this._state.curMin = this._state.min;
@@ -1479,18 +1532,43 @@ class RangeFilter extends FilterBase {
 				$btnMiniEq.attr("state", FilterBox._PILL_STATES[0]);
 			}
 		};
+		// endregion
+
+		const _populateDropdown = ($sel) => {
+			$sel.empty();
+
+			[...new Array(this._state.max - this._state.min + 1)].forEach((_, i) => {
+				const val = i + this._state.min;
+				const label = this._labels ? this._labels[i] : null;
+				$(`<option/>`, {value: val, text: label || val}).appendTo($sel);
+			});
+
+			return $sel;
+		};
 
 		const handleCurUpdate = () => {
+			// Slider
 			// defer this otherwise slider fails to update with correct values
 			setTimeout(() => this._$slider.slider("values", [this._state.curMin, this._state.curMax]), 5);
+
+			// Dropdowns
+			$selMin.val(`${this._state.curMin}`);
+			$selMax.val(`${this._state.curMax}`);
+
 			handleMiniUpdate();
 		};
 
 		const handleLimitUpdate = () => {
+			// Slider
 			const sliderOpts = getSliderOpts();
 			this._$slider.slider("option", {min: this._state.min, max: this._state.max})
 				.slider("pips", sliderOpts)
 				.slider("float", sliderOpts);
+
+			// Dropdowns
+			_populateDropdown($selMin).val(`${this._state.curMin}`);
+			_populateDropdown($selMax).val(`${this._state.curMax}`);
+
 			handleMiniUpdate();
 		};
 
@@ -1503,10 +1581,12 @@ class RangeFilter extends FilterBase {
 
 		if (opts.isMulti) {
 			this._$slider.addClass("grow");
-			this.__$wrpSlider.addClass("grow");
+			$wrpSlider.addClass("grow");
+			$wrpDropdowns.addClass("grow");
 			return $$`<div class="flex">
 				<div class="fltr__range-inline-label">${this.header}</div>
-				${this.__$wrpSlider}
+				${$wrpSlider} 
+				${$wrpDropdowns}
 			</div>`;
 		} else {
 			return $$`<div class="flex-col">
@@ -1515,7 +1595,8 @@ class RangeFilter extends FilterBase {
 					<div>${this.header}</div>
 					${$wrpControls}
 				</div>
-				${this.__$wrpSlider}
+				${$wrpSlider} 
+				${$wrpDropdowns}
 			</div>`;
 		}
 	}
@@ -1573,7 +1654,7 @@ class RangeFilter extends FilterBase {
 			if (item instanceof Array) item.forEach(it => this.addItem(it));
 			else if (!this._labels.some(it => it === item)) {
 				this._labels.push(item);
-				this._isLabelsDirty = true;
+				// Fake an update to trigger label handling
 			}
 
 			this._addItem_addNumber(this._labels.length - 1);
@@ -1597,17 +1678,25 @@ class RangeFilter extends FilterBase {
 			if (old.curMax === old.max) this._state.curMax = this._state.max;
 		}
 	}
+
+	getDefaultMeta () { return {...RangeFilter._DEFAULT_META, ...super.getDefaultMeta()}; }
 }
+RangeFilter._DEFAULT_META = {
+	isUseDropdowns: false
+};
 
 class MultiFilter extends FilterBase {
 	constructor (opts) {
 		super(opts);
 		this._filters = opts.filters;
 
-		this.__state = {
-			...MultiFilter._DETAULT_STATE,
-			mode: opts.mode || MultiFilter._DETAULT_STATE.mode
-		};
+		Object.assign(
+			this.__state,
+			{
+				...MultiFilter._DETAULT_STATE,
+				mode: opts.mode || MultiFilter._DETAULT_STATE.mode
+			}
+		);
 		this._baseState = MiscUtil.copy(this.__state);
 		this._state = this._getProxy("state", this.__state);
 	}
@@ -1639,7 +1728,7 @@ class MultiFilter extends FilterBase {
 	getSubHashes () {
 		const out = [];
 
-		const baseMeta = this.getBaseSubHashes();
+		const baseMeta = this.getMetaSubHashes();
 		if (baseMeta) out.push(...baseMeta);
 
 		const anyNotDefault = Object.keys(MultiFilter._DETAULT_STATE).find(k => this._state[k] !== MultiFilter._DETAULT_STATE[k]);
@@ -1655,7 +1744,7 @@ class MultiFilter extends FilterBase {
 	}
 
 	setFromSubHashState (state) {
-		this.setBaseFromSubHashState(state);
+		this.setMetaFromSubHashState(state);
 
 		let hasState = false;
 

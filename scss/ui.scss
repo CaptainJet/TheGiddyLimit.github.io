@@ -121,7 +121,7 @@ Shared UI components
 		user-select: none;
 
 		&:active {
-			box-shadow: 0 0 2px 0 #000b;
+			@include shadow-active();
 		}
 
 		&[data-state='0'] {
@@ -161,40 +161,6 @@ Shared UI components
 	}
 }
 
-.night-mode {
-	.ui-prof__ {
-		&btn-cycle {
-			&:active {
-				box-shadow: 0 0 3px 0 #fffb;
-			}
-
-			&[data-state='0'] {
-				background: $rgb-night-bg-color;
-			}
-
-			&[data-state='1'] {
-				background: $rgb-border-grey;
-				border-color: #aaa;
-			}
-
-			&[data-state='2'] {
-				background: $rgb-border-grey;
-				border-color: #aaa;
-
-				&::after {
-					color: $rgb-night-bg-color;
-					font-weight: bold;
-				}
-			}
-
-			&[data-state='3'] {
-				background: repeating-linear-gradient(45deg, $rgb-border-grey, $rgb-border-grey 10px, $rgb-night-bg-color 10px, $rgb-night-bg-color 20px);
-				border-color: $rgb-border-grey;
-			}
-		}
-	}
-}
-
 /* Direction picker */
 .ui-dir__ {
 	&face {
@@ -223,24 +189,11 @@ Shared UI components
 	}
 }
 
-.night-mode {
-	.ui-dir__ {
-		&face {
-			background: $rgb-night-bg-color;
-		}
-
-		&arm {
-			background: $rgb-night-font-color;
-			box-shadow: none;
-		}
-	}
-}
-
 /* Icon picker */
 .ui-icn__ {
 	&btn {
 		width: 110px;
-		height: 90px;
+		height: 110px;
 	}
 
 	&wrp-icon {
@@ -314,15 +267,16 @@ Shared UI components
 	}
 }
 
-.night-mode {
-	.ui-tip__ {
-		&child {
-			background: $rgb-night-bg-color;
-		}
-	}
-}
-
 /* Context menu */
 .ui-ctx {
 	z-index: $z-context-menu;
+}
+
+/* Fontawesome Icons */
+.fa {
+	&--btn-sm {
+		position: relative;
+		top: 1px;
+		font-size: 15px;
+	}
 }

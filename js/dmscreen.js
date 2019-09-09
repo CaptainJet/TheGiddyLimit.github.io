@@ -27,6 +27,7 @@ const PANEL_TYP_TWITCH_CHAT = 12;
 const PANEL_TYP_ADVENTURES = 13;
 const PANEL_TYP_BOOKS = 14;
 const PANEL_TYP_INITIATIVE_TRACKER_PLAYER = 15;
+const PANEL_TYP_COUNTER = 16;
 const PANEL_TYP_IMAGE = 20;
 const PANEL_TYP_GENERIC_EMBED = 90;
 
@@ -785,6 +786,10 @@ class Panel {
 					p.doPopulate_InitiativeTrackerPlayer(saved.s, saved.r);
 					handleTabRenamed(p);
 					return p;
+				case PANEL_TYP_COUNTER:
+					p.doPopulate_Counter(saved.s, saved.r);
+					handleTabRenamed(p);
+					return p;
 				case PANEL_TYP_UNIT_CONVERTER:
 					p.doPopulate_UnitConverter(saved.s, saved.r);
 					handleTabRenamed(p);
@@ -899,31 +904,29 @@ class Panel {
 			PANEL_TYP_STATS,
 			meta
 		);
-		Renderer.hover._doFillThenCall(
+		Renderer.hover.pCacheAndGet(
 			page,
 			source,
-			hash,
-			() => {
-				const fn = Renderer.hover._pageToRenderFn(page);
-				const it = Renderer.hover._getFromCache(page, source, hash);
+			hash
+		).then(it => {
+			const fn = Renderer.hover._pageToRenderFn(page);
 
-				const $contentInner = $(`<div class="panel-content-wrapper-inner"/>`);
-				const $contentStats = $(`<table class="stats"/>`).appendTo($contentInner);
-				$contentStats.append(fn(it));
+			const $contentInner = $(`<div class="panel-content-wrapper-inner"/>`);
+			const $contentStats = $(`<table class="stats"/>`).appendTo($contentInner);
+			$contentStats.append(fn(it));
 
-				this._stats_bindCrScaleClickHandler(it, meta, $contentInner, $contentStats);
+			this._stats_bindCrScaleClickHandler(it, meta, $contentInner, $contentStats);
 
-				this.set$Tab(
-					ix,
-					PANEL_TYP_STATS,
-					meta,
-					$contentInner,
-					title || it.name,
-					true,
-					!!title
-				);
-			}
-		);
+			this.set$Tab(
+				ix,
+				PANEL_TYP_STATS,
+				meta,
+				$contentInner,
+				title || it.name,
+				true,
+				!!title
+			);
+		});
 	}
 
 	_stats_bindCrScaleClickHandler (mon, meta, $contentInner, $contentStats) {
@@ -981,31 +984,29 @@ class Panel {
 			PANEL_TYP_CREATURE_SCALED_CR,
 			meta
 		);
-		Renderer.hover._doFillThenCall(
+		Renderer.hover.pCacheAndGet(
 			page,
 			source,
-			hash,
-			() => {
-				const it = Renderer.hover._getFromCache(page, source, hash);
-				ScaleCreature.scale(it, targetCr).then(initialRender => {
-					const $contentInner = $(`<div class="panel-content-wrapper-inner"/>`);
-					const $contentStats = $(`<table class="stats"/>`).appendTo($contentInner);
-					$contentStats.append(Renderer.monster.getCompactRenderedString(initialRender, null, {showScaler: true, isScaled: true}));
+			hash
+		).then(it => {
+			ScaleCreature.scale(it, targetCr).then(initialRender => {
+				const $contentInner = $(`<div class="panel-content-wrapper-inner"/>`);
+				const $contentStats = $(`<table class="stats"/>`).appendTo($contentInner);
+				$contentStats.append(Renderer.monster.getCompactRenderedString(initialRender, null, {showScaler: true, isScaled: true}));
 
-					this._stats_bindCrScaleClickHandler(it, meta, $contentInner, $contentStats);
+				this._stats_bindCrScaleClickHandler(it, meta, $contentInner, $contentStats);
 
-					this.set$Tab(
-						ix,
-						PANEL_TYP_CREATURE_SCALED_CR,
-						meta,
-						$contentInner,
-						title || initialRender._displayName || initialRender.name,
-						true,
-						!!title
-					);
-				});
-			}
-		);
+				this.set$Tab(
+					ix,
+					PANEL_TYP_CREATURE_SCALED_CR,
+					meta,
+					$contentInner,
+					title || initialRender._displayName || initialRender.name,
+					true,
+					!!title
+				);
+			});
+		});
 	}
 
 	doPopulate_Rules (book, chapter, header, skipSetTab, title) { // FIXME skipSetTab is never used
@@ -1103,6 +1104,16 @@ class Panel {
 			state,
 			$(`<div class="panel-content-wrapper-inner"/>`).append(InitiativeTrackerPlayer.make$tracker(this.board, state)),
 			title || "Initiative Tracker",
+			true
+		);
+	}
+
+	doPopulate_Counter (state = {}, title) {
+		this.set$ContentTab(
+			PANEL_TYP_COUNTER,
+			state,
+			$(`<div class="panel-content-wrapper-inner"/>`).append(Counter.$getCounter(this.board, state)),
+			title || "Counter",
 			true
 		);
 	}
@@ -1434,8 +1445,8 @@ class Panel {
 	}
 
 	doRenderTitle () {
-		const displayText = this.title !== TITLE_LOADING &&
-			(this.type === PANEL_TYP_STATS || this.type === PANEL_TYP_CREATURE_SCALED_CR || this.type === PANEL_TYP_RULES || this.type === PANEL_TYP_ADVENTURES || this.type === PANEL_TYP_BOOKS) ? this.title : "";
+		const displayText = this.title !== TITLE_LOADING
+		&& (this.type === PANEL_TYP_STATS || this.type === PANEL_TYP_CREATURE_SCALED_CR || this.type === PANEL_TYP_RULES || this.type === PANEL_TYP_ADVENTURES || this.type === PANEL_TYP_BOOKS) ? this.title : "";
 
 		this.$pnlTitle.text(displayText);
 		if (!displayText) this.$pnlTitle.addClass("hidden");
@@ -1677,7 +1688,7 @@ class Panel {
 				}
 			})
 			.on("contextmenu", (evt) => {
-				if (!evt.ctrlKey && $btnSelTab.hasClass("content-tab-can-rename")) {
+				if ($btnSelTab.hasClass("content-tab-can-rename")) {
 					const nuTitle = prompt("Rename tab to:");
 					if (nuTitle && nuTitle.trim()) {
 						this.setTabTitle(ix, nuTitle);
@@ -1894,6 +1905,13 @@ class Panel {
 						t: type,
 						r: toSaveTitle,
 						s: {}
+					};
+				}
+				case PANEL_TYP_COUNTER: {
+					return {
+						t: type,
+						r: toSaveTitle,
+						s: $content.find(`.dm-cnt__root`).data("getState")()
 					};
 				}
 				case PANEL_TYP_UNIT_CONVERTER: {
@@ -2607,6 +2625,13 @@ class AddMenuSpecialTab extends AddMenuTab {
 				this.menu.doClose();
 			});
 
+			const $wrpCounter = $(`<div class="ui-modal__row"><span>Counter</span></div>`).appendTo($tab);
+			const $btnCounter = $(`<button class="btn btn-primary">Add</button>`).appendTo($wrpCounter);
+			$btnCounter.on("click", () => {
+				this.menu.pnl.doPopulate_Counter();
+				this.menu.doClose();
+			});
+
 			$(`<hr class="ui-modal__row-sep"/>`).appendTo($tab);
 
 			const $wrpTimeTracker = $(`<div class="ui-modal__row"><span>In-Game Clock/Calendar</span></div>`).appendTo($tab);
@@ -3221,7 +3246,7 @@ window.addEventListener("load", () => {
 	Renderer.hover.bindDmScreen(window.DM_SCREEN);
 	window.DM_SCREEN.pInitialise()
 		.catch(err => {
-			JqueryUtil.doToast({content: `Failed to load with error "${err.message}". See the console for details.`, type: "danger"});
+			JqueryUtil.doToast({content: `Failed to load with error "${err.message}". ${MiscUtil.STR_SEE_CONSOLE}`, type: "danger"});
 			$(`.dm-screen-loading`).find(`.initial-message`).text("Failed!");
 			setTimeout(() => { throw err; });
 		});

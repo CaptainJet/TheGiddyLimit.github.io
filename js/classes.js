@@ -220,7 +220,8 @@ class FeatureDescription {
 			if (sc.name === "Shadow (UA)" && sc.source === SRC_UALDR) return false;
 			if (sc.name === "The Undying Light (UA)" && sc.source === SRC_UALDR) return false;
 
-			const nonUa = ClassDisplay.curClass.subclasses.find(it => !_isNonStandardSource(it) && it.name.replace(/(v\d+)?\s*\((UA|SCAG|PSA|Livestream)\)/, "").trim() === sc.name);
+			const baseName = sc.name.replace(/(v\d+)?\s*\((UA|SCAG|PSA|Livestream)\)/, "").trim().toLowerCase();
+			const nonUa = ClassDisplay.curClass.subclasses.find(it => !_isNonStandardSource(it) && it.name.trim().toLowerCase() === baseName);
 			if (nonUa) return false;
 		}
 		return true;
@@ -297,7 +298,7 @@ class HashLoad {
 		$("td#prof").toggle(!!(ClassDisplay.curClass.proficiency || sProfs));
 
 		function getSkillProfString (skills) {
-			const numString = Parser.numberToString(skills.choose);
+			const numString = Parser.numberToText(skills.choose);
 			return skills.from.length === 18 ? `Choose any ${numString}.` : `Choose ${numString} from ${skills.from.map(it => Renderer.get().render(`{@skill ${it}}`)).joinConjunct(", ", " and ")}.`
 		}
 
@@ -342,11 +343,11 @@ class HashLoad {
 			$("#multiclassing").hide();
 		}
 
-		$(`#statsprof_divider`).toggle(!!(ClassDisplay.curClass.hd ||
-			ClassDisplay.curClass.proficiency ||
-			ClassDisplay.curClass.startingProficiencies ||
-			ClassDisplay.curClass.startingEquipment ||
-			ClassDisplay.curClass.multiclassing));
+		$(`#statsprof_divider`).toggle(!!(ClassDisplay.curClass.hd
+			|| ClassDisplay.curClass.proficiency
+			|| ClassDisplay.curClass.startingProficiencies
+			|| ClassDisplay.curClass.startingEquipment
+			|| ClassDisplay.curClass.multiclassing));
 
 		// FEATURE TABLE ===================================================================================================
 		renderer.resetHeaderIndex();
@@ -418,7 +419,7 @@ class HashLoad {
 				groupHeaders.append(`<th ${hasTitle ? `class="colGroupTitle"` : ""} colspan="${tGroup.colLabels.length}" ${subclassData}>${hasTitle ? tGroup.title : ""}</th>`);
 
 				for (let j = 0; j < tGroup.colLabels.length; j++) {
-					let lbl = `<div class="cls__squash_header">${renderer.render(tGroup.colLabels[j])}</div>`;
+					let lbl = `<div class="cls__squash_header" title="${Renderer.stripTags(tGroup.colLabels[j])}">${renderer.render(tGroup.colLabels[j])}</div>`;
 					colHeaders.append(`<th class="centred-col" ${subclassData}>${lbl}</th>`)
 				}
 
@@ -572,7 +573,6 @@ class HashLoad {
 			const handlePillClick = () => HashLoad.handleSubclassClick($pill.hasClass(CLSS_ACTIVE), subClasses[i].name, ClassData.cleanScSource(subClasses[i].source));
 			$pill.click(handlePillClick)
 				.contextmenu(evt => {
-					if (evt.ctrlKey) return;
 					evt.preventDefault();
 					handlePillClick();
 				});
@@ -601,7 +601,6 @@ class HashLoad {
 			$pill.find(`span`).text(STRS_SOURCE_STATES[state]);
 			HashLoad.setSourceState(state);
 		}).contextmenu(evt => {
-			if (evt.ctrlKey) return;
 			evt.preventDefault();
 			let state = Number($pill.attr("data-state"));
 			if (--state < 0) state = STRS_SOURCE_STATES.length - 1;
@@ -617,7 +616,6 @@ class HashLoad {
 		if (defaultActive) pill.addClass(pillActiveClass);
 		HashLoad.subclassPillWrapper.append(pill);
 		const onPillClick = function (evt) {
-			if (evt.ctrlKey) return;
 			evt.preventDefault();
 			let active = $(this).hasClass(pillActiveClass);
 			if (!defaultActive) active = !active;

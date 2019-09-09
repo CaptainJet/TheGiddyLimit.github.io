@@ -11,6 +11,8 @@
 				"str",
 				"dex"
 			],
+			"spellcastingAbility": "wis",
+			"casterProgression": "1/2",
 			"classTableGroups": [
 				{
 					"colLabels": [
@@ -260,7 +262,7 @@
 				"additionalFromBackground": true,
 				"default": [
 					"(a) {@item scale mail|phb} or (b) {@item leather armor|phb}",
-					"(a) two {@item shortsword|phb|shortswords} or (b) two {@filter simple melee weapons|items|source=phb|category=basic|type=simple weapon;melee weapon=&}",
+					"(a) two {@item shortsword|phb|shortswords} or (b) two {@filter simple melee weapons|items|source=phb|category=basic|type=simple weapon;melee weapon=sand}",
 					"(a) a {@item dungeoneer's pack|phb} or (b) an {@item explorer's pack|phb}",
 					"A {@item longbow|phb} and a {@item quiver|phb} of {@item arrows (20)|phb|20 arrows}"
 				],
@@ -289,7 +291,11 @@
 							"Stealth",
 							"Survival"
 						]
-					}
+					},
+					"weapons": [
+						"simple",
+						"martial"
+					]
 				}
 			},
 			"classFeatures": [
@@ -1932,6 +1938,8 @@
 				"str",
 				"dex"
 			],
+			"spellcastingAbility": "wis",
+			"casterProgression": "1/2",
 			"classTableGroups": [
 				{
 					"colLabels": [
@@ -2181,7 +2189,7 @@
 				"additionalFromBackground": true,
 				"default": [
 					"(a) {@item scale mail|phb} or (b) {@item leather armor|phb}",
-					"(a) two {@item shortsword|phb|shortswords} or (b) two {@filter simple melee weapons|items|source=phb|category=basic|type=simple weapon;melee weapon=&}",
+					"(a) two {@item shortsword|phb|shortswords} or (b) two {@filter simple melee weapons|items|source=phb|category=basic|type=simple weapon;melee weapon=sand}",
 					"(a) a {@item dungeoneer's pack|phb} or (b) an {@item explorer's pack|phb}",
 					"A {@item longbow|phb} and a {@item quiver|phb} of {@item arrows (20)|phb|20 arrows}"
 				],
@@ -4130,7 +4138,7 @@
 				"additionalFromBackground": true,
 				"default": [
 					"(a) {@item scale mail|phb} or (b) {@item leather armor|phb}",
-					"(a) two {@item shortsword|phb|shortswords} or (b) two {@filter simple melee weapons|items|source=phb|category=basic|type=simple weapon;melee weapon=&}",
+					"(a) two {@item shortsword|phb|shortswords} or (b) two {@filter simple melee weapons|items|source=phb|category=basic|type=simple weapon;melee weapon=sand}",
 					"(a) a {@item dungeoneer's pack|phb} or (b) an {@item explorer's pack|phb}",
 					"A {@item longbow|phb} and a {@item quiver|phb} of {@item arrows (20)|phb|20 arrows}"
 				],

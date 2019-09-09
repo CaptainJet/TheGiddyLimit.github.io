@@ -84,9 +84,12 @@ class NavBar {
 		addLi(ulAdventures, "adventure.html", "Waterdeep: Dungeon of the Mad Mage", {isSide: true, aHash: "WDMM"});
 		addLi(ulAdventures, "adventure.html", "Krenko's Way", {isSide: true, aHash: "KKW"});
 		addLi(ulAdventures, "adventure.html", "Ghosts of Saltmarsh", {isSide: true, aHash: "GoS"});
-		addLi(ulAdventures, "adventure.html", "The Orrery of the Wanderer", {isSide: true, aHash: "OoW"});
-		addLi(ulAdventures, "adventure.html", "Dragon of Icespire Peak", {isSide: true, aHash: "DIP"});
 		addLi(ulAdventures, "adventure.html", "Hunt for the Thessalhydra", {isSide: true, aHash: "HftT"});
+		addLi(ulAdventures, "adventure.html", "The Orrery of the Wanderer", {isSide: true, aHash: "OoW"});
+		addLi(ulAdventures, "adventure.html", "Essentials Kit: Dragon of Icespire Peak", {isSide: true, aHash: "DIP"});
+		addLi(ulAdventures, "adventure.html", "Essentials Kit: Storm Lord's Wrath", {isSide: true, aHash: "SLW"});
+		addLi(ulAdventures, "adventure.html", "Essentials Kit: Sleeping Dragon's Wake", {isSide: true, aHash: "SDW"});
+		addLi(ulAdventures, "adventure.html", "Essentials Kit: Divine Contention", {isSide: true, aHash: "DC"});
 		addDivider(ulAdventures);
 		addLi(ulAdventures, "adventures.html", "View All/Homebrew");
 		addLi(ulDms, "cultsboons.html", "Cults & Demonic Boons");
@@ -119,6 +122,11 @@ class NavBar {
 		addDivider(ulUtils);
 		addLi(ulUtils, "roll20.html", "Roll20 Script Help");
 		addLi(ulUtils, "makeshaped.html", "Roll20 Shaped Sheet JS Builder");
+		addDivider(ulUtils);
+		addLi(ulUtils, "changelog.html", "Changelog");
+		addLi(ulUtils, `https://wiki.5e.tools/index.php/Page:_${NavBar.getCurrentPage().replace(/.html$/i, "")}`, "Help", {isExternal: true});
+		addDivider(ulUtils);
+		addLi(ulUtils, "privacy-policy.html", "Privacy Policy");
 
 		addLi(navBar, "donate.html", "Donate", {isRoot: true});
 
@@ -173,6 +181,7 @@ class NavBar {
 		 * @param [opts.isSide] - True if this item is part of a side menu.
 		 * @param [opts.aHash] - Optional hash to be appended to the base href
 		 * @param [opts.isRoot] - If the item is a root navbar element.
+		 * @param [opts.isExternal] - If the item is an external link.
 		 */
 		function addLi (appendTo, aHref, aText, opts) {
 			opts = opts || {};
@@ -196,6 +205,13 @@ class NavBar {
 			const a = document.createElement("a");
 			a.href = `${aHref}${hashPart}`;
 			a.innerHTML = aText;
+
+			if (opts.isExternal) {
+				a.setAttribute("target", "_blank");
+				a.classList.add("inline-split-v-center");
+				a.classList.add("w-100");
+				a.innerHTML = `<span>${aText}</span><span class="glyphicon glyphicon-new-window"/>`
+			}
 
 			li.appendChild(a);
 			appendTo.appendChild(li);
@@ -272,11 +288,16 @@ class NavBar {
 		}
 	}
 
-	static highlightCurrentPage () {
+	static getCurrentPage () {
 		let currentPage = window.location.pathname;
 		currentPage = currentPage.substr(currentPage.lastIndexOf("/") + 1);
 
 		if (!currentPage) currentPage = "5etools.html";
+		return currentPage.trim();
+	}
+
+	static highlightCurrentPage () {
+		let currentPage = NavBar.getCurrentPage();
 
 		let isSecondLevel = false;
 		if (currentPage.toLowerCase() === "book.html" || currentPage.toLowerCase() === "adventure.html") {

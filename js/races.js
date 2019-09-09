@@ -21,13 +21,12 @@ function getAbilityObjs (abils) {
 	}
 
 	const out = new CollectionUtil.ObjectSet();
-	if (abils.choose) {
-		abils.choose.forEach(ch => {
-			if (ch.predefined) {
-				ch.predefined.forEach(pre => {
-					Object.keys(pre).forEach(abil => out.add(makeAbilObj(abil, pre[abil])));
-				});
-			} else if (ch.weighted) {
+
+	(abils || []).forEach(abil => {
+		if (abil.choose) {
+			const ch = abil.choose;
+
+			if (ch.weighted) {
 				// add every ability + weight combo
 				ch.weighted.from.forEach(f => {
 					ch.weighted.weights.forEach(w => {
@@ -38,9 +37,10 @@ function getAbilityObjs (abils) {
 				const by = ch.amount || 1;
 				ch.from.forEach(asi => out.add(makeAbilObj(asi, by)));
 			}
-		});
-	}
-	Object.keys(abils).filter(abil => abil !== "choose").forEach(abil => out.add(makeAbilObj(abil, abils[abil])));
+		}
+		Object.keys(abil).filter(prop => prop !== "choose").forEach(prop => out.add(makeAbilObj(prop, abil[prop])));
+	});
+
 	return Array.from(out.values());
 }
 
@@ -284,49 +284,17 @@ class RacesPage extends ListPage {
 	doLoadHash (id) {
 		const renderer = this._renderer;
 		renderer.setFirstSection(true);
-		const $pgContent = $("#pagecontent").empty();
+		const $content = $("#pagecontent").empty();
 		const race = this._dataList[id];
 
 		function buildStatsTab () {
-			function getPronunciationButton () {
-				return `<button class="btn btn-xs btn-default btn-name-pronounce">
-					<span class="glyphicon glyphicon-volume-up name-pronounce-icon"></span>
-					<audio class="name-pronounce">
-					   <source src="${race.soundClip}" type="audio/mpeg">
-					   <source src="audio/races/${/^(.*?)(\(.*?\))?$/.exec(race._baseName || race.name)[1].trim().toLowerCase()}.mp3" type="audio/mpeg">
-					</audio>
-				</button>`;
-			}
-			$pgContent.append(`
-			<tbody>
-			${Renderer.utils.getBorderTr()}
-			${Renderer.utils.getNameTr(race, {pronouncePart: race.soundClip ? getPronunciationButton() : ""})}
-			<tr><td colspan="6"><b>Ability Scores:</b> ${(race.ability ? Renderer.getAbilityData(race.ability) : {asText: "None"}).asText}</td></tr>
-			<tr><td colspan="6"><b>Size:</b> ${Parser.sizeAbvToFull(race.size)}</td></tr>
-			<tr><td colspan="6"><b>Speed:</b> ${Parser.getSpeedString(race)}</td></tr>
-			<tr id="traits"><td class="divider" colspan="6"><div></div></td></tr>
-			${Renderer.utils.getBorderTr()}
-			</tbody>
-			`);
-
-			const renderStack = [];
-			renderStack.push("<tr class='text'><td colspan='6'>");
-			renderer.recursiveRender({type: "entries", entries: race.entries}, renderStack, {depth: 1});
-			renderStack.push("</td></tr>");
-			if (race.traitTags && race.traitTags.includes("NPC Race")) {
-				renderStack.push(`<tr class="text"><td colspan="6"><section class="text-muted">`);
-				renderer.recursiveRender(`{@i Note: This race is listed in the {@i Dungeon Master's Guide} as an option for creating NPCs. It is not designed for use as a playable race.}`, renderStack, {depth: 2});
-				renderStack.push(`</section></td></tr>`);
-			}
-			renderStack.push(Renderer.utils.getPageTr(race));
-
-			$pgContent.find('tbody tr:last').before(renderStack.join(""));
+			$content.append(RenderRaces.$getRenderedRace(race));
 		}
 
 		function buildFluffTab (isImageTab) {
-			return Renderer.utils.buildFluffTab(
+			return Renderer.utils.pBuildFluffTab(
 				isImageTab,
-				$pgContent,
+				$content,
 				race,
 				getFluff,
 				`data/fluff-races.json`,
