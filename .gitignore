@@ -7,3 +7,6 @@ node_modules
 
 # Generated files
 sitemap.xml
+etc/access-log
+etc/error-log
+etc/pid-file
